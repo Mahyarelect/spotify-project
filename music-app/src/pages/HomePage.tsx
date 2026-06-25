@@ -2,10 +2,20 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { Link } from "react-router-dom";
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <nav className="max-w-4xl mx-auto py-4 px-4 flex items-center gap-4 border-b dark:border-zinc-800">
+        <Link to="/profile" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Profile</Link>
+        <Link to="/subscription" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Subscription</Link>
+        <Link to="/settings" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Settings</Link>
+        {user && (
+          <button onClick={logout} className="ml-auto text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
+            Sign Out
+          </button>
+        )}
+      </nav>
       <div className="max-w-4xl mx-auto py-10 px-4">
         {loading ? (
           <p className="text-center text-zinc-500 dark:text-zinc-400">Loading...</p>
