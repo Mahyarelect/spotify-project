@@ -1,0 +1,95 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema } from "@/lib/validation/authSchemas";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useNavigate, Link } from "react-router-dom";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { useState } from "react";
+import { Modal } from "@/components/ui/Modal";
+
+export function RegisterForm() {
+  const { registerListener } = useAuth();
+  const navigate = useNavigate();
+  const [serverError, setServerError] = useState("");
+  const [policyOpen, setPolicyOpen] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(registerSchema) });
+
+  const onSubmit = async (data: {
+    displayName: string;
+    email: string;
+    password: string;
+    birthDate: string;
+    gender: "male" | "female" | "other" | "unspecified";
+  }) => {
+    setServerError("");
+    try {
+      await registerListener(data);
+      navigate("/");
+    } catch {
+      setServerError("An account with this email already exists");
+    }
+  };
+
+  return (
+    <>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {serverError && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
+            {serverError}
+          </div>
+        )}
+        <Input label="Display Name" placeholder="Your name" error={errors.displayName?.message} {...register("displayName")} />
+        <Input label="Email" type="email" placeholder="you@example.com" error={errors.email?.message} {...register("email")} />
+        <Input label="Password" type="password" placeholder="••••••••" error={errors.password?.message} {...register("password")} />
+        <Input label="Confirm Password" type="password" placeholder="••••••••" error={errors.confirmPassword?.message} {...register("confirmPassword")} />
+        <Input label="Birth Date" type="date" error={errors.birthDate?.message} {...register("birthDate")} />
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Gender</label>
+          <select
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 border-zinc-300"
+            {...register("gender")}
+          >
+            <option value="">Select...</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="unspecified">Prefer not to say</option>
+          </select>
+          {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
+        </div>
+        <div className="flex items-center gap-2">
+          <input type="checkbox" id="acceptPolicy" className="rounded border-zinc-300" {...register("acceptPolicy")} />
+          <label htmlFor="acceptPolicy" className="text-sm text-zinc-600 dark:text-zinc-400">
+            I accept the{" "}
+            <button type="button" onClick={() => setPolicyOpen(true)} className="text-green-600 hover:underline">
+              privacy policy
+            </button>
+          </label>
+        </div>
+        {errors.acceptPolicy && <p className="text-sm text-red-500">{errors.acceptPolicy.message}</p>}
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? "Creating account..." : "Create Account"}
+        </Button>
+        <p className="text-center text-sm text-zinc-500">
+          Already have an account?{" "}
+          <Link to="/login" className="text-green-600 hover:underline">Sign in</Link>
+        </p>
+      </form>
+
+      <Modal open={policyOpen} onClose={() => setPolicyOpen(false)} title="Privacy Policy">
+        <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-3">
+          <p><strong>Mock Privacy Policy</strong></p>
+          <p>This is a mock privacy policy for Phase 1 of the music streaming app project. No real data is collected or processed.</p>
+          <p>In the production version, user data will be handled in accordance with applicable privacy regulations and stored securely on our backend servers.</p>
+          <p>By using this application, you agree to the collection and use of information as outlined in this policy.</p>
+        </div>
+      </Modal>
+    </>
+  );
+}

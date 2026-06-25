@@ -1,0 +1,56 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { editProfileSchema } from "@/lib/validation/profileSchemas";
+import type { User } from "@/types/user";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { AvatarUploader } from "./AvatarUploader";
+import { useSubscriptionLimits } from "@/lib/hooks/useSubscriptionLimits";
+import { useState } from "react";
+
+export function EditProfileForm({
+  user,
+  onSave,
+}: {
+  user: User;
+  onSave: (data: { displayName: string; bio?: string; avatarUrl?: string }) => void;
+}) {
+  const limits = useSubscriptionLimits(user);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatarUrl);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(editProfileSchema),
+    defaultValues: { displayName: user.displayName, bio: user.bio ?? "" },
+  });
+
+  const onSubmit = (data: { displayName: string; bio?: string }) => {
+    onSave({ ...data, avatarUrl: avatarUrl ?? user.avatarUrl ?? undefined });
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <AvatarUploader
+        currentUrl={avatarUrl}
+        disabled={!limits.canUploadProfileImage}
+        onUpload={(dataUrl) => setAvatarUrl(dataUrl)}
+      />
+      <Input label="Display Name" error={errors.displayName?.message} {...register("displayName")} />
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Bio</label>
+        <textarea
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 border-zinc-300"
+          rows={3}
+          {...register("bio")}
+        />
+        {errors.bio && <p className="text-sm text-red-500">{errors.bio.message}</p>}
+      </div>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Saving..." : "Save Changes"}
+      </Button>
+    </form>
+  );
+}
