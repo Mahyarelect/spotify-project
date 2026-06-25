@@ -1,5 +1,5 @@
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { PlanCard } from "@/components/subscription/PlanCard";
 import { PlanComparisonTable } from "@/components/subscription/PlanComparisonTable";
@@ -28,9 +28,14 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <nav className="max-w-4xl mx-auto py-4 px-4 flex items-center gap-4 border-b dark:border-zinc-800">
+        <Link to="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Home</Link>
+        <Link to="/profile" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Profile</Link>
+        <Link to="/settings" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Settings</Link>
+      </nav>
       <div className="max-w-4xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-2">Subscription</h1>
-        <p className="text-zinc-500 mb-6">
+        <h1 className="text-2xl font-bold mb-2 dark:text-white">Subscription</h1>
+        <p className="text-zinc-500 dark:text-zinc-400 mb-6">
           Current plan: <span className="font-semibold capitalize">{user.planTier}</span>
           {user.planRenewsAt && (
             <span className="ml-2">· Renews {new Date(user.planRenewsAt).toLocaleDateString()}</span>
@@ -53,7 +58,7 @@ export default function SubscriptionPage() {
         </div>
 
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Plan Comparison</h2>
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">Plan Comparison</h2>
           <PlanComparisonTable plans={PLAN_LIMITS} />
         </div>
 

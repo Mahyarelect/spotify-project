@@ -36,8 +36,8 @@ export function ArtistRegisterForm() {
     return (
       <div className="text-center space-y-4 py-8">
         <div className="text-4xl">🎵</div>
-        <h2 className="text-xl font-semibold">Application Submitted</h2>
-        <p className="text-zinc-500">Your artist application is pending review. We&apos;ll notify you once a decision has been made.</p>
+        <h2 className="text-xl font-semibold dark:text-white">Application Submitted</h2>
+        <p className="text-zinc-500 dark:text-zinc-400">Your artist application is pending review. We&apos;ll notify you once a decision has been made.</p>
         <Link to="/login" className="inline-block text-green-600 hover:underline">Back to Login</Link>
       </div>
     );
@@ -55,7 +55,7 @@ export function ArtistRegisterForm() {
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? "Submitting..." : "Submit Application"}
       </Button>
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
         Already have an account?{" "}
         <Link to="/login" className="text-green-600 hover:underline">Sign in</Link>
       </p>

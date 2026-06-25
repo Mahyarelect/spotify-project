@@ -34,12 +34,12 @@ export function Modal({
     >
       <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">{title}</h2>
+          <h2 className="text-lg font-semibold dark:text-white">{title}</h2>
           <button
             onClick={onClose}
             className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
-            <X size={20} />
+            <X size={20} className="dark:text-zinc-300" />
           </button>
         </div>
         {children}

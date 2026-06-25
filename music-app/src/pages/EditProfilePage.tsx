@@ -23,7 +23,7 @@ export default function EditProfilePage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <div className="max-w-xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-6">Edit Profile</h1>
+        <h1 className="text-2xl font-bold mb-6 dark:text-white">Edit Profile</h1>
         <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
           <EditProfileForm user={user} onSave={handleSave} />
         </div>

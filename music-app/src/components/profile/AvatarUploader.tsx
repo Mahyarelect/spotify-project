@@ -36,13 +36,13 @@ export function AvatarUploader({
         type="button"
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50"
       >
         <Upload size={14} />
         {disabled ? "Upgrade to upload photo" : "Upload Photo"}
       </button>
       {disabled && (
-        <p className="text-xs text-amber-600">Upgrade to Silver to add a profile photo</p>
+        <p className="text-xs text-amber-600 dark:text-amber-400">Upgrade to Silver to add a profile photo</p>
       )}
     </div>
   );

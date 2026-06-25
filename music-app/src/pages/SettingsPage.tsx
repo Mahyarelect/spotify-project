@@ -58,7 +58,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <div className="max-w-2xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-6">Settings</h1>
+        <h1 className="text-2xl font-bold mb-6 dark:text-white">Settings</h1>
         <div className="space-y-6">
           <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
             <NotificationSettings prefs={prefs} onChange={handleNotifChange} />
@@ -70,7 +70,7 @@ export default function SettingsPage() {
             <LanguageSettings language={language} onChange={handleLanguageChange} />
           </div>
           <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
-            <h3 className="font-semibold text-lg mb-3">Account</h3>
+            <h3 className="font-semibold text-lg mb-3 dark:text-white">Account</h3>
             <DeleteAccountDialog onDelete={handleDelete} />
           </div>
         </div>

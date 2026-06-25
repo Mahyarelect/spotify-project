@@ -15,10 +15,10 @@ export function NotificationSettings({
 
   return (
     <div className="space-y-3">
-      <h3 className="font-semibold text-lg">Notifications</h3>
+      <h3 className="font-semibold text-lg dark:text-white">Notifications</h3>
       {toggles.map(({ key, label }) => (
         <label key={key} className="flex items-center justify-between">
-          <span className="text-sm">{label}</span>
+          <span className="text-sm dark:text-zinc-300">{label}</span>
           <input
             type="checkbox"
             checked={prefs[key]}

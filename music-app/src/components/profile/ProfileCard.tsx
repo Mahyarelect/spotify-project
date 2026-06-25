@@ -29,15 +29,15 @@ export function ProfileCard({
           )}
         </div>
         <div>
-          <h1 className="text-xl font-bold">{user.displayName}</h1>
-          <p className="text-sm text-zinc-500">@{user.username}</p>
+          <h1 className="text-xl font-bold dark:text-white">{user.displayName}</h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">@{user.username}</p>
           <span
             className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full ${
               user.planTier === "gold"
-                ? "bg-yellow-100 text-yellow-800"
+                ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300"
                 : user.planTier === "silver"
-                  ? "bg-zinc-200 text-zinc-700"
-                  : "bg-zinc-100 text-zinc-500"
+                  ? "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
             }`}
           >
             {user.planTier.charAt(0).toUpperCase() + user.planTier.slice(1)}
@@ -49,22 +49,22 @@ export function ProfileCard({
 
       <div className="flex gap-6 text-sm">
         <div>
-          <span className="font-semibold">{user.followers.length}</span>{" "}
-          <span className="text-zinc-500">Followers</span>
+          <span className="font-semibold dark:text-zinc-200">{user.followers.length}</span>{" "}
+          <span className="text-zinc-500 dark:text-zinc-400">Followers</span>
         </div>
         <div>
-          <span className="font-semibold">{user.following.length}</span>{" "}
-          <span className="text-zinc-500">Following</span>
+          <span className="font-semibold dark:text-zinc-200">{user.following.length}</span>{" "}
+          <span className="text-zinc-500 dark:text-zinc-400">Following</span>
         </div>
         <div>
-          <span className="font-semibold">{streamsToday}</span>{" "}
-          <span className="text-zinc-500">Streams today</span>
+          <span className="font-semibold dark:text-zinc-200">{streamsToday}</span>{" "}
+          <span className="text-zinc-500 dark:text-zinc-400">Streams today</span>
         </div>
       </div>
 
       <div className="flex gap-2">
         {viewerIsOwner ? (
-          <button onClick={onEdit} className="px-4 py-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-300 dark:hover:bg-zinc-600">
+          <button onClick={onEdit} className="px-4 py-2 bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300 dark:hover:bg-zinc-600">
             Edit Profile
           </button>
         ) : (
@@ -72,7 +72,7 @@ export function ProfileCard({
             onClick={isFollowing ? onUnfollow : onFollow}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
               isFollowing
-                ? "bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600"
+                ? "bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-600"
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >

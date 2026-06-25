@@ -16,12 +16,12 @@ export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm dark:text-zinc-300">
         <thead>
           <tr className="border-b dark:border-zinc-700">
-            <th className="text-left py-3 px-4">Feature</th>
+            <th className="text-left py-3 px-4 dark:text-white">Feature</th>
             {plans.map((p) => (
-              <th key={p.tier} className="text-center py-3 px-4 capitalize">{p.tier}</th>
+              <th key={p.tier} className="text-center py-3 px-4 capitalize dark:text-white">{p.tier}</th>
             ))}
           </tr>
         </thead>
@@ -47,7 +47,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
             </tr>
           ))}
           <tr className="font-semibold">
-            <td className="py-3 px-4">Price</td>
+            <td className="py-3 px-4 dark:text-white">Price</td>
             {plans.map((p) => (
               <td key={p.tier} className="text-center py-3 px-4">
                 {p.priceMonthly === 0 ? "Free" : `$${p.priceMonthly}/mo`}

@@ -47,11 +47,11 @@ export function LoginForm() {
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? "Signing in..." : "Sign In"}
       </Button>
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
         Don&apos;t have an account?{" "}
         <Link to="/register" className="text-green-600 hover:underline">Register</Link>
       </p>
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
         Want to{" "}
         <Link to="/register-artist" className="text-green-600 hover:underline">register as an artist</Link>?
       </p>

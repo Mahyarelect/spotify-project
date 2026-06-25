@@ -7,7 +7,7 @@ export function LanguageSettings({
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="font-semibold text-lg">Language</h3>
+      <h3 className="font-semibold text-lg dark:text-white">Language</h3>
       <select
         value={language}
         onChange={(e) => onChange(e.target.value as "en" | "fa")}
