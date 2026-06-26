@@ -1,85 +1,89 @@
-import { useAuth } from "@/lib/hooks/useAuth";
-import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageShell } from "@/components/layout/PageShell";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { SoundSettings } from "@/components/settings/SoundSettings";
 import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
-import * as userService from "@/lib/services/userService";
+import { useAuth } from "@/lib/hooks/useAuth";
 import * as settingsService from "@/lib/services/settingsService";
+import * as userService from "@/lib/services/userService";
+import { ROUTES } from "@/lib/constants/routes";
 import type { NotificationPrefs } from "@/types/user";
 
 export default function SettingsPage() {
-  const { user, loading, logout } = useAuth();
-  const navigate = useNavigate();
-  const [prefs, setPrefs] = useState<NotificationPrefs>({
-    newReleasesFromFollowed: true,
-    subscriptionExpiry: true,
-    ticketUpdates: false,
-  });
+  const { user, logout, refreshUser } = useAuth();
+  const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [sound, setSound] = useState(true);
   const [language, setLanguage] = useState<"en" | "fa">("en");
 
   useEffect(() => {
-    if (!loading && !user) navigate("/login");
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      setPrefs(user.notificationLimits);
-      setSound(user.soundEnabled);
-      setLanguage(user.language);
-    }
+    if (!user) return;
+    setPrefs(user.notificationLimits);
+    setSound(user.soundEnabled);
+    setLanguage(user.language);
   }, [user]);
 
-  if (loading || !user) return null;
+  if (!user || !prefs) return null;
 
-  const handleNotifChange = async (newPrefs: NotificationPrefs) => {
-    setPrefs(newPrefs);
-    await settingsService.updateNotificationPrefs(user.id, newPrefs);
-  };
+  const userId = user.id;
 
-  const handleSoundChange = async (enabled: boolean) => {
+  async function handleNotifChange(nextPrefs: NotificationPrefs) {
+    setPrefs(nextPrefs);
+    await settingsService.updateNotificationPrefs(userId, nextPrefs);
+    await refreshUser();
+  }
+
+  async function handleSoundChange(enabled: boolean) {
     setSound(enabled);
-    await settingsService.updateSoundEnabled(user.id, enabled);
-  };
+    await settingsService.updateSoundEnabled(userId, enabled);
+    await refreshUser();
+  }
 
-  const handleLanguageChange = async (lang: "en" | "fa") => {
+  async function handleLanguageChange(lang: "en" | "fa") {
     setLanguage(lang);
-    await settingsService.updateLanguage(user.id, lang);
-  };
+    await settingsService.updateLanguage(userId, lang);
+    await refreshUser();
+  }
 
-  const handleDelete = async () => {
-    await userService.deleteAccount(user.id);
+  async function handleDeleteAccount() {
+    await userService.deleteAccount(userId);
     logout();
-    navigate("/login");
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <nav className="max-w-2xl mx-auto py-4 px-4 flex items-center gap-4 border-b dark:border-zinc-800">
-        <Link to="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Home</Link>
-        <Link to="/profile" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Profile</Link>
-        <Link to="/subscription" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Subscription</Link>
-      </nav>
-      <div className="max-w-2xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-6 dark:text-white">Settings</h1>
+    <>
+      <PageHeader title="Settings" description="Manage notifications, sound, language, and account deletion." />
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
-          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
+          <PageShell>
             <NotificationSettings prefs={prefs} onChange={handleNotifChange} />
-          </div>
-          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
+          </PageShell>
+          <PageShell>
             <SoundSettings enabled={sound} onChange={handleSoundChange} />
-          </div>
-          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
+          </PageShell>
+          <PageShell>
             <LanguageSettings language={language} onChange={handleLanguageChange} />
-          </div>
-          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
-            <h3 className="font-semibold text-lg mb-3 dark:text-white">Account</h3>
-            <DeleteAccountDialog onDelete={handleDelete} />
-          </div>
+          </PageShell>
+        </div>
+        <div className="space-y-6">
+          <PageShell className="h-fit">
+            <h2 className="text-lg font-semibold">Subscription</h2>
+            <p className="mt-2 text-sm text-zinc-400">Current plan: {user.planTier}</p>
+            <Link
+              to={ROUTES.SUBSCRIPTION}
+              className="mt-4 inline-flex rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-black"
+            >
+              Manage subscription
+            </Link>
+          </PageShell>
+          <PageShell className="h-fit border-red-900/60">
+            <h3 className="font-semibold text-lg mb-3">Account</h3>
+            <DeleteAccountDialog onDelete={handleDeleteAccount} />
+          </PageShell>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,22 +1,17 @@
 import type { User } from "@/types/user";
+import { mockHashPassword, verifyMockPassword } from "./password";
+import { getUsers, saveUsers, getArtistApplications, saveArtistApplications, STORAGE_KEYS } from "./storage";
 
-const USERS_KEY = "musicapp_users";
-const SESSION_KEY = "musicapp_currentSessionUserId";
-
-function getUsers(): User[] {
-  const raw = localStorage.getItem(USERS_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
-
-function saveUsers(users: User[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-export async function login(email: string, _password: string) {
+export async function login(email: string, password: string) {
+  const normalizedEmail = email.trim().toLowerCase();
   const users = getUsers();
-  const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-  if (!user) throw new Error("Invalid email or password");
-  localStorage.setItem(SESSION_KEY, user.id);
+  const user = users.find((candidate) => candidate.email.toLowerCase() === normalizedEmail);
+
+  if (!user || !verifyMockPassword(password, user.passwordHash)) {
+    throw new Error("Invalid email or password");
+  }
+
+  localStorage.setItem(STORAGE_KEYS.currentSessionUserId, user.id);
   return { user, role: user.role };
 }
 
@@ -38,7 +33,7 @@ export async function registerListener(data: {
   const newUser: User = {
     id: "u" + Date.now(),
     email: data.email,
-    passwordHash: "$2b$10$mockhash" + data.password,
+    passwordHash: mockHashPassword(data.password),
     displayName: data.displayName,
     username,
     role: "listener",
@@ -60,7 +55,7 @@ export async function registerListener(data: {
   };
   users.push(newUser);
   saveUsers(users);
-  localStorage.setItem(SESSION_KEY, newUser.id);
+  localStorage.setItem(STORAGE_KEYS.currentSessionUserId, newUser.id);
   return newUser;
 }
 
@@ -70,19 +65,17 @@ export async function registerArtist(data: {
   artistName: string;
   portfolioUrl: string;
 }): Promise<{ pending: true }> {
-  const appsKey = "musicapp_artistApplications";
-  const raw = localStorage.getItem(appsKey);
-  const apps = raw ? JSON.parse(raw) : [];
+  const apps = getArtistApplications();
   apps.push({
     id: "app" + Date.now(),
     email: data.email,
-    passwordHash: "$2b$10$mockhash" + data.password,
+    passwordHash: mockHashPassword(data.password),
     artistName: data.artistName,
     portfolioUrl: data.portfolioUrl,
     status: "pending",
     submittedAt: new Date().toISOString(),
   });
-  localStorage.setItem(appsKey, JSON.stringify(apps));
+  saveArtistApplications(apps);
   return { pending: true };
 }
 
@@ -93,5 +86,5 @@ export async function forgotPassword(_email: string) {
 }
 
 export function logout() {
-  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(STORAGE_KEYS.currentSessionUserId);
 }

@@ -17,6 +17,7 @@ export function EditProfileForm({
 }) {
   const limits = useSubscriptionLimits(user);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatarUrl);
+  const canUploadAvatar = limits.canUploadProfileImage;
 
   const {
     register,
@@ -28,14 +29,17 @@ export function EditProfileForm({
   });
 
   const onSubmit = (data: { displayName: string; bio?: string }) => {
-    onSave({ ...data, avatarUrl: avatarUrl ?? user.avatarUrl ?? undefined });
+    onSave({
+      ...data,
+      avatarUrl: canUploadAvatar ? (avatarUrl ?? user.avatarUrl ?? undefined) : (user.avatarUrl ?? undefined),
+    });
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <AvatarUploader
         currentUrl={avatarUrl}
-        disabled={!limits.canUploadProfileImage}
+        disabled={!canUploadAvatar}
         onUpload={(dataUrl) => setAvatarUrl(dataUrl)}
       />
       <Input label="Display Name" error={errors.displayName?.message} {...register("displayName")} />

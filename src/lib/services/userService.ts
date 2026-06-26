@@ -1,20 +1,10 @@
 import type { User, PlanTier } from "@/types/user";
-
-const USERS_KEY = "musicapp_users";
-const SESSION_KEY = "musicapp_currentSessionUserId";
-
-function getUsers(): User[] {
-  const raw = localStorage.getItem(USERS_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
-
-function saveUsers(users: User[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
+import { getUsers, saveUsers, STORAGE_KEYS } from "./storage";
+import { getPlanByTier } from "./subscriptionService";
 
 export async function getCurrentUser(): Promise<User | null> {
   const users = getUsers();
-  const userId = localStorage.getItem(SESSION_KEY);
+  const userId = localStorage.getItem(STORAGE_KEYS.currentSessionUserId);
   if (!userId) return null;
   return users.find((u) => u.id === userId) ?? null;
 }
@@ -26,20 +16,30 @@ export async function updateProfile(
   const users = getUsers();
   const idx = users.findIndex((u) => u.id === userId);
   if (idx === -1) throw new Error("User not found");
-  users[idx] = { ...users[idx], ...patch };
+
+  const current = users[idx];
+  const plan = await getPlanByTier(current.planTier);
+
+  const safePatch = { ...patch };
+  if (!plan.profileImageAllowed) {
+    delete safePatch.avatarUrl;
+  }
+
+  users[idx] = { ...current, ...safePatch };
   saveUsers(users);
   return users[idx];
 }
 
 export async function upgradePlan(
   userId: string,
-  tier: PlanTier
+  tier: PlanTier,
+  months: 1 | 3 | 6 | 12 = 1
 ): Promise<User> {
   const users = getUsers();
   const idx = users.findIndex((u) => u.id === userId);
   if (idx === -1) throw new Error("User not found");
   const renewsAt = new Date();
-  renewsAt.setMonth(renewsAt.getMonth() + 1);
+  renewsAt.setMonth(renewsAt.getMonth() + months);
   users[idx] = {
     ...users[idx],
     planTier: tier,
@@ -52,7 +52,12 @@ export async function upgradePlan(
 export async function deleteAccount(userId: string): Promise<void> {
   const users = getUsers().filter((u) => u.id !== userId);
   saveUsers(users);
-  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(STORAGE_KEYS.currentSessionUserId);
+}
+
+export async function getUserByUsername(username: string): Promise<User | null> {
+  const users = getUsers();
+  return users.find((u) => u.username === username) ?? null;
 }
 
 export async function followUser(

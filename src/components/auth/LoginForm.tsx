@@ -6,6 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
+import { ROLE_HOME_ROUTE } from "@/lib/constants/routes";
 
 export function LoginForm() {
   const { login } = useAuth();
@@ -22,9 +23,7 @@ export function LoginForm() {
     setServerError("");
     try {
       const { role } = await login(data.email, data.password);
-      if (role === "listener") navigate("/");
-      else if (role === "artist") navigate("/artist-dashboard");
-      else navigate("/admin-dashboard");
+      navigate(ROLE_HOME_ROUTE[role as keyof typeof ROLE_HOME_ROUTE] ?? "/", { replace: true });
     } catch {
       setServerError("Invalid email or password");
     }

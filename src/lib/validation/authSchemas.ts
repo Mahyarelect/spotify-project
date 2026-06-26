@@ -5,13 +5,61 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+const MIN_AGE_YEARS = 13;
+const MAX_AGE_YEARS = 120;
+
+function parseDateOnly(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  const validCalendarDate =
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day;
+
+  return validCalendarDate ? parsed : null;
+}
+
+function todayUtcDateOnly(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+}
+
+function yearsBeforeToday(years: number): Date {
+  const date = todayUtcDateOnly();
+  date.setUTCFullYear(date.getUTCFullYear() - years);
+  return date;
+}
+
+export const birthDateSchema = z
+  .string()
+  .min(1, "Birth date is required")
+  .refine((value) => parseDateOnly(value) !== null, "Enter a valid birth date")
+  .refine((value) => {
+    const parsed = parseDateOnly(value);
+    return parsed !== null && parsed <= todayUtcDateOnly();
+  }, "Birth date cannot be in the future")
+  .refine((value) => {
+    const parsed = parseDateOnly(value);
+    return parsed !== null && parsed >= yearsBeforeToday(MAX_AGE_YEARS);
+  }, `Birth date cannot be more than ${MAX_AGE_YEARS} years ago`)
+  .refine((value) => {
+    const parsed = parseDateOnly(value);
+    return parsed !== null && parsed <= yearsBeforeToday(MIN_AGE_YEARS);
+  }, `You must be at least ${MIN_AGE_YEARS} years old to register`);
+
 export const registerSchema = z
   .object({
-    displayName: z.string().min(2, "Display name must be at least 2 characters"),
-    email: z.string().email("Please enter a valid email address"),
+    displayName: z.string().trim().min(2, "Display name must be at least 2 characters"),
+    email: z.string().trim().email("Please enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
-    birthDate: z.string().min(1, "Birth date is required"),
+    confirmPassword: z.string().min(1, "Confirm your password"),
+    birthDate: birthDateSchema,
     gender: z.enum(["male", "female", "other", "unspecified"], {
       message: "Please select a gender",
     }),

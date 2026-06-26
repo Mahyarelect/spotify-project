@@ -1,10 +1,14 @@
 import type { User } from "@/types/user";
+import { mockHashPassword } from "@/lib/services/password";
+
+// Dev password for all mock users: Password123!
+const MOCK_PASSWORD_HASH = mockHashPassword("Password123!");
 
 export const MOCK_USERS: User[] = [
   {
     id: "u1",
     email: "alice@example.com",
-    passwordHash: "$2b$10$mockhashalice",
+    passwordHash: MOCK_PASSWORD_HASH,
     displayName: "Alice Listener",
     username: "alice_l",
     role: "listener",
@@ -27,7 +31,7 @@ export const MOCK_USERS: User[] = [
   {
     id: "u2",
     email: "bob@example.com",
-    passwordHash: "$2b$10$mockhashbob",
+    passwordHash: MOCK_PASSWORD_HASH,
     displayName: "Bob Artist",
     username: "bob_a",
     role: "artist",
@@ -51,7 +55,7 @@ export const MOCK_USERS: User[] = [
   {
     id: "u3",
     email: "carol@example.com",
-    passwordHash: "$2b$10$mockhashcarol",
+    passwordHash: MOCK_PASSWORD_HASH,
     displayName: "Carol Admin",
     username: "carol_admin",
     role: "admin",
@@ -74,7 +78,7 @@ export const MOCK_USERS: User[] = [
   {
     id: "u4",
     email: "dave@example.com",
-    passwordHash: "$2b$10$mockhashdave",
+    passwordHash: MOCK_PASSWORD_HASH,
     displayName: "Dave Support",
     username: "dave_s",
     role: "support",

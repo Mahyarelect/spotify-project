@@ -1,76 +1,77 @@
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { PlanCard } from "@/components/subscription/PlanCard";
 import { PlanComparisonTable } from "@/components/subscription/PlanComparisonTable";
 import { UpgradeModal } from "@/components/subscription/UpgradeModal";
-import { PLAN_LIMITS } from "@/lib/constants/plans";
+import * as subscriptionService from "@/lib/services/subscriptionService";
 import * as userService from "@/lib/services/userService";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageShell } from "@/components/layout/PageShell";
 import type { PlanLimits } from "@/types/subscription";
 
 export default function SubscriptionPage() {
-  const { user, loading, refreshUser } = useAuth();
-  const navigate = useNavigate();
+  const { user, refreshUser } = useAuth();
+  const [plans, setPlans] = useState<PlanLimits[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<PlanLimits | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/login");
-  }, [user, loading, navigate]);
+    let cancelled = false;
 
-  if (loading || !user) return null;
+    async function loadPlans() {
+      const loadedPlans = await subscriptionService.getPlans();
+      if (!cancelled) setPlans(loadedPlans);
+    }
 
-  const handleUpgrade = async (_months: number) => {
+    loadPlans();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!user) return null;
+
+  const handleUpgrade = async (months: number) => {
     if (!selectedPlan) return;
-    await userService.upgradePlan(user.id, selectedPlan.tier);
+    await userService.upgradePlan(user.id, selectedPlan.tier, months as 1 | 3 | 6 | 12);
     await refreshUser();
     setSelectedPlan(null);
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <nav className="max-w-4xl mx-auto py-4 px-4 flex items-center gap-4 border-b dark:border-zinc-800">
-        <Link to="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Home</Link>
-        <Link to="/profile" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Profile</Link>
-        <Link to="/settings" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Settings</Link>
-      </nav>
-      <div className="max-w-4xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-2 dark:text-white">Subscription</h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mb-6">
-          Current plan: <span className="font-semibold capitalize">{user.planTier}</span>
-          {user.planRenewsAt && (
-            <span className="ml-2">· Renews {new Date(user.planRenewsAt).toLocaleDateString()}</span>
-          )}
-        </p>
+    <>
+      <PageHeader
+        title="Subscription"
+        description={`Current plan: ${user.planTier}${user.planRenewsAt ? ` · Renews ${new Date(user.planRenewsAt).toLocaleDateString()}` : ""}`}
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          {PLAN_LIMITS.map((plan) => (
-            <PlanCard
-              key={plan.tier}
-              plan={plan}
-              isCurrent={user.planTier === plan.tier}
-              onSelect={
-                plan.tier !== "free" && plan.tier !== user.planTier
-                  ? () => setSelectedPlan(plan)
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-
-        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4 dark:text-white">Plan Comparison</h2>
-          <PlanComparisonTable plans={PLAN_LIMITS} />
-        </div>
-
-        {selectedPlan && (
-          <UpgradeModal
-            plan={selectedPlan}
-            open={!!selectedPlan}
-            onClose={() => setSelectedPlan(null)}
-            onConfirm={handleUpgrade}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {plans.map((plan) => (
+          <PlanCard
+            key={plan.tier}
+            plan={plan}
+            isCurrent={user.planTier === plan.tier}
+            onSelect={
+              plan.tier !== "free" && plan.tier !== user.planTier
+                ? () => setSelectedPlan(plan)
+                : undefined
+            }
           />
-        )}
+        ))}
       </div>
-    </div>
+
+      <PageShell>
+        <h2 className="text-lg font-semibold mb-4">Plan Comparison</h2>
+        <PlanComparisonTable plans={plans} />
+      </PageShell>
+
+      {selectedPlan && (
+        <UpgradeModal
+          plan={selectedPlan}
+          open={!!selectedPlan}
+          onClose={() => setSelectedPlan(null)}
+          onConfirm={handleUpgrade}
+        />
+      )}
+    </>
   );
 }

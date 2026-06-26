@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import type { z } from "zod";
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
   const { registerListener } = useAuth();
@@ -18,18 +21,18 @@ export function RegisterForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(registerSchema) });
+  } = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema), mode: "onChange" });
 
-  const onSubmit = async (data: {
-    displayName: string;
-    email: string;
-    password: string;
-    birthDate: string;
-    gender: "male" | "female" | "other" | "unspecified";
-  }) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     setServerError("");
     try {
-      await registerListener(data);
+      await registerListener({
+        displayName: data.displayName,
+        email: data.email,
+        password: data.password,
+        birthDate: data.birthDate,
+        gender: data.gender,
+      });
       navigate("/");
     } catch {
       setServerError("An account with this email already exists");

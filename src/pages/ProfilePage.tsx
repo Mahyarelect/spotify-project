@@ -1,34 +1,61 @@
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ProfileCard } from "@/components/profile/ProfileCard";
+import * as userService from "@/lib/services/userService";
+import { ROUTES } from "@/lib/constants/routes";
+import type { User } from "@/types/user";
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { username } = useParams();
   const [streamsToday] = useState(12);
+  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/login");
-  }, [user, loading, navigate]);
+    async function loadProfile() {
+      if (username) {
+        const found = await userService.getUserByUsername(username);
+        setProfileUser(found);
+        if (user) {
+          setIsFollowing(user.following.includes(found?.id ?? ""));
+        }
+      } else {
+        setProfileUser(user);
+      }
+    }
+    if (!loading) loadProfile();
+  }, [username, user, loading]);
 
-  if (loading || !user) return null;
+  if (loading || !profileUser) return null;
+
+  const viewerIsOwner = !username || (user?.id === profileUser.id);
+
+  const handleFollow = async () => {
+    if (!user) return;
+    await userService.followUser(user.id, profileUser.id);
+    setIsFollowing(true);
+  };
+
+  const handleUnfollow = async () => {
+    if (!user) return;
+    await userService.unfollowUser(user.id, profileUser.id);
+    setIsFollowing(false);
+  };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <nav className="max-w-2xl mx-auto py-4 px-4 flex items-center gap-4 border-b dark:border-zinc-800">
-        <Link to="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Home</Link>
-        <Link to="/subscription" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Subscription</Link>
-        <Link to="/settings" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Settings</Link>
-      </nav>
-      <div className="max-w-2xl mx-auto py-10 px-4">
-        <ProfileCard
-          user={user}
-          viewerIsOwner={true}
-          onEdit={() => navigate("/profile/edit")}
-          streamsToday={streamsToday}
-        />
-      </div>
-    </div>
+    <>
+      <ProfileCard
+        user={profileUser}
+        viewerIsOwner={viewerIsOwner}
+        onEdit={() => navigate(ROUTES.EDIT_PROFILE)}
+        onFollow={handleFollow}
+        onUnfollow={handleUnfollow}
+        isFollowing={isFollowing}
+        streamsToday={streamsToday}
+      />
+    </>
   );
 }
