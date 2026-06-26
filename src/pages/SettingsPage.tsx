@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageShell } from "@/components/layout/PageShell";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -14,6 +14,7 @@ import type { NotificationPrefs } from "@/types/user";
 
 export default function SettingsPage() {
   const { user, logout, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [sound, setSound] = useState(true);
   const [language, setLanguage] = useState<"en" | "fa">("en");
@@ -50,6 +51,7 @@ export default function SettingsPage() {
   async function handleDeleteAccount() {
     await userService.deleteAccount(userId);
     logout();
+    navigate(ROUTES.LOGIN, { replace: true });
   }
 
   return (

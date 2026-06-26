@@ -1,5 +1,10 @@
 export function mockHashPassword(password: string): string {
-  return `mock-sha:${btoa(unescape(encodeURIComponent(`music-app:${password}`)))}`;
+  let hash = 0;
+  const input = `music-app:${password}`;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
+  }
+  return `mock-hash:${hash.toString(16)}`;
 }
 
 export function verifyMockPassword(password: string, storedHash: string): boolean {

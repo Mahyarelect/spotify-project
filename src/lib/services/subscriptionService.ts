@@ -2,6 +2,16 @@ import { getPlans as readPlans, savePlans, getUsers, saveUsers } from "./storage
 import type { User, PlanTier } from "@/types/user";
 import type { PlanLimits } from "@/types/subscription";
 
+function addMonthsClamped(start: Date, months: number): Date {
+  const result = new Date(start);
+  const day = result.getDate();
+  result.setDate(1);
+  result.setMonth(result.getMonth() + months);
+  const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+  result.setDate(Math.min(day, lastDay));
+  return result;
+}
+
 export async function getPlans(): Promise<PlanLimits[]> {
   return readPlans();
 }
@@ -28,8 +38,7 @@ export async function upgradePlan(userId: string, tier: PlanTier, months: 1 | 3 
   const idx = users.findIndex((user) => user.id === userId);
   if (idx === -1) throw new Error("User not found");
 
-  const renewsAt = new Date();
-  renewsAt.setMonth(renewsAt.getMonth() + months);
+  const renewsAt = addMonthsClamped(new Date(), months);
 
   users[idx] = {
     ...users[idx],

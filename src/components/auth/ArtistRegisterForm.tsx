@@ -27,7 +27,15 @@ export function ArtistRegisterForm() {
     try {
       await authService.registerArtist(data);
       setSubmitted(true);
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "An account with this email already exists") {
+        setServerError("An account with this email already exists.");
+        return;
+      }
+      if (error instanceof Error && error.message === "An artist application with this email is already pending or approved") {
+        setServerError("An artist application with this email is already pending or approved.");
+        return;
+      }
       setServerError("Registration failed. Please try again.");
     }
   };

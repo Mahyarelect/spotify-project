@@ -32,11 +32,22 @@ export function writeJson<T>(key: string, value: T): void {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+export function hasStorageKey(key: string): boolean {
+  if (!canUseLocalStorage()) return false;
+  return window.localStorage.getItem(key) !== null;
+}
+
+function deepClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 export function getUsers(): User[] {
-  const users = readJson<User[]>(STORAGE_KEYS.users, []);
-  if (users.length > 0) return users;
-  writeJson(STORAGE_KEYS.users, MOCK_USERS);
-  return MOCK_USERS;
+  if (!hasStorageKey(STORAGE_KEYS.users)) {
+    const seeded = deepClone(MOCK_USERS);
+    writeJson(STORAGE_KEYS.users, seeded);
+    return seeded;
+  }
+  return readJson<User[]>(STORAGE_KEYS.users, []);
 }
 
 export function saveUsers(users: User[]): void {
@@ -52,12 +63,29 @@ export function saveArtistApplications(applications: ArtistApplication[]): void 
 }
 
 export function getPlans(): PlanLimits[] {
-  const plans = readJson<PlanLimits[]>(STORAGE_KEYS.plans, []);
-  if (plans.length > 0) return plans;
-  writeJson(STORAGE_KEYS.plans, MOCK_PLANS);
-  return MOCK_PLANS;
+  if (!hasStorageKey(STORAGE_KEYS.plans)) {
+    const seeded = deepClone(MOCK_PLANS);
+    writeJson(STORAGE_KEYS.plans, seeded);
+    return seeded;
+  }
+  return readJson<PlanLimits[]>(STORAGE_KEYS.plans, []);
 }
 
 export function savePlans(plans: PlanLimits[]): void {
   writeJson(STORAGE_KEYS.plans, plans);
+}
+
+export function getSessionUserId(): string | null {
+  if (!canUseLocalStorage()) return null;
+  return window.localStorage.getItem(STORAGE_KEYS.currentSessionUserId);
+}
+
+export function setSessionUserId(userId: string): void {
+  if (!canUseLocalStorage()) return;
+  window.localStorage.setItem(STORAGE_KEYS.currentSessionUserId, userId);
+}
+
+export function clearSessionUserId(): void {
+  if (!canUseLocalStorage()) return;
+  window.localStorage.removeItem(STORAGE_KEYS.currentSessionUserId);
 }

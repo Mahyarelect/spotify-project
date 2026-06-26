@@ -23,4 +23,10 @@ describe("password hashing", () => {
     const stored = mockHashPassword("Password123!");
     expect(verifyMockPassword("WrongPassword!", stored)).toBe(false);
   });
+
+  it("handles unicode passwords", () => {
+    const stored = mockHashPassword("p\u00E4ssw\u00F6rd");
+    expect(verifyMockPassword("p\u00E4ssw\u00F6rd", stored)).toBe(true);
+    expect(verifyMockPassword("password", stored)).toBe(false);
+  });
 });

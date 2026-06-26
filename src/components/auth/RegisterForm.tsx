@@ -1,12 +1,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerSchema } from "@/lib/validation/authSchemas";
+import { registerSchema, MIN_AGE_YEARS, MAX_AGE_YEARS, dateInputValueYearsAgo } from "@/lib/validation/authSchemas";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { ROUTES } from "@/lib/constants/routes";
 import type { z } from "zod";
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -20,7 +21,7 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema), mode: "onChange" });
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -33,9 +34,13 @@ export function RegisterForm() {
         birthDate: data.birthDate,
         gender: data.gender,
       });
-      navigate("/");
-    } catch {
-      setServerError("An account with this email already exists");
+      navigate(ROUTES.HOME);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Email already exists") {
+        setServerError("An account with this email already exists.");
+        return;
+      }
+      setServerError("Registration failed. Please try again.");
     }
   };
 
@@ -51,7 +56,14 @@ export function RegisterForm() {
         <Input label="Email" type="email" placeholder="you@example.com" error={errors.email?.message} {...register("email")} />
         <Input label="Password" type="password" placeholder="••••••••" error={errors.password?.message} {...register("password")} />
         <Input label="Confirm Password" type="password" placeholder="••••••••" error={errors.confirmPassword?.message} {...register("confirmPassword")} />
-        <Input label="Birth Date" type="date" error={errors.birthDate?.message} {...register("birthDate")} />
+        <Input
+          label="Birth Date"
+          type="date"
+          min={dateInputValueYearsAgo(MAX_AGE_YEARS)}
+          max={dateInputValueYearsAgo(MIN_AGE_YEARS)}
+          error={errors.birthDate?.message}
+          {...register("birthDate")}
+        />
         <div className="space-y-1">
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Gender</label>
           <select
@@ -76,7 +88,7 @@ export function RegisterForm() {
           </label>
         </div>
         {errors.acceptPolicy && <p className="text-sm text-red-500">{errors.acceptPolicy.message}</p>}
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button type="submit" disabled={!isValid || isSubmitting} className="w-full">
           {isSubmitting ? "Creating account..." : "Create Account"}
         </Button>
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">

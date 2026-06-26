@@ -1,17 +1,32 @@
 import type { User } from "@/types/user";
 import { mockHashPassword, verifyMockPassword } from "./password";
-import { getUsers, saveUsers, getArtistApplications, saveArtistApplications, STORAGE_KEYS } from "./storage";
+import {
+  getUsers, saveUsers,
+  getArtistApplications, saveArtistApplications,
+  setSessionUserId, clearSessionUserId,
+} from "./storage";
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function createId(prefix: string): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `${prefix}_${crypto.randomUUID()}`;
+  }
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+}
 
 export async function login(email: string, password: string) {
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = normalizeEmail(email);
   const users = getUsers();
-  const user = users.find((candidate) => candidate.email.toLowerCase() === normalizedEmail);
+  const user = users.find((candidate) => normalizeEmail(candidate.email) === normalizedEmail);
 
   if (!user || !verifyMockPassword(password, user.passwordHash)) {
     throw new Error("Invalid email or password");
   }
 
-  localStorage.setItem(STORAGE_KEYS.currentSessionUserId, user.id);
+  setSessionUserId(user.id);
   return { user, role: user.role };
 }
 
@@ -23,18 +38,22 @@ export async function registerListener(data: {
   gender: "male" | "female" | "other" | "unspecified";
 }): Promise<User> {
   const users = getUsers();
-  if (users.some((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
-    throw new Error("An account with this email already exists");
+  const normalizedEmail = normalizeEmail(data.email);
+
+  if (users.some((u) => normalizeEmail(u.email) === normalizedEmail)) {
+    throw new Error("Email already exists");
   }
+
   const username =
     data.displayName.toLowerCase().replace(/[^a-z0-9]/g, "") +
     "_" +
     Math.random().toString(36).slice(2, 6);
+
   const newUser: User = {
-    id: "u" + Date.now(),
-    email: data.email,
+    id: createId("u"),
+    email: normalizedEmail,
     passwordHash: mockHashPassword(data.password),
-    displayName: data.displayName,
+    displayName: data.displayName.trim(),
     username,
     role: "listener",
     birthDate: data.birthDate,
@@ -55,7 +74,7 @@ export async function registerListener(data: {
   };
   users.push(newUser);
   saveUsers(users);
-  localStorage.setItem(STORAGE_KEYS.currentSessionUserId, newUser.id);
+  setSessionUserId(newUser.id);
   return newUser;
 }
 
@@ -65,10 +84,21 @@ export async function registerArtist(data: {
   artistName: string;
   portfolioUrl: string;
 }): Promise<{ pending: true }> {
+  const normalizedEmail = normalizeEmail(data.email);
+
+  const users = getUsers();
+  if (users.some((u) => normalizeEmail(u.email) === normalizedEmail)) {
+    throw new Error("An account with this email already exists");
+  }
+
   const apps = getArtistApplications();
+  if (apps.some((a) => normalizeEmail(a.email) === normalizedEmail && a.status !== "rejected")) {
+    throw new Error("An artist application with this email is already pending or approved");
+  }
+
   apps.push({
-    id: "app" + Date.now(),
-    email: data.email,
+    id: createId("artist_app"),
+    email: normalizedEmail,
     passwordHash: mockHashPassword(data.password),
     artistName: data.artistName,
     portfolioUrl: data.portfolioUrl,
@@ -86,5 +116,5 @@ export async function forgotPassword(_email: string) {
 }
 
 export function logout() {
-  localStorage.removeItem(STORAGE_KEYS.currentSessionUserId);
+  clearSessionUserId();
 }

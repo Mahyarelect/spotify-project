@@ -5,8 +5,14 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const MIN_AGE_YEARS = 13;
-const MAX_AGE_YEARS = 120;
+export const MIN_AGE_YEARS = 13;
+export const MAX_AGE_YEARS = 120;
+
+export function dateInputValueYearsAgo(years: number): string {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - years);
+  return date.toISOString().slice(0, 10);
+}
 
 function parseDateOnly(value: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -73,13 +79,10 @@ export const registerSchema = z
   });
 
 export const artistRegisterSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().trim().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   artistName: z.string().min(2, "Artist name must be at least 2 characters"),
-  portfolioUrl: z
-    .string()
-    .url("Please enter a valid URL")
-    .min(1, "Portfolio URL is required"),
+  portfolioUrl: z.string().trim().min(1, "Portfolio is required").url("Enter a valid URL"),
 });
 
 export const forgotPasswordSchema = z.object({

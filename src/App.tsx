@@ -4,6 +4,7 @@ import { ROUTES } from "@/lib/constants/routes";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoute";
+import { GuestOnlyRoute } from "@/components/routing/GuestOnlyRoute";
 
 import HomePage from "@/pages/HomePage";
 import LoginPage from "@/pages/LoginPage";
@@ -14,6 +15,8 @@ import ProfilePage from "@/pages/ProfilePage";
 import EditProfilePage from "@/pages/EditProfilePage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
+import ArtistDashboardPlaceholder from "@/pages/ArtistDashboardPlaceholder";
+import AdminDashboardPlaceholder from "@/pages/AdminDashboardPlaceholder";
 
 export default function App() {
   return (
@@ -29,14 +32,18 @@ export default function App() {
               <Route path={ROUTES.EDIT_PROFILE} element={<EditProfilePage />} />
               <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
               <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
+              <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPlaceholder />} />
+              <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPlaceholder />} />
             </Route>
           </Route>
 
-          <Route element={<AuthLayout />}>
-            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-            <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-            <Route path={ROUTES.REGISTER_ARTIST} element={<RegisterArtistPage />} />
-            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+          <Route element={<GuestOnlyRoute />}>
+            <Route element={<AuthLayout />}>
+              <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+              <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+              <Route path={ROUTES.REGISTER_ARTIST} element={<RegisterArtistPage />} />
+              <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />

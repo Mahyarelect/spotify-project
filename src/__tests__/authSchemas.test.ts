@@ -20,6 +20,14 @@ describe("birthDateSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects under-13 birth date", () => {
+    const recent = new Date();
+    recent.setFullYear(recent.getFullYear() - 10);
+    const dateStr = recent.toISOString().slice(0, 10);
+    const result = birthDateSchema.safeParse(dateStr);
+    expect(result.success).toBe(false);
+  });
+
   it("accepts valid date for user at least 13 years old", () => {
     const result = birthDateSchema.safeParse("1995-03-15");
     expect(result.success).toBe(true);
