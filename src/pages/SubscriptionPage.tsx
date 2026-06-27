@@ -44,7 +44,7 @@ export default function SubscriptionPage() {
         description={`Current plan: ${user.planTier}${user.planRenewsAt ? ` · Renews ${new Date(user.planRenewsAt).toLocaleDateString()}` : ""}`}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 mb-10">
         {plans.map((plan) => (
           <PlanCard
             key={plan.tier}

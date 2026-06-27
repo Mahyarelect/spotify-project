@@ -20,17 +20,17 @@ export function ProfileCard({
 }) {
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6 space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="w-20 h-20 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center overflow-hidden">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="w-20 h-20 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center overflow-hidden">
           {user.avatarUrl ? (
             <img src={user.avatarUrl} alt={user.displayName} className="w-full h-full object-cover" />
           ) : (
             <UserIcon size={32} className="text-zinc-400" />
           )}
         </div>
-        <div>
+        <div className="break-words">
           <h1 className="text-xl font-bold dark:text-white">{user.displayName}</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">@{user.username}</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 break-all">@{user.username}</p>
           <span
             className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full ${
               user.planTier === "gold"
@@ -62,17 +62,17 @@ export function ProfileCard({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         {viewerIsOwner ? (
-          <button onClick={onEdit} className="px-4 py-2 bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300 dark:hover:bg-zinc-600">
+          <button onClick={onEdit} className="w-full rounded-lg bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600 sm:w-auto">
             Edit Profile
           </button>
         ) : (
           <button
             onClick={isFollowing ? onUnfollow : onFollow}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+            className={`w-full rounded-lg px-4 py-2 text-sm font-medium sm:w-auto ${
               isFollowing
-                ? "bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-600"
+                ? "bg-zinc-200 text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
