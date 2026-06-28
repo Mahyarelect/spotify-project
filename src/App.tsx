@@ -17,6 +17,8 @@ import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
 import ArtistDashboardPlaceholder from "@/pages/ArtistDashboardPlaceholder";
 import AdminDashboardPlaceholder from "@/pages/AdminDashboardPlaceholder";
+import PlaylistsPage from "@/pages/PlaylistsPage";
+import AlbumsPage from "@/pages/AlbumsPage";
 
 export default function App() {
   return (
@@ -32,6 +34,8 @@ export default function App() {
               <Route path={ROUTES.EDIT_PROFILE} element={<EditProfilePage />} />
               <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
               <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
+              <Route path={ROUTES.PLAYLISTS} element={<PlaylistsPage />} />
+              <Route path={ROUTES.ALBUMS} element={<AlbumsPage />} />
               <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPlaceholder />} />
               <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPlaceholder />} />
             </Route>

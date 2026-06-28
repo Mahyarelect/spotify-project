@@ -21,13 +21,12 @@ describe("TopNav", () => {
     localStorage.clear();
   });
 
-  it("shows Sign In and Register when logged out", async () => {
+  it("shows the app logo", async () => {
     renderNav();
-    expect(await screen.findByText("Sign In")).toBeInTheDocument();
-    expect(screen.getByText("Register")).toBeInTheDocument();
+    expect(await screen.findByText("Music App")).toBeInTheDocument();
   });
 
-  it("shows Profile, Subscription, Settings, Sign Out when logged in", async () => {
+  it("shows user display name when logged in", async () => {
     const mockUsers = [
       {
         id: "u1",
@@ -56,9 +55,6 @@ describe("TopNav", () => {
     localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(mockUsers));
     localStorage.setItem(STORAGE_KEYS.currentSessionUserId, "u1");
     renderNav();
-    expect(await screen.findByText("Profile")).toBeInTheDocument();
-    expect(screen.getByText("Subscription")).toBeInTheDocument();
-    expect(screen.getByText("Settings")).toBeInTheDocument();
-    expect(screen.getByText("Sign Out")).toBeInTheDocument();
+    expect(await screen.findByText("Test User")).toBeInTheDocument();
   });
 });

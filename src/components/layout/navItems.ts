@@ -19,3 +19,11 @@ export const privateNavItems: NavItem[] = [
   { label: "Subscription", to: ROUTES.SUBSCRIPTION },
   { label: "Settings", to: ROUTES.SETTINGS },
 ];
+
+export const sidebarNavItems: NavItem[] = [
+  { label: "Home", to: ROUTES.HOME, end: true },
+  { label: "Playlists", to: ROUTES.PLAYLISTS },
+  { label: "Albums & Singles", to: ROUTES.ALBUMS },
+  { label: "Profile", to: ROUTES.PROFILE },
+  { label: "Settings", to: ROUTES.SETTINGS },
+];

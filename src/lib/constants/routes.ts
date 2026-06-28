@@ -15,6 +15,7 @@ export const ROUTES = {
   ARTIST_DASHBOARD: "/artist-dashboard",
   ADMIN_DASHBOARD: "/admin-dashboard",
   PLAYLISTS: "/playlists",
+  ALBUMS: "/albums",
   MUSIC_LIBRARY: "/music",
 } as const;
 
