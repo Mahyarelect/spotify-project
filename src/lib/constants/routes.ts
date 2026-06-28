@@ -16,6 +16,9 @@ export const ROUTES = {
   ADMIN_DASHBOARD: "/admin-dashboard",
   PLAYLISTS: "/playlists",
   ALBUMS: "/albums",
+  ALBUM_DETAIL: "/album/:albumId",
+  ARTIST: "/artist/:artistName",
+  PLAYER: "/player/:songId",
   MUSIC_LIBRARY: "/music",
 } as const;
 

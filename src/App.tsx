@@ -19,6 +19,9 @@ import ArtistDashboardPlaceholder from "@/pages/ArtistDashboardPlaceholder";
 import AdminDashboardPlaceholder from "@/pages/AdminDashboardPlaceholder";
 import PlaylistsPage from "@/pages/PlaylistsPage";
 import AlbumsPage from "@/pages/AlbumsPage";
+import AlbumDetailPage from "@/pages/AlbumDetailPage";
+import ArtistPage from "@/pages/ArtistPage";
+import PlayerPage from "@/pages/PlayerPage";
 
 export default function App() {
   return (
@@ -36,6 +39,9 @@ export default function App() {
               <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
               <Route path={ROUTES.PLAYLISTS} element={<PlaylistsPage />} />
               <Route path={ROUTES.ALBUMS} element={<AlbumsPage />} />
+              <Route path={ROUTES.ALBUM_DETAIL} element={<AlbumDetailPage />} />
+              <Route path={ROUTES.ARTIST} element={<ArtistPage />} />
+              <Route path={ROUTES.PLAYER} element={<PlayerPage />} />
               <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPlaceholder />} />
               <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPlaceholder />} />
             </Route>
