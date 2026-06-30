@@ -14,6 +14,8 @@ export const STORAGE_KEYS = {
   albums: "musicapp_albums",
   playlists: "musicapp_playlists",
   recentlyPlayed: "musicapp_recentlyPlayed",
+  streamCounts: "musicapp_streamCounts",
+  playerPrefs: "musicapp_playerPrefs",
 } as const;
 
 function canUseLocalStorage(): boolean {
@@ -154,4 +156,38 @@ export function addRecentlyPlayed(userId: string, entry: RecentlyPlayed): void {
   const filtered = existing.filter((e) => e.playlistId !== entry.playlistId);
   all[userId] = [entry, ...filtered].slice(0, 10);
   writeJson(STORAGE_KEYS.recentlyPlayed, all);
+}
+
+// ── Stream Counts ──
+
+export function getStreamCount(userId: string, date: string): number {
+  const all = readJson<Record<string, Record<string, number>>>(STORAGE_KEYS.streamCounts, {});
+  return all[userId]?.[date] ?? 0;
+}
+
+export function incrementStreamCount(userId: string, date: string): void {
+  const all = readJson<Record<string, Record<string, number>>>(STORAGE_KEYS.streamCounts, {});
+  if (!all[userId]) all[userId] = {};
+  all[userId][date] = (all[userId][date] ?? 0) + 1;
+  writeJson(STORAGE_KEYS.streamCounts, all);
+}
+
+// ── Player Preferences ──
+
+export interface PlayerPrefs {
+  volume: number;
+  shuffle: boolean;
+  repeatMode: "off" | "all" | "one";
+}
+
+export function getPlayerPrefs(): PlayerPrefs {
+  return readJson<PlayerPrefs>(STORAGE_KEYS.playerPrefs, {
+    volume: 80,
+    shuffle: false,
+    repeatMode: "off",
+  });
+}
+
+export function savePlayerPrefs(prefs: PlayerPrefs): void {
+  writeJson(STORAGE_KEYS.playerPrefs, prefs);
 }

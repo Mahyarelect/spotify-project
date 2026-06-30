@@ -1,13 +1,26 @@
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Play, Music } from "lucide-react";
-import { useMemo } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Music } from "lucide-react";
+import { useMemo, useEffect } from "react";
 import { getSongs } from "@/lib/services/storage";
 import { ROUTES } from "@/lib/constants/routes";
+import { usePlayer } from "@/lib/hooks/usePlayer";
 
 export default function PlayerPage() {
   const { songId } = useParams();
+  const navigate = useNavigate();
   const songs = useMemo(() => getSongs(), []);
   const song = songs.find((s) => s.id === songId);
+  const { currentSong, playSong, expand } = usePlayer();
+
+  useEffect(() => {
+    if (song) {
+      if (!currentSong || currentSong.id !== song.id) {
+        playSong(song, songs);
+      }
+      expand();
+      navigate(ROUTES.HOME, { replace: true });
+    }
+  }, [songId, song, currentSong, playSong, expand, songs, navigate]);
 
   if (!song) {
     return (
@@ -42,14 +55,8 @@ export default function PlayerPage() {
         <p className="text-zinc-400">{song.artistName}</p>
       </div>
 
-      <div className="flex items-center justify-center gap-6">
-        <button className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-black transition hover:bg-green-400">
-          <Play size={24} fill="currentColor" />
-        </button>
-      </div>
-
       <p className="text-xs text-zinc-500">
-        Music player is a placeholder — playback will be implemented in a future phase.
+        Loading player...
       </p>
     </div>
   );

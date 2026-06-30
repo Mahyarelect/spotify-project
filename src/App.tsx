@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/lib/context/AuthContext";
+import { PlayerProvider } from "@/lib/context/PlayerContext";
 import { ROUTES } from "@/lib/constants/routes";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
@@ -27,37 +28,39 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path={ROUTES.HOME} element={<HomePage />} />
+        <PlayerProvider>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path={ROUTES.HOME} element={<HomePage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-              <Route path={ROUTES.PROFILE_BY_USERNAME} element={<ProfilePage />} />
-              <Route path={ROUTES.EDIT_PROFILE} element={<EditProfilePage />} />
-              <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
-              <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
-              <Route path={ROUTES.PLAYLISTS} element={<PlaylistsPage />} />
-              <Route path={ROUTES.ALBUMS} element={<AlbumsPage />} />
-              <Route path={ROUTES.ALBUM_DETAIL} element={<AlbumDetailPage />} />
-              <Route path={ROUTES.ARTIST} element={<ArtistPage />} />
-              <Route path={ROUTES.PLAYER} element={<PlayerPage />} />
-              <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPlaceholder />} />
-              <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPlaceholder />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+                <Route path={ROUTES.PROFILE_BY_USERNAME} element={<ProfilePage />} />
+                <Route path={ROUTES.EDIT_PROFILE} element={<EditProfilePage />} />
+                <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+                <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
+                <Route path={ROUTES.PLAYLISTS} element={<PlaylistsPage />} />
+                <Route path={ROUTES.ALBUMS} element={<AlbumsPage />} />
+                <Route path={ROUTES.ALBUM_DETAIL} element={<AlbumDetailPage />} />
+                <Route path={ROUTES.ARTIST} element={<ArtistPage />} />
+                <Route path={ROUTES.PLAYER} element={<PlayerPage />} />
+                <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPlaceholder />} />
+                <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPlaceholder />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route element={<GuestOnlyRoute />}>
-            <Route element={<AuthLayout />}>
-              <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-              <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-              <Route path={ROUTES.REGISTER_ARTIST} element={<RegisterArtistPage />} />
-              <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+            <Route element={<GuestOnlyRoute />}>
+              <Route element={<AuthLayout />}>
+                <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+                <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+                <Route path={ROUTES.REGISTER_ARTIST} element={<RegisterArtistPage />} />
+                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
+          </Routes>
+        </PlayerProvider>
       </BrowserRouter>
     </AuthProvider>
   );

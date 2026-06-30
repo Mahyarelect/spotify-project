@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { Play, Music } from "lucide-react";
+import { Play, Music, Pause } from "lucide-react";
 import type { Song, Playlist } from "@/types/music";
 import { AddToPlaylistMenu } from "./AddToPlaylistMenu";
+import { usePlayer } from "@/lib/hooks/usePlayer";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -22,28 +23,54 @@ export function SingleCard({
   onAddToPlaylist: (playlistId: string, songId: string) => void;
   onRemoveFromPlaylist: (playlistId: string, songId: string) => void;
 }) {
+  const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
+  const isActive = currentSong?.id === song.id;
+
+  const handlePlay = () => {
+    if (isActive) {
+      togglePlay();
+    } else {
+      playSong(song);
+    }
+  };
+
   return (
-    <div className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 transition hover:border-zinc-700 hover:bg-zinc-800/60 sm:gap-4 sm:px-4 sm:py-3">
-      <Link
-        to={`/player/${song.id}`}
+    <div
+      className={`group flex items-center gap-3 rounded-lg border px-3 py-2.5 transition sm:gap-4 sm:px-4 sm:py-3 ${
+        isActive
+          ? "border-zinc-700 bg-zinc-800/60"
+          : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-800/60"
+      }`}
+    >
+      <button
+        onClick={handlePlay}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded sm:h-11 sm:w-11"
         style={{ backgroundColor: song.coverColor }}
+        aria-label={isActive && isPlaying ? "Pause" : `Play ${song.title}`}
       >
-        <Music size={16} className="text-white/60 group-hover:hidden" />
-        <Play
-          size={16}
-          className="hidden text-white group-hover:block"
-          fill="currentColor"
-        />
-      </Link>
+        {isActive && isPlaying ? (
+          <Pause size={16} className="text-white" fill="currentColor" />
+        ) : (
+          <>
+            <Music size={16} className="text-white/60 group-hover:hidden" />
+            <Play
+              size={16}
+              className="hidden text-white group-hover:block"
+              fill="currentColor"
+            />
+          </>
+        )}
+      </button>
 
       <div className="min-w-0 flex-1">
-        <Link
-          to={`/player/${song.id}`}
-          className="block truncate text-sm font-medium text-zinc-100 hover:text-green-400 hover:underline"
+        <button
+          onClick={handlePlay}
+          className={`block truncate text-left text-sm font-medium hover:underline ${
+            isActive ? "text-green-400" : "text-zinc-100 hover:text-green-400"
+          }`}
         >
           {song.title}
-        </Link>
+        </button>
         <p className="truncate text-xs text-zinc-400">
           <Link
             to={`/artist/${encodeURIComponent(song.artistName)}`}

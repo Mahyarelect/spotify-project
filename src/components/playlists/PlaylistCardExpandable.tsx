@@ -5,12 +5,14 @@ import {
   ChevronUp,
   Music,
   Play,
+  Pause,
   Pencil,
   Trash2,
   X,
   Check,
 } from "lucide-react";
 import type { Playlist, Song } from "@/types/music";
+import { usePlayer } from "@/lib/hooks/usePlayer";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -35,13 +37,25 @@ export function PlaylistCardExpandable({
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(playlist.title);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
 
   const playlistSongs = songs.filter((s) => playlist.songIds.includes(s.id));
+  const isPlaylistPlaying =
+    currentSong && playlistSongs.some((s) => s.id === currentSong.id) && isPlaying;
 
   const handleSaveRename = () => {
     if (editTitle.trim()) {
       onRename(editTitle.trim());
       setEditing(false);
+    }
+  };
+
+  const handlePlayAll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPlaylistPlaying) {
+      togglePlay();
+    } else if (playlistSongs.length > 0) {
+      playSong(playlistSongs[0], playlistSongs);
     }
   };
 
@@ -106,6 +120,15 @@ export function PlaylistCardExpandable({
         </div>
 
         <div className="flex items-center gap-1">
+          {playlistSongs.length > 0 && (
+            <button
+              onClick={handlePlayAll}
+              className="rounded-full p-2 text-green-400 transition hover:bg-zinc-700"
+              aria-label={isPlaylistPlaying ? "Pause playlist" : "Play playlist"}
+            >
+              {isPlaylistPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
+            </button>
+          )}
           {!editing && (
             <>
               <button
@@ -178,55 +201,84 @@ export function PlaylistCardExpandable({
               to add songs.
             </p>
           ) : (
-            playlistSongs.map((song, i) => (
-              <div
-                key={song.id}
-                className="group flex items-center gap-3 px-4 py-2.5 transition hover:bg-zinc-800/40 sm:gap-4"
-              >
-                <div className="flex w-6 items-center justify-center sm:w-8">
-                  <span className="text-xs text-zinc-500 group-hover:hidden">
-                    {i + 1}
+            playlistSongs.map((song, i) => {
+              const isActive = currentSong?.id === song.id;
+              return (
+                <div
+                  key={song.id}
+                  className={`group flex items-center gap-3 px-4 py-2.5 transition hover:bg-zinc-800/40 sm:gap-4 ${
+                    isActive ? "bg-zinc-800/30" : ""
+                  }`}
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isActive) {
+                        togglePlay();
+                      } else {
+                        playSong(song, playlistSongs);
+                      }
+                    }}
+                    className="flex w-6 items-center justify-center sm:w-8"
+                    aria-label={isActive && isPlaying ? "Pause" : `Play ${song.title}`}
+                  >
+                    {isActive && isPlaying ? (
+                      <Pause size={14} className="text-green-400" fill="currentColor" />
+                    ) : (
+                      <>
+                        <span
+                          className={`text-xs group-hover:hidden ${
+                            isActive ? "text-green-400" : "text-zinc-500"
+                          }`}
+                        >
+                          {i + 1}
+                        </span>
+                        <Play
+                          size={14}
+                          className="hidden text-green-400 group-hover:block"
+                          fill="currentColor"
+                        />
+                      </>
+                    )}
+                  </button>
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded sm:h-10 sm:w-10"
+                    style={{ backgroundColor: song.coverColor }}
+                  >
+                    <Music size={14} className="text-white/60" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={`block truncate text-sm font-medium ${
+                        isActive ? "text-green-400" : "text-zinc-100"
+                      }`}
+                    >
+                      {song.title}
+                    </p>
+                    <Link
+                      to={`/artist/${encodeURIComponent(song.artistName)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="block truncate text-xs text-zinc-400 hover:text-green-400 hover:underline"
+                    >
+                      {song.artistName}
+                    </Link>
+                  </div>
+                  <span className="hidden text-xs text-zinc-500 sm:block">
+                    {formatDuration(song.durationSec)}
                   </span>
-                  <Link to={`/player/${song.id}`}>
-                    <Play
-                      size={14}
-                      className="hidden text-green-400 group-hover:block"
-                    />
-                  </Link>
-                </div>
-                <Link
-                  to={`/player/${song.id}`}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded sm:h-10 sm:w-10"
-                  style={{ backgroundColor: song.coverColor }}
-                >
-                  <Music size={14} className="text-white/60" />
-                </Link>
-                <div className="min-w-0 flex-1">
-                  <Link
-                    to={`/player/${song.id}`}
-                    className="block truncate text-sm font-medium text-zinc-100 hover:text-green-400 hover:underline"
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveSong(song.id);
+                    }}
+                    className="rounded-full p-1 text-zinc-500 opacity-0 transition hover:bg-zinc-700 hover:text-red-400 group-hover:opacity-100"
+                    title="Remove from playlist"
                   >
-                    {song.title}
-                  </Link>
-                  <Link
-                    to={`/artist/${encodeURIComponent(song.artistName)}`}
-                    className="block truncate text-xs text-zinc-400 hover:text-green-400 hover:underline"
-                  >
-                    {song.artistName}
-                  </Link>
+                    <X size={14} />
+                  </button>
                 </div>
-                <span className="hidden text-xs text-zinc-500 sm:block">
-                  {formatDuration(song.durationSec)}
-                </span>
-                <button
-                  onClick={() => onRemoveSong(song.id)}
-                  className="rounded-full p-1 text-zinc-500 opacity-0 transition hover:bg-zinc-700 hover:text-red-400 group-hover:opacity-100"
-                  title="Remove from playlist"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}

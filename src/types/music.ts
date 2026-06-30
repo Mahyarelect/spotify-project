@@ -2,10 +2,13 @@ export interface Song {
   id: string;
   title: string;
   artistName: string;
+  artistId?: string;
   albumId: string;
   durationSec: number;
   coverColor: string;
+  coverImage?: string;
   playCount: number;
+  lyrics?: string;
 }
 
 export interface Album {

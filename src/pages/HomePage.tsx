@@ -110,7 +110,7 @@ export default function HomePage() {
         <SectionHeading title="Popular Songs" />
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
           {popularSongs.map((song, i) => (
-            <SongRow key={song.id} song={song} index={i} />
+            <SongRow key={song.id} song={song} index={i} queue={popularSongs} />
           ))}
         </div>
       </section>
