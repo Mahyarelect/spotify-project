@@ -156,7 +156,12 @@ export default function AlbumDetailPage() {
                 >
                   {song.title}
                 </p>
-                <p className="truncate text-xs text-zinc-400">{song.artistName}</p>
+                <Link
+                  to={`/artist/${encodeURIComponent(song.artistName)}`}
+                  className="block truncate text-xs text-zinc-400 hover:text-green-400 hover:underline"
+                >
+                  {song.artistName}
+                </Link>
               </div>
               <span className="text-xs text-zinc-500">
                 {formatDuration(song.durationSec)}
