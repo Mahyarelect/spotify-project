@@ -5,6 +5,7 @@ import {
   getArtistApplications, saveArtistApplications,
   setSessionUserId, clearSessionUserId,
 } from "./storage";
+import { notifyArtistVerification } from "./notificationService";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -106,6 +107,7 @@ export async function registerArtist(data: {
     submittedAt: new Date().toISOString(),
   });
   saveArtistApplications(apps);
+  notifyArtistVerification(apps[apps.length - 1].id, data.artistName);
   return { pending: true };
 }
 

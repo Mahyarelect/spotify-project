@@ -9,6 +9,7 @@ import {
 import type { User } from "@/types/user";
 import * as authService from "@/lib/services/authService";
 import * as userService from "@/lib/services/userService";
+import { notifySubscriptionExpiry } from "@/lib/services/notificationService";
 
 interface AuthContextType {
   user: User | null;
@@ -35,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const u = await userService.getCurrentUser();
     setUser(u);
     setLoading(false);
+    if (u?.planRenewsAt && u.planTier !== "free") {
+      notifySubscriptionExpiry(u.id, u.planTier, u.planRenewsAt);
+    }
   }, []);
 
   useEffect(() => {
@@ -44,6 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const { user: u, role } = await authService.login(email, password);
     setUser(u);
+    if (u.planRenewsAt && u.planTier !== "free") {
+      notifySubscriptionExpiry(u.id, u.planTier, u.planRenewsAt);
+    }
     return { role };
   };
 

@@ -4,6 +4,7 @@ import { MOCK_SONGS, MOCK_ALBUMS, MOCK_PLAYLISTS } from "@/lib/mockData/music";
 import type { User, ArtistApplication } from "@/types/user";
 import type { PlanLimits } from "@/types/subscription";
 import type { Song, Album, Playlist, RecentlyPlayed } from "@/types/music";
+import type { Notification } from "@/types/notification";
 
 export const STORAGE_KEYS = {
   users: "musicapp_users",
@@ -16,6 +17,7 @@ export const STORAGE_KEYS = {
   recentlyPlayed: "musicapp_recentlyPlayed",
   streamCounts: "musicapp_streamCounts",
   playerPrefs: "musicapp_playerPrefs",
+  notifications: "musicapp_notifications",
 } as const;
 
 function canUseLocalStorage(): boolean {
@@ -190,4 +192,21 @@ export function getPlayerPrefs(): PlayerPrefs {
 
 export function savePlayerPrefs(prefs: PlayerPrefs): void {
   writeJson(STORAGE_KEYS.playerPrefs, prefs);
+}
+
+// ── Notifications ──
+
+export function getNotifications(userId: string): Notification[] {
+  const all = readJson<Record<string, Notification[]>>(STORAGE_KEYS.notifications, {});
+  return all[userId] ?? [];
+}
+
+export function saveNotifications(userId: string, notifications: Notification[]): void {
+  const all = readJson<Record<string, Notification[]>>(STORAGE_KEYS.notifications, {});
+  all[userId] = notifications;
+  writeJson(STORAGE_KEYS.notifications, all);
+}
+
+export function getAllNotifications(): Record<string, Notification[]> {
+  return readJson<Record<string, Notification[]>>(STORAGE_KEYS.notifications, {});
 }

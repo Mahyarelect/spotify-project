@@ -1,0 +1,554 @@
+digraph G {
+  rankdir=LR;
+  node [shape=box, style=filled, fontname="Arial", fontsize=9];
+  edge [color="#666666", arrowsize=0.6];
+  compound=true;
+
+  subgraph cluster_root {
+    label="root";
+    style=filled;
+    color="#e5e7eb40";
+    fillcolor="#e5e7eb15";
+    "App.tsx" [fillcolor="#e5e7eb"];
+    "index.css" [fillcolor="#e5e7eb"];
+    "main.tsx" [fillcolor="#e5e7eb"];
+    "test-setup.ts" [fillcolor="#e5e7eb"];
+  }
+
+  subgraph cluster_tests {
+    label="tests";
+    style=filled;
+    color="#d1d5db40";
+    fillcolor="#d1d5db15";
+    "__tests__/GuestOnlyRoute.test.tsx" [fillcolor="#d1d5db"];
+    "__tests__/ProtectedRoute.test.tsx" [fillcolor="#d1d5db"];
+    "__tests__/TopNav.test.tsx" [fillcolor="#d1d5db"];
+    "__tests__/authSchemas.test.ts" [fillcolor="#d1d5db"];
+    "__tests__/authService.test.ts" [fillcolor="#d1d5db"];
+    "__tests__/notificationService.test.ts" [fillcolor="#d1d5db"];
+    "__tests__/password.test.ts" [fillcolor="#d1d5db"];
+    "__tests__/playerContext.test.tsx" [fillcolor="#d1d5db"];
+    "__tests__/storage.test.ts" [fillcolor="#d1d5db"];
+    "__tests__/streamService.test.ts" [fillcolor="#d1d5db"];
+    "__tests__/subscription.test.ts" [fillcolor="#d1d5db"];
+    "__tests__/userService.test.ts" [fillcolor="#d1d5db"];
+  }
+
+  subgraph cluster_albums {
+    label="albums";
+    style=filled;
+    color="#22d3ee40";
+    fillcolor="#22d3ee15";
+    "components/albums/AddToPlaylistMenu.tsx" [fillcolor="#22d3ee"];
+    "components/albums/AlbumCardArchive.tsx" [fillcolor="#22d3ee"];
+    "components/albums/FilterSortBar.tsx" [fillcolor="#22d3ee"];
+    "components/albums/SearchBar.tsx" [fillcolor="#22d3ee"];
+    "components/albums/SingleCard.tsx" [fillcolor="#22d3ee"];
+  }
+
+  subgraph cluster_auth {
+    label="auth";
+    style=filled;
+    color="#fb718540";
+    fillcolor="#fb718515";
+    "components/auth/ArtistRegisterForm.tsx" [fillcolor="#fb7185"];
+    "components/auth/ForgotPasswordForm.tsx" [fillcolor="#fb7185"];
+    "components/auth/LoginForm.tsx" [fillcolor="#fb7185"];
+    "components/auth/RegisterForm.tsx" [fillcolor="#fb7185"];
+  }
+
+  subgraph cluster_home {
+    label="home";
+    style=filled;
+    color="#4ade8040";
+    fillcolor="#4ade8015";
+    "components/home/AlbumCard.tsx" [fillcolor="#4ade80"];
+    "components/home/EarlyAccessBanner.tsx" [fillcolor="#4ade80"];
+    "components/home/HorizontalCardScroller.tsx" [fillcolor="#4ade80"];
+    "components/home/PlaylistCard.tsx" [fillcolor="#4ade80"];
+    "components/home/SectionHeading.tsx" [fillcolor="#4ade80"];
+    "components/home/SongRow.tsx" [fillcolor="#4ade80"];
+  }
+
+  subgraph cluster_layout {
+    label="layout";
+    style=filled;
+    color="#facc1540";
+    fillcolor="#facc1515";
+    "components/layout/AppLayout.tsx" [fillcolor="#facc15"];
+    "components/layout/AuthLayout.tsx" [fillcolor="#facc15"];
+    "components/layout/PageHeader.tsx" [fillcolor="#facc15"];
+    "components/layout/PageShell.tsx" [fillcolor="#facc15"];
+    "components/layout/Sidebar.tsx" [fillcolor="#facc15"];
+    "components/layout/TopNav.tsx" [fillcolor="#facc15"];
+    "components/layout/navItems.ts" [fillcolor="#facc15"];
+  }
+
+  subgraph cluster_notifications {
+    label="notifications";
+    style=filled;
+    color="#f472b640";
+    fillcolor="#f472b615";
+    "components/notifications/EmptyNotificationsState.tsx" [fillcolor="#f472b6"];
+    "components/notifications/NotificationCard.tsx" [fillcolor="#f472b6"];
+    "components/notifications/NotificationList.tsx" [fillcolor="#f472b6"];
+  }
+
+  subgraph cluster_player {
+    label="player";
+    style=filled;
+    color="#34d39940";
+    fillcolor="#34d39915";
+    "components/player/PlayerBar.tsx" [fillcolor="#34d399"];
+    "components/player/PlayerOverlay.tsx" [fillcolor="#34d399"];
+    "components/player/QueueItem.tsx" [fillcolor="#34d399"];
+    "components/player/QueuePanel.tsx" [fillcolor="#34d399"];
+    "components/player/controls/PlayPauseButton.tsx" [fillcolor="#34d399"];
+    "components/player/controls/ProgressBar.tsx" [fillcolor="#34d399"];
+    "components/player/controls/RepeatButton.tsx" [fillcolor="#34d399"];
+    "components/player/controls/ShuffleButton.tsx" [fillcolor="#34d399"];
+    "components/player/controls/SkipButton.tsx" [fillcolor="#34d399"];
+    "components/player/controls/VolumeControl.tsx" [fillcolor="#34d399"];
+  }
+
+  subgraph cluster_playlists {
+    label="playlists";
+    style=filled;
+    color="#818cf840";
+    fillcolor="#818cf815";
+    "components/playlists/CreatePlaylistModal.tsx" [fillcolor="#818cf8"];
+    "components/playlists/EmptyPlaylistState.tsx" [fillcolor="#818cf8"];
+    "components/playlists/PlaylistCardExpandable.tsx" [fillcolor="#818cf8"];
+  }
+
+  subgraph cluster_profile {
+    label="profile";
+    style=filled;
+    color="#f472b640";
+    fillcolor="#f472b615";
+    "components/profile/AvatarUploader.tsx" [fillcolor="#f472b6"];
+    "components/profile/EditProfileForm.tsx" [fillcolor="#f472b6"];
+    "components/profile/FollowButton.tsx" [fillcolor="#f472b6"];
+    "components/profile/ProfileCard.tsx" [fillcolor="#f472b6"];
+  }
+
+  subgraph cluster_routing {
+    label="routing";
+    style=filled;
+    color="#2dd4bf40";
+    fillcolor="#2dd4bf15";
+    "components/routing/GuestOnlyRoute.tsx" [fillcolor="#2dd4bf"];
+    "components/routing/ProtectedRoute.tsx" [fillcolor="#2dd4bf"];
+  }
+
+  subgraph cluster_settings {
+    label="settings";
+    style=filled;
+    color="#a3e63540";
+    fillcolor="#a3e63515";
+    "components/settings/DeleteAccountDialog.tsx" [fillcolor="#a3e635"];
+    "components/settings/LanguageSettings.tsx" [fillcolor="#a3e635"];
+    "components/settings/NotificationSettings.tsx" [fillcolor="#a3e635"];
+    "components/settings/SoundSettings.tsx" [fillcolor="#a3e635"];
+  }
+
+  subgraph cluster_subscription {
+    label="subscription";
+    style=filled;
+    color="#fbbf2440";
+    fillcolor="#fbbf2415";
+    "components/subscription/LimitBadge.tsx" [fillcolor="#fbbf24"];
+    "components/subscription/PlanCard.tsx" [fillcolor="#fbbf24"];
+    "components/subscription/PlanComparisonTable.tsx" [fillcolor="#fbbf24"];
+    "components/subscription/UpgradeModal.tsx" [fillcolor="#fbbf24"];
+  }
+
+  subgraph cluster_ui {
+    label="ui";
+    style=filled;
+    color="#c084fc40";
+    fillcolor="#c084fc15";
+    "components/ui/Button.tsx" [fillcolor="#c084fc"];
+    "components/ui/Input.tsx" [fillcolor="#c084fc"];
+    "components/ui/Modal.tsx" [fillcolor="#c084fc"];
+    "components/ui/RoleGuard.tsx" [fillcolor="#c084fc"];
+  }
+
+  subgraph cluster_constants {
+    label="constants";
+    style=filled;
+    color="#a78bfa40";
+    fillcolor="#a78bfa15";
+    "lib/constants/plans.ts" [fillcolor="#a78bfa"];
+    "lib/constants/roles.ts" [fillcolor="#a78bfa"];
+    "lib/constants/routes.ts" [fillcolor="#a78bfa"];
+  }
+
+  subgraph cluster_context {
+    label="context";
+    style=filled;
+    color="#f9731640";
+    fillcolor="#f9731615";
+    "lib/context/AuthContext.tsx" [fillcolor="#f97316"];
+    "lib/context/PlayerContext.tsx" [fillcolor="#f97316"];
+  }
+
+  subgraph cluster_hooks {
+    label="hooks";
+    style=filled;
+    color="#fb923c40";
+    fillcolor="#fb923c15";
+    "lib/hooks/useAuth.ts" [fillcolor="#fb923c"];
+    "lib/hooks/usePlayer.ts" [fillcolor="#fb923c"];
+    "lib/hooks/useSubscriptionLimits.ts" [fillcolor="#fb923c"];
+  }
+
+  subgraph cluster_mockdata {
+    label="mockdata";
+    style=filled;
+    color="#94a3b840";
+    fillcolor="#94a3b815";
+    "lib/mockData/music.ts" [fillcolor="#94a3b8"];
+    "lib/mockData/plans.ts" [fillcolor="#94a3b8"];
+    "lib/mockData/users.ts" [fillcolor="#94a3b8"];
+  }
+
+  subgraph cluster_services {
+    label="services";
+    style=filled;
+    color="#f43f5e40";
+    fillcolor="#f43f5e15";
+    "lib/services/authService.ts" [fillcolor="#f43f5e"];
+    "lib/services/notificationService.ts" [fillcolor="#f43f5e"];
+    "lib/services/password.ts" [fillcolor="#f43f5e"];
+    "lib/services/playlistService.ts" [fillcolor="#f43f5e"];
+    "lib/services/settingsService.ts" [fillcolor="#f43f5e"];
+    "lib/services/storage.ts" [fillcolor="#f43f5e"];
+    "lib/services/streamService.ts" [fillcolor="#f43f5e"];
+    "lib/services/subscriptionService.ts" [fillcolor="#f43f5e"];
+    "lib/services/userService.ts" [fillcolor="#f43f5e"];
+  }
+
+  subgraph cluster_validation {
+    label="validation";
+    style=filled;
+    color="#e879f940";
+    fillcolor="#e879f915";
+    "lib/validation/authSchemas.ts" [fillcolor="#e879f9"];
+    "lib/validation/profileSchemas.ts" [fillcolor="#e879f9"];
+  }
+
+  subgraph cluster_pages {
+    label="pages";
+    style=filled;
+    color="#38bdf840";
+    fillcolor="#38bdf815";
+    "pages/AdminDashboardPlaceholder.tsx" [fillcolor="#38bdf8"];
+    "pages/AlbumDetailPage.tsx" [fillcolor="#38bdf8"];
+    "pages/AlbumsPage.tsx" [fillcolor="#38bdf8"];
+    "pages/ArtistDashboardPlaceholder.tsx" [fillcolor="#38bdf8"];
+    "pages/ArtistPage.tsx" [fillcolor="#38bdf8"];
+    "pages/EditProfilePage.tsx" [fillcolor="#38bdf8"];
+    "pages/ForgotPasswordPage.tsx" [fillcolor="#38bdf8"];
+    "pages/HomePage.tsx" [fillcolor="#38bdf8"];
+    "pages/LoginPage.tsx" [fillcolor="#38bdf8"];
+    "pages/NotificationsPage.tsx" [fillcolor="#38bdf8"];
+    "pages/PlayerPage.tsx" [fillcolor="#38bdf8"];
+    "pages/PlaylistsPage.tsx" [fillcolor="#38bdf8"];
+    "pages/ProfilePage.tsx" [fillcolor="#38bdf8"];
+    "pages/RegisterArtistPage.tsx" [fillcolor="#38bdf8"];
+    "pages/RegisterPage.tsx" [fillcolor="#38bdf8"];
+    "pages/SettingsPage.tsx" [fillcolor="#38bdf8"];
+    "pages/SubscriptionPage.tsx" [fillcolor="#38bdf8"];
+  }
+
+  subgraph cluster_types {
+    label="types";
+    style=filled;
+    color="#60a5fa40";
+    fillcolor="#60a5fa15";
+    "types/music.ts" [fillcolor="#60a5fa"];
+    "types/notification.ts" [fillcolor="#60a5fa"];
+    "types/subscription.ts" [fillcolor="#60a5fa"];
+    "types/user.ts" [fillcolor="#60a5fa"];
+  }
+
+  "App.tsx" -> "components/layout/AppLayout.tsx";
+  "App.tsx" -> "components/layout/AuthLayout.tsx";
+  "App.tsx" -> "components/routing/GuestOnlyRoute.tsx";
+  "App.tsx" -> "components/routing/ProtectedRoute.tsx";
+  "App.tsx" -> "lib/constants/routes.ts";
+  "App.tsx" -> "lib/context/AuthContext.tsx";
+  "App.tsx" -> "lib/context/PlayerContext.tsx";
+  "App.tsx" -> "pages/AdminDashboardPlaceholder.tsx";
+  "App.tsx" -> "pages/AlbumDetailPage.tsx";
+  "App.tsx" -> "pages/AlbumsPage.tsx";
+  "App.tsx" -> "pages/ArtistDashboardPlaceholder.tsx";
+  "App.tsx" -> "pages/ArtistPage.tsx";
+  "App.tsx" -> "pages/EditProfilePage.tsx";
+  "App.tsx" -> "pages/ForgotPasswordPage.tsx";
+  "App.tsx" -> "pages/HomePage.tsx";
+  "App.tsx" -> "pages/LoginPage.tsx";
+  "App.tsx" -> "pages/NotificationsPage.tsx";
+  "App.tsx" -> "pages/PlayerPage.tsx";
+  "App.tsx" -> "pages/PlaylistsPage.tsx";
+  "App.tsx" -> "pages/ProfilePage.tsx";
+  "App.tsx" -> "pages/RegisterArtistPage.tsx";
+  "App.tsx" -> "pages/RegisterPage.tsx";
+  "App.tsx" -> "pages/SettingsPage.tsx";
+  "App.tsx" -> "pages/SubscriptionPage.tsx";
+  "__tests__/GuestOnlyRoute.test.tsx" -> "components/routing/GuestOnlyRoute.tsx";
+  "__tests__/GuestOnlyRoute.test.tsx" -> "lib/context/AuthContext.tsx";
+  "__tests__/GuestOnlyRoute.test.tsx" -> "lib/services/password.ts";
+  "__tests__/GuestOnlyRoute.test.tsx" -> "lib/services/storage.ts";
+  "__tests__/ProtectedRoute.test.tsx" -> "components/routing/ProtectedRoute.tsx";
+  "__tests__/ProtectedRoute.test.tsx" -> "lib/context/AuthContext.tsx";
+  "__tests__/ProtectedRoute.test.tsx" -> "lib/services/storage.ts";
+  "__tests__/TopNav.test.tsx" -> "components/layout/TopNav.tsx";
+  "__tests__/TopNav.test.tsx" -> "lib/context/AuthContext.tsx";
+  "__tests__/TopNav.test.tsx" -> "lib/services/password.ts";
+  "__tests__/TopNav.test.tsx" -> "lib/services/storage.ts";
+  "__tests__/authSchemas.test.ts" -> "lib/validation/authSchemas.ts";
+  "__tests__/authService.test.ts" -> "lib/services/authService.ts";
+  "__tests__/authService.test.ts" -> "lib/services/storage.ts";
+  "__tests__/notificationService.test.ts" -> "lib/services/notificationService.ts";
+  "__tests__/password.test.ts" -> "lib/services/password.ts";
+  "__tests__/playerContext.test.tsx" -> "lib/context/AuthContext.tsx";
+  "__tests__/playerContext.test.tsx" -> "lib/context/PlayerContext.tsx";
+  "__tests__/playerContext.test.tsx" -> "lib/hooks/useAuth.ts";
+  "__tests__/playerContext.test.tsx" -> "lib/services/storage.ts";
+  "__tests__/playerContext.test.tsx" -> "types/music.ts";
+  "__tests__/storage.test.ts" -> "lib/services/storage.ts";
+  "__tests__/streamService.test.ts" -> "lib/services/storage.ts";
+  "__tests__/streamService.test.ts" -> "lib/services/streamService.ts";
+  "__tests__/subscription.test.ts" -> "lib/services/password.ts";
+  "__tests__/subscription.test.ts" -> "lib/services/storage.ts";
+  "__tests__/subscription.test.ts" -> "lib/services/userService.ts";
+  "__tests__/userService.test.ts" -> "lib/services/storage.ts";
+  "__tests__/userService.test.ts" -> "lib/services/userService.ts";
+  "components/albums/AddToPlaylistMenu.tsx" -> "types/music.ts";
+  "components/albums/AlbumCardArchive.tsx" -> "types/music.ts";
+  "components/albums/SingleCard.tsx" -> "components/albums/AddToPlaylistMenu.tsx";
+  "components/albums/SingleCard.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/albums/SingleCard.tsx" -> "types/music.ts";
+  "components/auth/ArtistRegisterForm.tsx" -> "components/ui/Button.tsx";
+  "components/auth/ArtistRegisterForm.tsx" -> "components/ui/Input.tsx";
+  "components/auth/ArtistRegisterForm.tsx" -> "lib/services/authService.ts";
+  "components/auth/ArtistRegisterForm.tsx" -> "lib/validation/authSchemas.ts";
+  "components/auth/ForgotPasswordForm.tsx" -> "components/ui/Button.tsx";
+  "components/auth/ForgotPasswordForm.tsx" -> "components/ui/Input.tsx";
+  "components/auth/ForgotPasswordForm.tsx" -> "lib/services/authService.ts";
+  "components/auth/ForgotPasswordForm.tsx" -> "lib/validation/authSchemas.ts";
+  "components/auth/LoginForm.tsx" -> "components/ui/Button.tsx";
+  "components/auth/LoginForm.tsx" -> "components/ui/Input.tsx";
+  "components/auth/LoginForm.tsx" -> "lib/constants/routes.ts";
+  "components/auth/LoginForm.tsx" -> "lib/hooks/useAuth.ts";
+  "components/auth/LoginForm.tsx" -> "lib/validation/authSchemas.ts";
+  "components/auth/RegisterForm.tsx" -> "components/ui/Button.tsx";
+  "components/auth/RegisterForm.tsx" -> "components/ui/Input.tsx";
+  "components/auth/RegisterForm.tsx" -> "components/ui/Modal.tsx";
+  "components/auth/RegisterForm.tsx" -> "lib/constants/routes.ts";
+  "components/auth/RegisterForm.tsx" -> "lib/hooks/useAuth.ts";
+  "components/auth/RegisterForm.tsx" -> "lib/validation/authSchemas.ts";
+  "components/home/AlbumCard.tsx" -> "types/music.ts";
+  "components/home/EarlyAccessBanner.tsx" -> "components/home/AlbumCard.tsx";
+  "components/home/EarlyAccessBanner.tsx" -> "lib/constants/routes.ts";
+  "components/home/EarlyAccessBanner.tsx" -> "lib/hooks/useAuth.ts";
+  "components/home/EarlyAccessBanner.tsx" -> "types/music.ts";
+  "components/home/PlaylistCard.tsx" -> "types/music.ts";
+  "components/home/SongRow.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/home/SongRow.tsx" -> "types/music.ts";
+  "components/layout/AppLayout.tsx" -> "components/layout/Sidebar.tsx";
+  "components/layout/AppLayout.tsx" -> "components/layout/TopNav.tsx";
+  "components/layout/AppLayout.tsx" -> "components/player/PlayerBar.tsx";
+  "components/layout/AppLayout.tsx" -> "components/player/PlayerOverlay.tsx";
+  "components/layout/AppLayout.tsx" -> "lib/hooks/useAuth.ts";
+  "components/layout/AppLayout.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/layout/AuthLayout.tsx" -> "lib/constants/routes.ts";
+  "components/layout/Sidebar.tsx" -> "lib/constants/routes.ts";
+  "components/layout/TopNav.tsx" -> "components/layout/navItems.ts";
+  "components/layout/TopNav.tsx" -> "lib/constants/routes.ts";
+  "components/layout/TopNav.tsx" -> "lib/hooks/useAuth.ts";
+  "components/layout/TopNav.tsx" -> "lib/services/notificationService.ts";
+  "components/layout/navItems.ts" -> "lib/constants/routes.ts";
+  "components/notifications/NotificationCard.tsx" -> "types/notification.ts";
+  "components/notifications/NotificationList.tsx" -> "components/notifications/NotificationCard.tsx";
+  "components/notifications/NotificationList.tsx" -> "types/notification.ts";
+  "components/player/PlayerBar.tsx" -> "components/player/controls/PlayPauseButton.tsx";
+  "components/player/PlayerBar.tsx" -> "components/player/controls/ProgressBar.tsx";
+  "components/player/PlayerBar.tsx" -> "components/player/controls/RepeatButton.tsx";
+  "components/player/PlayerBar.tsx" -> "components/player/controls/ShuffleButton.tsx";
+  "components/player/PlayerBar.tsx" -> "components/player/controls/SkipButton.tsx";
+  "components/player/PlayerBar.tsx" -> "components/player/controls/VolumeControl.tsx";
+  "components/player/PlayerBar.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/player/PlayerOverlay.tsx" -> "components/player/QueuePanel.tsx";
+  "components/player/PlayerOverlay.tsx" -> "components/player/controls/PlayPauseButton.tsx";
+  "components/player/PlayerOverlay.tsx" -> "components/player/controls/ProgressBar.tsx";
+  "components/player/PlayerOverlay.tsx" -> "components/player/controls/RepeatButton.tsx";
+  "components/player/PlayerOverlay.tsx" -> "components/player/controls/ShuffleButton.tsx";
+  "components/player/PlayerOverlay.tsx" -> "components/player/controls/SkipButton.tsx";
+  "components/player/PlayerOverlay.tsx" -> "components/player/controls/VolumeControl.tsx";
+  "components/player/PlayerOverlay.tsx" -> "lib/constants/plans.ts";
+  "components/player/PlayerOverlay.tsx" -> "lib/hooks/useAuth.ts";
+  "components/player/PlayerOverlay.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/player/PlayerOverlay.tsx" -> "lib/services/streamService.ts";
+  "components/player/QueueItem.tsx" -> "types/music.ts";
+  "components/player/QueuePanel.tsx" -> "components/player/QueueItem.tsx";
+  "components/player/QueuePanel.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/player/controls/RepeatButton.tsx" -> "lib/context/PlayerContext.tsx";
+  "components/playlists/CreatePlaylistModal.tsx" -> "components/ui/Button.tsx";
+  "components/playlists/CreatePlaylistModal.tsx" -> "components/ui/Modal.tsx";
+  "components/playlists/PlaylistCardExpandable.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/playlists/PlaylistCardExpandable.tsx" -> "types/music.ts";
+  "components/profile/EditProfileForm.tsx" -> "components/profile/AvatarUploader.tsx";
+  "components/profile/EditProfileForm.tsx" -> "components/ui/Button.tsx";
+  "components/profile/EditProfileForm.tsx" -> "components/ui/Input.tsx";
+  "components/profile/EditProfileForm.tsx" -> "lib/hooks/useSubscriptionLimits.ts";
+  "components/profile/EditProfileForm.tsx" -> "lib/validation/profileSchemas.ts";
+  "components/profile/EditProfileForm.tsx" -> "types/user.ts";
+  "components/profile/FollowButton.tsx" -> "components/ui/Button.tsx";
+  "components/profile/ProfileCard.tsx" -> "types/user.ts";
+  "components/routing/GuestOnlyRoute.tsx" -> "lib/constants/routes.ts";
+  "components/routing/GuestOnlyRoute.tsx" -> "lib/hooks/useAuth.ts";
+  "components/routing/ProtectedRoute.tsx" -> "lib/constants/routes.ts";
+  "components/routing/ProtectedRoute.tsx" -> "lib/hooks/useAuth.ts";
+  "components/settings/DeleteAccountDialog.tsx" -> "components/ui/Button.tsx";
+  "components/settings/DeleteAccountDialog.tsx" -> "components/ui/Modal.tsx";
+  "components/settings/NotificationSettings.tsx" -> "types/user.ts";
+  "components/subscription/PlanCard.tsx" -> "types/subscription.ts";
+  "components/subscription/PlanComparisonTable.tsx" -> "types/subscription.ts";
+  "components/subscription/UpgradeModal.tsx" -> "components/ui/Button.tsx";
+  "components/subscription/UpgradeModal.tsx" -> "components/ui/Modal.tsx";
+  "components/subscription/UpgradeModal.tsx" -> "lib/constants/plans.ts";
+  "components/subscription/UpgradeModal.tsx" -> "types/subscription.ts";
+  "components/ui/RoleGuard.tsx" -> "lib/hooks/useAuth.ts";
+  "components/ui/RoleGuard.tsx" -> "types/user.ts";
+  "lib/constants/plans.ts" -> "types/subscription.ts";
+  "lib/constants/roles.ts" -> "types/user.ts";
+  "lib/constants/routes.ts" -> "types/user.ts";
+  "lib/context/AuthContext.tsx" -> "lib/services/authService.ts";
+  "lib/context/AuthContext.tsx" -> "lib/services/notificationService.ts";
+  "lib/context/AuthContext.tsx" -> "lib/services/userService.ts";
+  "lib/context/AuthContext.tsx" -> "types/user.ts";
+  "lib/context/PlayerContext.tsx" -> "lib/hooks/useAuth.ts";
+  "lib/context/PlayerContext.tsx" -> "lib/services/storage.ts";
+  "lib/context/PlayerContext.tsx" -> "lib/services/streamService.ts";
+  "lib/context/PlayerContext.tsx" -> "types/music.ts";
+  "lib/hooks/useAuth.ts" -> "lib/context/AuthContext.tsx";
+  "lib/hooks/usePlayer.ts" -> "lib/context/PlayerContext.tsx";
+  "lib/hooks/useSubscriptionLimits.ts" -> "lib/constants/plans.ts";
+  "lib/hooks/useSubscriptionLimits.ts" -> "types/user.ts";
+  "lib/mockData/music.ts" -> "types/music.ts";
+  "lib/mockData/plans.ts" -> "types/subscription.ts";
+  "lib/mockData/users.ts" -> "lib/services/password.ts";
+  "lib/mockData/users.ts" -> "types/user.ts";
+  "lib/services/authService.ts" -> "lib/services/notificationService.ts";
+  "lib/services/authService.ts" -> "lib/services/password.ts";
+  "lib/services/authService.ts" -> "lib/services/storage.ts";
+  "lib/services/authService.ts" -> "types/user.ts";
+  "lib/services/notificationService.ts" -> "lib/services/storage.ts";
+  "lib/services/notificationService.ts" -> "types/notification.ts";
+  "lib/services/playlistService.ts" -> "lib/constants/plans.ts";
+  "lib/services/playlistService.ts" -> "lib/services/storage.ts";
+  "lib/services/playlistService.ts" -> "types/music.ts";
+  "lib/services/playlistService.ts" -> "types/user.ts";
+  "lib/services/settingsService.ts" -> "lib/services/userService.ts";
+  "lib/services/settingsService.ts" -> "types/user.ts";
+  "lib/services/storage.ts" -> "lib/mockData/music.ts";
+  "lib/services/storage.ts" -> "lib/mockData/plans.ts";
+  "lib/services/storage.ts" -> "lib/mockData/users.ts";
+  "lib/services/storage.ts" -> "types/music.ts";
+  "lib/services/storage.ts" -> "types/notification.ts";
+  "lib/services/storage.ts" -> "types/subscription.ts";
+  "lib/services/storage.ts" -> "types/user.ts";
+  "lib/services/streamService.ts" -> "lib/services/storage.ts";
+  "lib/services/streamService.ts" -> "types/user.ts";
+  "lib/services/subscriptionService.ts" -> "lib/services/storage.ts";
+  "lib/services/subscriptionService.ts" -> "types/subscription.ts";
+  "lib/services/subscriptionService.ts" -> "types/user.ts";
+  "lib/services/userService.ts" -> "lib/services/storage.ts";
+  "lib/services/userService.ts" -> "lib/services/subscriptionService.ts";
+  "lib/services/userService.ts" -> "types/user.ts";
+  "main.tsx" -> "App.tsx";
+  "main.tsx" -> "index.css";
+  "pages/AdminDashboardPlaceholder.tsx" -> "lib/constants/routes.ts";
+  "pages/AlbumDetailPage.tsx" -> "lib/constants/routes.ts";
+  "pages/AlbumDetailPage.tsx" -> "lib/hooks/usePlayer.ts";
+  "pages/AlbumDetailPage.tsx" -> "lib/services/storage.ts";
+  "pages/AlbumsPage.tsx" -> "components/albums/AlbumCardArchive.tsx";
+  "pages/AlbumsPage.tsx" -> "components/albums/FilterSortBar.tsx";
+  "pages/AlbumsPage.tsx" -> "components/albums/SearchBar.tsx";
+  "pages/AlbumsPage.tsx" -> "components/albums/SingleCard.tsx";
+  "pages/AlbumsPage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/AlbumsPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/AlbumsPage.tsx" -> "lib/services/playlistService.ts";
+  "pages/AlbumsPage.tsx" -> "lib/services/storage.ts";
+  "pages/AlbumsPage.tsx" -> "types/music.ts";
+  "pages/ArtistDashboardPlaceholder.tsx" -> "lib/constants/routes.ts";
+  "pages/ArtistPage.tsx" -> "lib/constants/routes.ts";
+  "pages/EditProfilePage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/EditProfilePage.tsx" -> "components/layout/PageShell.tsx";
+  "pages/EditProfilePage.tsx" -> "components/profile/EditProfileForm.tsx";
+  "pages/EditProfilePage.tsx" -> "lib/constants/routes.ts";
+  "pages/EditProfilePage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/EditProfilePage.tsx" -> "lib/services/userService.ts";
+  "pages/ForgotPasswordPage.tsx" -> "components/auth/ForgotPasswordForm.tsx";
+  "pages/HomePage.tsx" -> "components/home/AlbumCard.tsx";
+  "pages/HomePage.tsx" -> "components/home/EarlyAccessBanner.tsx";
+  "pages/HomePage.tsx" -> "components/home/HorizontalCardScroller.tsx";
+  "pages/HomePage.tsx" -> "components/home/PlaylistCard.tsx";
+  "pages/HomePage.tsx" -> "components/home/SectionHeading.tsx";
+  "pages/HomePage.tsx" -> "components/home/SongRow.tsx";
+  "pages/HomePage.tsx" -> "lib/constants/routes.ts";
+  "pages/HomePage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/HomePage.tsx" -> "lib/services/storage.ts";
+  "pages/LoginPage.tsx" -> "components/auth/LoginForm.tsx";
+  "pages/NotificationsPage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/NotificationsPage.tsx" -> "components/layout/PageShell.tsx";
+  "pages/NotificationsPage.tsx" -> "components/notifications/EmptyNotificationsState.tsx";
+  "pages/NotificationsPage.tsx" -> "components/notifications/NotificationList.tsx";
+  "pages/NotificationsPage.tsx" -> "components/ui/Button.tsx";
+  "pages/NotificationsPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/NotificationsPage.tsx" -> "lib/services/notificationService.ts";
+  "pages/NotificationsPage.tsx" -> "types/notification.ts";
+  "pages/PlayerPage.tsx" -> "lib/constants/routes.ts";
+  "pages/PlayerPage.tsx" -> "lib/hooks/usePlayer.ts";
+  "pages/PlayerPage.tsx" -> "lib/services/storage.ts";
+  "pages/PlaylistsPage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/PlaylistsPage.tsx" -> "components/playlists/CreatePlaylistModal.tsx";
+  "pages/PlaylistsPage.tsx" -> "components/playlists/EmptyPlaylistState.tsx";
+  "pages/PlaylistsPage.tsx" -> "components/playlists/PlaylistCardExpandable.tsx";
+  "pages/PlaylistsPage.tsx" -> "components/ui/Button.tsx";
+  "pages/PlaylistsPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/PlaylistsPage.tsx" -> "lib/services/playlistService.ts";
+  "pages/PlaylistsPage.tsx" -> "lib/services/storage.ts";
+  "pages/PlaylistsPage.tsx" -> "types/music.ts";
+  "pages/ProfilePage.tsx" -> "components/profile/ProfileCard.tsx";
+  "pages/ProfilePage.tsx" -> "lib/constants/routes.ts";
+  "pages/ProfilePage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/ProfilePage.tsx" -> "lib/services/userService.ts";
+  "pages/ProfilePage.tsx" -> "types/user.ts";
+  "pages/RegisterArtistPage.tsx" -> "components/auth/ArtistRegisterForm.tsx";
+  "pages/RegisterPage.tsx" -> "components/auth/RegisterForm.tsx";
+  "pages/SettingsPage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/SettingsPage.tsx" -> "components/layout/PageShell.tsx";
+  "pages/SettingsPage.tsx" -> "components/settings/DeleteAccountDialog.tsx";
+  "pages/SettingsPage.tsx" -> "components/settings/LanguageSettings.tsx";
+  "pages/SettingsPage.tsx" -> "components/settings/NotificationSettings.tsx";
+  "pages/SettingsPage.tsx" -> "components/settings/SoundSettings.tsx";
+  "pages/SettingsPage.tsx" -> "lib/constants/routes.ts";
+  "pages/SettingsPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/SettingsPage.tsx" -> "lib/services/settingsService.ts";
+  "pages/SettingsPage.tsx" -> "lib/services/userService.ts";
+  "pages/SettingsPage.tsx" -> "types/user.ts";
+  "pages/SubscriptionPage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/SubscriptionPage.tsx" -> "components/layout/PageShell.tsx";
+  "pages/SubscriptionPage.tsx" -> "components/subscription/PlanCard.tsx";
+  "pages/SubscriptionPage.tsx" -> "components/subscription/PlanComparisonTable.tsx";
+  "pages/SubscriptionPage.tsx" -> "components/subscription/UpgradeModal.tsx";
+  "pages/SubscriptionPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/SubscriptionPage.tsx" -> "lib/services/subscriptionService.ts";
+  "pages/SubscriptionPage.tsx" -> "lib/services/userService.ts";
+  "pages/SubscriptionPage.tsx" -> "types/subscription.ts";
+  "types/subscription.ts" -> "types/user.ts";
+}

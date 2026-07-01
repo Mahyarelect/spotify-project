@@ -23,6 +23,7 @@ import AlbumsPage from "@/pages/AlbumsPage";
 import AlbumDetailPage from "@/pages/AlbumDetailPage";
 import ArtistPage from "@/pages/ArtistPage";
 import PlayerPage from "@/pages/PlayerPage";
+import NotificationsPage from "@/pages/NotificationsPage";
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
                 <Route path={ROUTES.ALBUM_DETAIL} element={<AlbumDetailPage />} />
                 <Route path={ROUTES.ARTIST} element={<ArtistPage />} />
                 <Route path={ROUTES.PLAYER} element={<PlayerPage />} />
+                <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
                 <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPlaceholder />} />
                 <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPlaceholder />} />
               </Route>

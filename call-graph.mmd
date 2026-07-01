@@ -1,0 +1,457 @@
+graph TD
+    %% Entry Point
+    main["main.tsx"]
+    app["App.tsx"]
+
+    %% Types
+    user["types/user.ts"]
+    music["types/music.ts"]
+    sub["types/subscription.ts"]
+    notifType["types/notification.ts"]
+
+    %% Constants
+    routes["lib/constants/routes.ts"]
+    plans["lib/constants/plans.ts"]
+    roles["lib/constants/roles.ts"]
+
+    %% Context
+    authCtx["lib/context/AuthContext.tsx"]
+    playerCtx["lib/context/PlayerContext.tsx"]
+
+    %% Hooks
+    useAuth["lib/hooks/useAuth.ts"]
+    usePlayer["lib/hooks/usePlayer.ts"]
+    useSubLimits["lib/hooks/useSubscriptionLimits.ts"]
+
+    %% Services
+    storage["lib/services/storage.ts"]
+    authSvc["lib/services/authService.ts"]
+    userSvc["lib/services/userService.ts"]
+    subSvc["lib/services/subscriptionService.ts"]
+    streamSvc["lib/services/streamService.ts"]
+    playlistSvc["lib/services/playlistService.ts"]
+    settingsSvc["lib/services/settingsService.ts"]
+    passwordSvc["lib/services/password.ts"]
+    notifSvc["lib/services/notificationService.ts"]
+
+    %% Mock Data
+    mockUsers["lib/mockData/users.ts"]
+    mockPlans["lib/mockData/plans.ts"]
+    mockMusic["lib/mockData/music.ts"]
+
+    %% Validation
+    authSchema["lib/validation/authSchemas.ts"]
+    profileSchema["lib/validation/profileSchemas.ts"]
+
+    %% Layout Components
+    appLayout["components/layout/AppLayout.tsx"]
+    authLayout["components/layout/AuthLayout.tsx"]
+    topNav["components/layout/TopNav.tsx"]
+    sidebar["components/layout/Sidebar.tsx"]
+    navItems["components/layout/navItems.ts"]
+    pageHeader["components/layout/PageHeader.tsx"]
+    pageShell["components/layout/PageShell.tsx"]
+
+    %% Routing Components
+    protectedRoute["components/routing/ProtectedRoute.tsx"]
+    guestRoute["components/routing/GuestOnlyRoute.tsx"]
+
+    %% UI Components
+    button["components/ui/Button.tsx"]
+    input["components/ui/Input.tsx"]
+    modal["components/ui/Modal.tsx"]
+    roleGuard["components/ui/RoleGuard.tsx"]
+
+    %% Auth Components
+    loginForm["components/auth/LoginForm.tsx"]
+    registerForm["components/auth/RegisterForm.tsx"]
+    artistRegForm["components/auth/ArtistRegisterForm.tsx"]
+    forgotPwForm["components/auth/ForgotPasswordForm.tsx"]
+
+    %% Home Components
+    albumCard["components/home/AlbumCard.tsx"]
+    playlistCard["components/home/PlaylistCard.tsx"]
+    songRow["components/home/SongRow.tsx"]
+    sectionHeading["components/home/SectionHeading.tsx"]
+    hScroll["components/home/HorizontalCardScroller.tsx"]
+    earlyBanner["components/home/EarlyAccessBanner.tsx"]
+
+    %% Player Components
+    playerBar["components/player/PlayerBar.tsx"]
+    playerOverlay["components/player/PlayerOverlay.tsx"]
+    queuePanel["components/player/QueuePanel.tsx"]
+    queueItem["components/player/QueueItem.tsx"]
+    playPause["components/player/controls/PlayPauseButton.tsx"]
+    progressBar["components/player/controls/ProgressBar.tsx"]
+    repeatBtn["components/player/controls/RepeatButton.tsx"]
+    shuffleBtn["components/player/controls/ShuffleButton.tsx"]
+    skipBtn["components/player/controls/SkipButton.tsx"]
+    volCtrl["components/player/controls/VolumeControl.tsx"]
+
+    %% Album Components
+    albumCardArchive["components/albums/AlbumCardArchive.tsx"]
+    singleCard["components/albums/SingleCard.tsx"]
+    searchBar["components/albums/SearchBar.tsx"]
+    filterSort["components/albums/FilterSortBar.tsx"]
+    addToPlaylist["components/albums/AddToPlaylistMenu.tsx"]
+
+    %% Playlist Components
+    createPlaylistModal["components/playlists/CreatePlaylistModal.tsx"]
+    emptyPlaylist["components/playlists/EmptyPlaylistState.tsx"]
+    playlistExpandable["components/playlists/PlaylistCardExpandable.tsx"]
+
+    %% Profile Components
+    profileCard["components/profile/ProfileCard.tsx"]
+    editProfileForm["components/profile/EditProfileForm.tsx"]
+    avatarUploader["components/profile/AvatarUploader.tsx"]
+    followBtn["components/profile/FollowButton.tsx"]
+
+    %% Settings Components
+    notifSettings["components/settings/NotificationSettings.tsx"]
+    soundSettings["components/settings/SoundSettings.tsx"]
+    langSettings["components/settings/LanguageSettings.tsx"]
+    deleteDialog["components/settings/DeleteAccountDialog.tsx"]
+
+    %% Subscription Components
+    planCard["components/subscription/PlanCard.tsx"]
+    planTable["components/subscription/PlanComparisonTable.tsx"]
+    upgradeModal["components/subscription/UpgradeModal.tsx"]
+    limitBadge["components/subscription/LimitBadge.tsx"]
+
+    %% Notification Components
+    notifCard["components/notifications/NotificationCard.tsx"]
+    notifList["components/notifications/NotificationList.tsx"]
+    notifEmpty["components/notifications/EmptyNotificationsState.tsx"]
+
+    %% Pages
+    homePage["pages/HomePage.tsx"]
+    loginPage["pages/LoginPage.tsx"]
+    registerPage["pages/RegisterPage.tsx"]
+    artistRegPage["pages/RegisterArtistPage.tsx"]
+    forgotPwPage["pages/ForgotPasswordPage.tsx"]
+    profilePage["pages/ProfilePage.tsx"]
+    editProfilePage["pages/EditProfilePage.tsx"]
+    settingsPage["pages/SettingsPage.tsx"]
+    subPage["pages/SubscriptionPage.tsx"]
+    playlistsPage["pages/PlaylistsPage.tsx"]
+    albumsPage["pages/AlbumsPage.tsx"]
+    albumDetailPage["pages/AlbumDetailPage.tsx"]
+    artistPage["pages/ArtistPage.tsx"]
+    playerPage["pages/PlayerPage.tsx"]
+    artistDash["pages/ArtistDashboardPlaceholder.tsx"]
+    adminDash["pages/AdminDashboardPlaceholder.tsx"]
+    notifPage["pages/NotificationsPage.tsx"]
+
+    %% === ENTRY FLOW ===
+    main --> app
+    main --> indexCss["index.css"]
+    app --> authCtx
+    app --> playerCtx
+    app --> routes
+    app --> appLayout
+    app --> authLayout
+    app --> protectedRoute
+    app --> guestRoute
+    app --> homePage
+    app --> loginPage
+    app --> registerPage
+    app --> artistRegPage
+    app --> forgotPwPage
+    app --> profilePage
+    app --> editProfilePage
+    app --> settingsPage
+    app --> subPage
+    app --> playlistsPage
+    app --> albumsPage
+    app --> albumDetailPage
+    app --> artistPage
+    app --> playerPage
+    app --> notifPage
+    app --> artistDash
+    app --> adminDash
+
+    %% === CONTEXT DEPENDENCIES ===
+    authCtx --> authSvc
+    authCtx --> userSvc
+    authCtx --> notifSvc
+    authCtx --> user
+    playerCtx --> useAuth
+    playerCtx --> storage
+    playerCtx --> streamSvc
+    playerCtx --> music
+
+    %% === HOOKS ===
+    useAuth --> authCtx
+    usePlayer --> playerCtx
+    useSubLimits --> plans
+    useSubLimits --> user
+
+    %% === SERVICE DEPENDENCIES ===
+    authSvc --> passwordSvc
+    authSvc --> storage
+    authSvc --> notifSvc
+    authSvc --> user
+    userSvc --> storage
+    userSvc --> subSvc
+    userSvc --> user
+    subSvc --> storage
+    subSvc --> sub
+    subSvc --> user
+    streamSvc --> storage
+    streamSvc --> user
+    playlistSvc --> storage
+    playlistSvc --> plans
+    playlistSvc --> music
+    playlistSvc --> user
+    settingsSvc --> userSvc
+    settingsSvc --> user
+    notifSvc --> storage
+    notifSvc --> notifType
+    notifSvc --> user
+    storage --> mockUsers
+    storage --> mockPlans
+    storage --> mockMusic
+    storage --> user
+    storage --> sub
+    storage --> music
+    storage --> notifType
+    mockUsers --> passwordSvc
+    mockUsers --> user
+    mockPlans --> sub
+    mockMusic --> music
+
+    %% === CONSTANTS ===
+    plans --> sub
+    roles --> user
+    routes --> user
+
+    %% === LAYOUT COMPONENTS ===
+    appLayout --> topNav
+    appLayout --> sidebar
+    appLayout --> playerBar
+    appLayout --> playerOverlay
+    appLayout --> useAuth
+    appLayout --> usePlayer
+    topNav --> navItems
+    topNav --> routes
+    topNav --> useAuth
+    topNav --> notifSvc
+    sidebar --> routes
+    authLayout --> routes
+    navItems --> routes
+
+    %% === ROUTING ===
+    protectedRoute --> routes
+    protectedRoute --> useAuth
+    guestRoute --> routes
+    guestRoute --> useAuth
+
+    %% === UI ===
+    roleGuard --> useAuth
+    roleGuard --> user
+
+    %% === AUTH FORMS ===
+    loginForm --> button
+    loginForm --> input
+    loginForm --> routes
+    loginForm --> useAuth
+    loginForm --> authSchema
+    registerForm --> button
+    registerForm --> input
+    registerForm --> modal
+    registerForm --> routes
+    registerForm --> useAuth
+    registerForm --> authSchema
+    artistRegForm --> button
+    artistRegForm --> input
+    artistRegForm --> authSvc
+    artistRegForm --> authSchema
+    forgotPwForm --> button
+    forgotPwForm --> input
+    forgotPwForm --> authSvc
+    forgotPwForm --> authSchema
+
+    %% === PLAYER ===
+    playerBar --> playPause
+    playerBar --> progressBar
+    playerBar --> repeatBtn
+    playerBar --> shuffleBtn
+    playerBar --> skipBtn
+    playerBar --> volCtrl
+    playerBar --> usePlayer
+    playerOverlay --> queuePanel
+    playerOverlay --> playPause
+    playerOverlay --> progressBar
+    playerOverlay --> repeatBtn
+    playerOverlay --> shuffleBtn
+    playerOverlay --> skipBtn
+    playerOverlay --> volCtrl
+    playerOverlay --> plans
+    playerOverlay --> useAuth
+    playerOverlay --> usePlayer
+    playerOverlay --> streamSvc
+    queuePanel --> queueItem
+    queuePanel --> usePlayer
+    queueItem --> music
+    repeatBtn --> playerCtx
+    songRow --> usePlayer
+    songRow --> music
+
+    %% === HOME ===
+    earlyBanner --> albumCard
+    earlyBanner --> routes
+    earlyBanner --> useAuth
+    earlyBanner --> music
+    albumCard --> music
+    playlistCard --> music
+
+    %% === ALBUMS ===
+    singleCard --> addToPlaylist
+    singleCard --> usePlayer
+    singleCard --> music
+    addToPlaylist --> music
+    albumCardArchive --> music
+
+    %% === PLAYLISTS ===
+    playlistExpandable --> usePlayer
+    playlistExpandable --> music
+    createPlaylistModal --> button
+    createPlaylistModal --> modal
+
+    %% === PROFILE ===
+    editProfileForm --> avatarUploader
+    editProfileForm --> button
+    editProfileForm --> input
+    editProfileForm --> useSubLimits
+    editProfileForm --> profileSchema
+    editProfileForm --> user
+    profileCard --> user
+    followBtn --> button
+
+    %% === SETTINGS ===
+    notifSettings --> user
+    deleteDialog --> button
+    deleteDialog --> modal
+
+    %% === SUBSCRIPTION ===
+    planCard --> sub
+    planTable --> sub
+    upgradeModal --> button
+    upgradeModal --> modal
+    upgradeModal --> plans
+    upgradeModal --> sub
+
+    %% === NOTIFICATIONS ===
+    notifCard --> notifType
+    notifList --> notifCard
+    notifList --> notifType
+    notifPage --> pageHeader
+    notifPage --> pageShell
+    notifPage --> button
+    notifPage --> notifList
+    notifPage --> notifEmpty
+    notifPage --> useAuth
+    notifPage --> notifSvc
+    notifPage --> notifType
+
+    %% === PAGES ===
+    homePage --> albumCard
+    homePage --> earlyBanner
+    homePage --> hScroll
+    homePage --> playlistCard
+    homePage --> sectionHeading
+    homePage --> songRow
+    homePage --> routes
+    homePage --> useAuth
+    homePage --> storage
+    loginPage --> loginForm
+    registerPage --> registerForm
+    artistRegPage --> artistRegForm
+    forgotPwPage --> forgotPwForm
+    profilePage --> profileCard
+    profilePage --> routes
+    profilePage --> useAuth
+    profilePage --> userSvc
+    profilePage --> user
+    editProfilePage --> pageHeader
+    editProfilePage --> pageShell
+    editProfilePage --> editProfileForm
+    editProfilePage --> routes
+    editProfilePage --> useAuth
+    editProfilePage --> userSvc
+    settingsPage --> pageHeader
+    settingsPage --> pageShell
+    settingsPage --> notifSettings
+    settingsPage --> soundSettings
+    settingsPage --> langSettings
+    settingsPage --> deleteDialog
+    settingsPage --> routes
+    settingsPage --> useAuth
+    settingsPage --> settingsSvc
+    settingsPage --> userSvc
+    settingsPage --> user
+    subPage --> pageHeader
+    subPage --> pageShell
+    subPage --> planCard
+    subPage --> planTable
+    subPage --> upgradeModal
+    subPage --> useAuth
+    subPage --> subSvc
+    subPage --> userSvc
+    subPage --> sub
+    playlistsPage --> pageHeader
+    playlistsPage --> createPlaylistModal
+    playlistsPage --> emptyPlaylist
+    playlistsPage --> playlistExpandable
+    playlistsPage --> button
+    playlistsPage --> useAuth
+    playlistsPage --> playlistSvc
+    playlistsPage --> storage
+    playlistsPage --> music
+    albumsPage --> albumCardArchive
+    albumsPage --> filterSort
+    albumsPage --> searchBar
+    albumsPage --> singleCard
+    albumsPage --> pageHeader
+    albumsPage --> useAuth
+    albumsPage --> playlistSvc
+    albumsPage --> storage
+    albumsPage --> music
+    albumDetailPage --> routes
+    albumDetailPage --> usePlayer
+    albumDetailPage --> storage
+    artistPage --> routes
+    playerPage --> routes
+    playerPage --> usePlayer
+    playerPage --> storage
+    artistDash --> routes
+    adminDash --> routes
+
+    %% === STYLING ===
+    classDef entry fill:#4ade80,stroke:#16a34a,color:#000
+    classDef type fill:#60a5fa,stroke:#2563eb,color:#000
+    classDef constant fill:#a78bfa,stroke:#7c3aed,color:#000
+    classDef context fill:#f97316,stroke:#ea580c,color:#000
+    classDef hook fill:#fb923c,stroke:#f97316,color:#000
+    classDef service fill:#f43f5e,stroke:#e11d48,color:#000
+    classDef mock fill:#94a3b8,stroke:#64748b,color:#000
+    classDef validation fill:#e879f9,stroke:#c026d3,color:#000
+    classDef layout fill:#facc15,stroke:#ca8a04,color:#000
+    classDef routing fill:#2dd4bf,stroke:#0d9488,color:#000
+    classDef ui fill:#c084fc,stroke:#9333ea,color:#000
+    classDef notifComp fill:#f472b6,stroke:#ec4899,color:#000
+    classDef page fill:#38bdf8,stroke:#0284c7,color:#000
+
+    class main,app entry
+    class user,music,sub,notifType type
+    class routes,plans,roles constant
+    class authCtx,playerCtx context
+    class useAuth,usePlayer,useSubLimits hook
+    class storage,authSvc,userSvc,subSvc,streamSvc,playlistSvc,settingsSvc,passwordSvc,notifSvc service
+    class mockUsers,mockPlans,mockMusic mock
+    class authSchema,profileSchema validation
+    class appLayout,authLayout,topNav,sidebar,navItems,pageHeader,pageShell layout
+    class protectedRoute,guestRoute routing
+    class button,input,modal,roleGuard ui
+    class notifCard,notifList,notifEmpty notifComp
+    class homePage,loginPage,registerPage,artistRegPage,forgotPwPage,profilePage,editProfilePage,settingsPage,subPage,playlistsPage,albumsPage,albumDetailPage,artistPage,playerPage,artistDash,adminDash,notifPage page

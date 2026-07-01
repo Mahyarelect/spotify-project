@@ -20,6 +20,7 @@ export const ROUTES = {
   ARTIST: "/artist/:artistName",
   PLAYER: "/player/:songId",
   MUSIC_LIBRARY: "/music",
+  NOTIFICATIONS: "/notifications",
 } as const;
 
 export const ROLE_HOME_ROUTE: Record<Role, string> = {

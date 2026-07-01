@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Bell } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ROUTES } from "@/lib/constants/routes";
+import { getUnreadCount } from "@/lib/services/notificationService";
 import { sidebarNavItems } from "./navItems";
 import { NavLink } from "react-router-dom";
 
@@ -45,10 +46,23 @@ export function TopNav() {
 
         <div className="flex items-center gap-3">
           {user ? (
-            <Link
-              to={ROUTES.PROFILE}
-              className="flex items-center gap-2 rounded-full bg-zinc-800 py-1 pl-1 pr-3 transition hover:bg-zinc-700"
-            >
+            <>
+              <Link
+                to={ROUTES.NOTIFICATIONS}
+                className="relative flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200"
+                aria-label="Notifications"
+              >
+                <Bell size={18} />
+                {getUnreadCount(user.id) > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-green-500 px-1 text-[10px] font-bold text-black">
+                    {getUnreadCount(user.id) > 9 ? "9+" : getUnreadCount(user.id)}
+                  </span>
+                )}
+              </Link>
+              <Link
+                to={ROUTES.PROFILE}
+                className="flex items-center gap-2 rounded-full bg-zinc-800 py-1 pl-1 pr-3 transition hover:bg-zinc-700"
+              >
               {user.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -64,6 +78,7 @@ export function TopNav() {
                 {user.displayName}
               </span>
             </Link>
+            </>
           ) : null}
 
           <button
