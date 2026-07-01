@@ -16,7 +16,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import EditProfilePage from "@/pages/EditProfilePage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
-import ArtistDashboardPlaceholder from "@/pages/ArtistDashboardPlaceholder";
+import ArtistDashboardPage from "@/pages/ArtistDashboardPage";
 import AdminDashboardPlaceholder from "@/pages/AdminDashboardPlaceholder";
 import PlaylistsPage from "@/pages/PlaylistsPage";
 import AlbumsPage from "@/pages/AlbumsPage";
@@ -46,7 +46,7 @@ export default function App() {
                 <Route path={ROUTES.ARTIST} element={<ArtistPage />} />
                 <Route path={ROUTES.PLAYER} element={<PlayerPage />} />
                 <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
-                <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPlaceholder />} />
+                <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPage />} />
                 <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPlaceholder />} />
               </Route>
             </Route>

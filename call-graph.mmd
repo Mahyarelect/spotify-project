@@ -35,6 +35,7 @@ graph TD
     passwordSvc["lib/services/password.ts"]
     notifSvc["lib/services/notificationService.ts"]
     artistSvc["lib/services/artistService.ts"]
+    artistWorkSvc["lib/services/artistWorkService.ts"]
 
     %% Mock Data
     mockUsers["lib/mockData/users.ts"]
@@ -131,6 +132,13 @@ graph TD
     artistWorks["components/artist/ArtistWorksList.tsx"]
     artistStats["components/artist/ArtistStatsPanel.tsx"]
 
+    %% Artist Dashboard Components
+    artistDashStats["components/artist-dashboard/ArtistStatsCards.tsx"]
+    artistDashTable["components/artist-dashboard/ArtistWorksTable.tsx"]
+    workForm["components/artist-dashboard/WorkForm.tsx"]
+    uploadAudio["components/artist-dashboard/UploadAudioMock.tsx"]
+    coverUploader["components/artist-dashboard/CoverUploader.tsx"]
+
     %% Pages
     homePage["pages/HomePage.tsx"]
     loginPage["pages/LoginPage.tsx"]
@@ -146,7 +154,7 @@ graph TD
     albumDetailPage["pages/AlbumDetailPage.tsx"]
     artistPage["pages/ArtistPage.tsx"]
     playerPage["pages/PlayerPage.tsx"]
-    artistDash["pages/ArtistDashboardPlaceholder.tsx"]
+    artistDash["pages/ArtistDashboardPage.tsx"]
     adminDash["pages/AdminDashboardPlaceholder.tsx"]
     notifPage["pages/NotificationsPage.tsx"]
 
@@ -384,6 +392,26 @@ graph TD
     artistPage --> userSvc
     artistPage --> user
 
+    %% === ARTIST DASHBOARD ===
+    artistWorkSvc --> storage
+    artistWorkSvc --> music
+    artistWorkSvc --> user
+    workForm --> button
+    workForm --> input
+    workForm --> uploadAudio
+    workForm --> coverUploader
+    artistDashTable --> music
+    artistDash --> pageHeader
+    artistDash --> pageShell
+    artistDash --> button
+    artistDash --> roleGuard
+    artistDash --> artistDashStats
+    artistDash --> artistDashTable
+    artistDash --> workForm
+    artistDash --> artistWorkSvc
+    artistDash --> useAuth
+    artistDash --> music
+
     %% === PAGES ===
     homePage --> albumCard
     homePage --> earlyBanner
@@ -478,12 +506,12 @@ graph TD
     class routes,plans,roles constant
     class authCtx,playerCtx context
     class useAuth,usePlayer,useSubLimits hook
-    class storage,authSvc,userSvc,subSvc,streamSvc,playlistSvc,settingsSvc,passwordSvc,notifSvc,artistSvc service
+    class storage,authSvc,userSvc,subSvc,streamSvc,playlistSvc,settingsSvc,passwordSvc,notifSvc,artistSvc,artistWorkSvc service
     class mockUsers,mockPlans,mockMusic mock
     class authSchema,profileSchema validation
     class appLayout,authLayout,topNav,sidebar,navItems,pageHeader,pageShell layout
     class protectedRoute,guestRoute routing
     class button,input,modal,roleGuard ui
     class notifCard,notifList,notifEmpty notifComp
-    class artistHeader,verifiedBadge,artistWorks,artistStats artistComp
+    class artistHeader,verifiedBadge,artistWorks,artistStats,artistDashStats,artistDashTable,workForm,uploadAudio,coverUploader artistComp
     class homePage,loginPage,registerPage,artistRegPage,forgotPwPage,profilePage,editProfilePage,settingsPage,subPage,playlistsPage,albumsPage,albumDetailPage,artistPage,playerPage,artistDash,adminDash,notifPage page

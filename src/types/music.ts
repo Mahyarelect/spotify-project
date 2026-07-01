@@ -9,6 +9,9 @@ export interface Song {
   coverImage?: string;
   playCount: number;
   lyrics?: string;
+  genre?: string;
+  releaseYear?: number;
+  collaborators?: string[];
 }
 
 export interface Album {
@@ -16,9 +19,11 @@ export interface Album {
   title: string;
   artistName: string;
   coverColor: string;
+  coverImage?: string;
   releaseDate: string;
   songIds: string[];
   isEarlyAccess: boolean;
+  genre?: string;
 }
 
 export interface Playlist {

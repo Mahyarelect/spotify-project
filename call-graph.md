@@ -2,7 +2,7 @@
 
 Generated from static analysis of `src/` using `madge`.
 
-- **121 modules** analyzed
+- **128 modules** analyzed
 - **0 circular dependencies** found
 
 ---
@@ -30,6 +30,7 @@ Generated from static analysis of `src/` using `madge`.
 │  subscription/ ui/   │                          └─────────────┘
 │  notifications/      │
 │  artist/             │
+│  artist-dashboard/   │
 └──────────┬───────────┘
            │
            ▼
@@ -42,7 +43,7 @@ Generated from static analysis of `src/` using `madge`.
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     SERVICES (10)                               │
+│                     SERVICES (11)                               │
 │  authService → password, storage, notificationService           │
 │  userService → storage, subscriptionService                     │
 │  subscriptionService → storage                                  │
@@ -50,7 +51,8 @@ Generated from static analysis of `src/` using `madge`.
 │  streamService → storage                                        │
 │  settingsService → userService                                  │
 │  notificationService → storage, users                           │
-│  artistService → storage, types/artist, types/music, users      │  ← NEW
+│  artistService → storage, types/artist, types/music, users      │
+│  artistWorkService → storage, types/music, users (CRUD)  ← NEW │
 │  storage → mockData (users, plans, music)                       │
 └─────────────────────────────────────────────────────────────────┘
         │
@@ -200,7 +202,16 @@ ArtistPage  ← REPLACED
   ├─→ userService.followUser(), .unfollowUser()
   ├─→ useAuth, plans, routes
   └─→ (no direct storage import — proper architecture)
-ArtistDashboardPlaceholder → routes (placeholder)
+ArtistDashboardPage  ← REPLACED
+  ├─→ RoleGuard (artist only)
+  ├─→ ArtistStatsCards (total streams, listeners, revenue, published works)
+  ├─→ ArtistWorksTable (songs/albums tabs, edit/delete actions)
+  ├─→ WorkForm (title, genre, release year, collaborators, lyrics, cover, audio mock)
+  │   ├─→ UploadAudioMock (mock file upload with random duration)
+  │   └─→ CoverUploader (color picker for cover art)
+  ├─→ artistWorkService (CRUD: createSong, updateSong, deleteSong, createAlbum, updateAlbum, deleteAlbum)
+  ├─→ useAuth, PageHeader, PageShell, Button
+  └─→ (no direct storage import — proper architecture)
 AdminDashboardPlaceholder → routes (placeholder)
 ```
 
@@ -307,6 +318,37 @@ ArtistPage.tsx
   └─→ (no direct storage import — proper architecture)
 ```
 
+### Artist Dashboard System  ← NEW
+```
+artistWorkService.ts
+  ├─→ storage.getSongs(), .saveSongs(), .getAlbums(), .saveAlbums(), .getUsers()
+  ├─→ getWorksByArtist(name): { songs, albums }
+  ├─→ getArtistListenerCount(name): number  (from artist followers)
+  ├─→ getArtistRevenue(name): number  (totalStreams × $0.003)
+  ├─→ createSong(data): Song  (with genre, releaseYear, collaborators, lyrics)
+  ├─→ updateSong(id, patch): Song
+  ├─→ deleteSong(id): void  (also removes from album)
+  ├─→ createAlbum(data): Album  (with genre, releaseDate, isEarlyAccess)
+  ├─→ updateAlbum(id, patch): Album
+  ├─→ deleteAlbum(id): void  (also deletes album songs)
+  └─→ addSongToAlbum(songId, albumId): void
+
+ArtistStatsCards.tsx → Total streams, listeners, revenue, published works
+ArtistWorksTable.tsx → Songs/Albums tabs, expandable rows, edit/delete actions
+WorkForm.tsx → Title, genre dropdown, release year, collaborators, lyrics, cover picker, audio mock
+UploadAudioMock.tsx → Mock file upload button, generates random duration
+CoverUploader.tsx → Color grid picker for cover art
+
+ArtistDashboardPage.tsx
+  ├─→ RoleGuard (allow=["artist"])
+  ├─→ ArtistStatsCards (live data from artistWorkService)
+  ├─→ ArtistWorksTable (songs + albums with edit/delete)
+  ├─→ WorkForm (create/edit single or album)
+  ├─→ artistWorkService (all CRUD operations)
+  ├─→ useAuth, PageHeader, PageShell, Button
+  └─→ (no direct storage import — proper architecture)
+```
+
 ### Component Dependencies
 ```
 LoginForm → Button, Input, routes, useAuth, authSchemas
@@ -371,10 +413,10 @@ npx madge --image call-graph.svg --extensions ts,tsx src/ --ts-config tsconfig.a
 |---|---|---|
 | Types | 5 | `types/user.ts` (25 importers) |
 | Constants | 3 | `lib/constants/routes.ts` (15 importers) |
-| Services | 10 | `lib/services/storage.ts` (13 importers) |
+| Services | 11 | `lib/services/storage.ts` (13 importers) |
 | Context | 2 | `AuthContext` (via useAuth: 14 importers) |
 | Hooks | 3 | `useAuth` (14 importers), `usePlayer` (8 importers) |
-| Components | 53 | `Button` (9 importers), `Modal` (4 importers) |
+| Components | 58 | `Button` (9 importers), `Modal` (4 importers) |
 | Pages | 17 | All import from hooks/services/components |
 
 ### Most Connected Modules (by inbound edges)

@@ -46,6 +46,18 @@ digraph G {
     "components/albums/SingleCard.tsx" [fillcolor="#22d3ee"];
   }
 
+  subgraph cluster_artistdash {
+    label="artistdash";
+    style=filled;
+    color="#84cc1640";
+    fillcolor="#84cc1615";
+    "components/artist-dashboard/ArtistStatsCards.tsx" [fillcolor="#84cc16"];
+    "components/artist-dashboard/ArtistWorksTable.tsx" [fillcolor="#84cc16"];
+    "components/artist-dashboard/CoverUploader.tsx" [fillcolor="#84cc16"];
+    "components/artist-dashboard/UploadAudioMock.tsx" [fillcolor="#84cc16"];
+    "components/artist-dashboard/WorkForm.tsx" [fillcolor="#84cc16"];
+  }
+
   subgraph cluster_artist {
     label="artist";
     style=filled;
@@ -230,6 +242,7 @@ digraph G {
     color="#f43f5e40";
     fillcolor="#f43f5e15";
     "lib/services/artistService.ts" [fillcolor="#f43f5e"];
+    "lib/services/artistWorkService.ts" [fillcolor="#f43f5e"];
     "lib/services/authService.ts" [fillcolor="#f43f5e"];
     "lib/services/notificationService.ts" [fillcolor="#f43f5e"];
     "lib/services/password.ts" [fillcolor="#f43f5e"];
@@ -258,6 +271,7 @@ digraph G {
     "pages/AdminDashboardPlaceholder.tsx" [fillcolor="#38bdf8"];
     "pages/AlbumDetailPage.tsx" [fillcolor="#38bdf8"];
     "pages/AlbumsPage.tsx" [fillcolor="#38bdf8"];
+    "pages/ArtistDashboardPage.tsx" [fillcolor="#38bdf8"];
     "pages/ArtistDashboardPlaceholder.tsx" [fillcolor="#38bdf8"];
     "pages/ArtistPage.tsx" [fillcolor="#38bdf8"];
     "pages/EditProfilePage.tsx" [fillcolor="#38bdf8"];
@@ -296,7 +310,7 @@ digraph G {
   "App.tsx" -> "pages/AdminDashboardPlaceholder.tsx";
   "App.tsx" -> "pages/AlbumDetailPage.tsx";
   "App.tsx" -> "pages/AlbumsPage.tsx";
-  "App.tsx" -> "pages/ArtistDashboardPlaceholder.tsx";
+  "App.tsx" -> "pages/ArtistDashboardPage.tsx";
   "App.tsx" -> "pages/ArtistPage.tsx";
   "App.tsx" -> "pages/EditProfilePage.tsx";
   "App.tsx" -> "pages/ForgotPasswordPage.tsx";
@@ -344,6 +358,12 @@ digraph G {
   "components/albums/SingleCard.tsx" -> "components/albums/AddToPlaylistMenu.tsx";
   "components/albums/SingleCard.tsx" -> "lib/hooks/usePlayer.ts";
   "components/albums/SingleCard.tsx" -> "types/music.ts";
+  "components/artist-dashboard/ArtistWorksTable.tsx" -> "types/music.ts";
+  "components/artist-dashboard/WorkForm.tsx" -> "components/artist-dashboard/CoverUploader.tsx";
+  "components/artist-dashboard/WorkForm.tsx" -> "components/artist-dashboard/UploadAudioMock.tsx";
+  "components/artist-dashboard/WorkForm.tsx" -> "components/ui/Button.tsx";
+  "components/artist-dashboard/WorkForm.tsx" -> "components/ui/Input.tsx";
+  "components/artist-dashboard/WorkForm.tsx" -> "types/music.ts";
   "components/artist/ArtistHeader.tsx" -> "components/artist/VerifiedBadge.tsx";
   "components/artist/ArtistHeader.tsx" -> "types/user.ts";
   "components/artist/ArtistWorksList.tsx" -> "lib/constants/routes.ts";
@@ -464,6 +484,8 @@ digraph G {
   "lib/services/artistService.ts" -> "types/artist.ts";
   "lib/services/artistService.ts" -> "types/music.ts";
   "lib/services/artistService.ts" -> "types/user.ts";
+  "lib/services/artistWorkService.ts" -> "lib/services/storage.ts";
+  "lib/services/artistWorkService.ts" -> "types/music.ts";
   "lib/services/authService.ts" -> "lib/services/notificationService.ts";
   "lib/services/authService.ts" -> "lib/services/password.ts";
   "lib/services/authService.ts" -> "lib/services/storage.ts";
@@ -506,6 +528,16 @@ digraph G {
   "pages/AlbumsPage.tsx" -> "lib/services/playlistService.ts";
   "pages/AlbumsPage.tsx" -> "lib/services/storage.ts";
   "pages/AlbumsPage.tsx" -> "types/music.ts";
+  "pages/ArtistDashboardPage.tsx" -> "components/artist-dashboard/ArtistStatsCards.tsx";
+  "pages/ArtistDashboardPage.tsx" -> "components/artist-dashboard/ArtistWorksTable.tsx";
+  "pages/ArtistDashboardPage.tsx" -> "components/artist-dashboard/WorkForm.tsx";
+  "pages/ArtistDashboardPage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/ArtistDashboardPage.tsx" -> "components/layout/PageShell.tsx";
+  "pages/ArtistDashboardPage.tsx" -> "components/ui/Button.tsx";
+  "pages/ArtistDashboardPage.tsx" -> "components/ui/RoleGuard.tsx";
+  "pages/ArtistDashboardPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/ArtistDashboardPage.tsx" -> "lib/services/artistWorkService.ts";
+  "pages/ArtistDashboardPage.tsx" -> "types/music.ts";
   "pages/ArtistDashboardPlaceholder.tsx" -> "lib/constants/routes.ts";
   "pages/ArtistPage.tsx" -> "components/artist/ArtistHeader.tsx";
   "pages/ArtistPage.tsx" -> "components/artist/ArtistStatsPanel.tsx";
