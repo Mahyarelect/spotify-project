@@ -1,5 +1,5 @@
 import { Repeat, Repeat1 } from "lucide-react";
-import type { RepeatMode } from "@/lib/context/PlayerContext";
+import type { RepeatMode } from "@/lib/hooks/usePlayer";
 
 export function RepeatButton({
   mode,

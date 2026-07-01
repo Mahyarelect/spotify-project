@@ -97,6 +97,10 @@ graph TD
     skipBtn["components/player/controls/SkipButton.tsx"]
     volCtrl["components/player/controls/VolumeControl.tsx"]
 
+    %% Error Components
+    errorBoundary["components/error/ErrorBoundary.tsx"]
+    errorFallback["components/error/ErrorFallback.tsx"]
+
     %% Album Components
     albumCardArchive["components/albums/AlbumCardArchive.tsx"]
     singleCard["components/albums/SingleCard.tsx"]
@@ -176,6 +180,8 @@ graph TD
     %% === ENTRY FLOW ===
     main --> app
     main --> indexCss["index.css"]
+    main --> errorBoundary
+    errorBoundary --> errorFallback
     app --> authCtx
     app --> playerCtx
     app --> routes
@@ -326,7 +332,7 @@ graph TD
     queuePanel --> queueItem
     queuePanel --> usePlayer
     queueItem --> music
-    repeatBtn --> playerCtx
+    repeatBtn --> usePlayer
     songRow --> usePlayer
     songRow --> music
 
@@ -548,6 +554,7 @@ graph TD
     classDef layout fill:#facc15,stroke:#ca8a04,color:#000
     classDef routing fill:#2dd4bf,stroke:#0d9488,color:#000
     classDef ui fill:#c084fc,stroke:#9333ea,color:#000
+    classDef errorComp fill:#f97316,stroke:#ea580c,color:#000
     classDef notifComp fill:#f472b6,stroke:#ec4899,color:#000
     classDef artistComp fill:#a3e635,stroke:#65a30d,color:#000
     classDef adminComp fill:#ef4444,stroke:#dc2626,color:#000
@@ -564,6 +571,7 @@ graph TD
     class appLayout,authLayout,topNav,sidebar,navItems,pageHeader,pageShell layout
     class protectedRoute,guestRoute routing
     class button,input,modal,roleGuard ui
+    class errorBoundary,errorFallback errorComp
     class notifCard,notifList,notifEmpty notifComp
     class artistHeader,verifiedBadge,artistWorks,artistStats,artistDashStats,artistDashTable,workForm,uploadAudio,coverUploader artistComp
     class adminSidebar,artistVerifyTable,supportTicketsTable,ticketChatBox,auditPaymentsTable,subPriceForm,revenueCharts adminComp

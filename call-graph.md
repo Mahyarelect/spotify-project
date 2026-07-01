@@ -2,7 +2,7 @@
 
 Generated from static analysis of `src/` using `madge`.
 
-- **142 modules** analyzed
+- **146 modules** analyzed
 - **0 circular dependencies** found
 
 ---
@@ -43,7 +43,7 @@ Generated from static analysis of `src/` using `madge`.
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     SERVICES (12)                               │
+│                     SERVICES (15)                               │
 │  authService → password, storage, notificationService           │
 │  userService → storage, subscriptionService                     │
 │  subscriptionService → storage                                  │
@@ -78,6 +78,7 @@ Generated from static analysis of `src/` using `madge`.
 ### Entry Flow
 ```
 main.tsx
+  ├─→ ErrorBoundary → ErrorFallback (catches render errors)
   └─→ App.tsx
        ├─→ AuthContext (provider)
        ├─→ PlayerContext (provider)
@@ -420,13 +421,14 @@ npx madge --image call-graph.svg --extensions ts,tsx src/ --ts-config tsconfig.a
 
 | Layer | Module Count | Most-Depended-On |
 |---|---|---|
-| Types | 5 | `types/user.ts` (25 importers) |
+| Types | 7 | `types/user.ts` (25 importers) |
 | Constants | 3 | `lib/constants/routes.ts` (15 importers) |
-| Services | 11 | `lib/services/storage.ts` (13 importers) |
+| Services | 15 | `lib/services/storage.ts` (13 importers) |
 | Context | 2 | `AuthContext` (via useAuth: 14 importers) |
 | Hooks | 3 | `useAuth` (14 importers), `usePlayer` (8 importers) |
-| Components | 58 | `Button` (9 importers), `Modal` (4 importers) |
-| Pages | 17 | All import from hooks/services/components |
+| Components | 74 | `Button` (9 importers), `Modal` (4 importers) |
+| Pages | 19 | All import from hooks/services/components |
+| Tests | 14 | 100 tests total, all passing |
 
 ### Most Connected Modules (by inbound edges)
 1. `types/user.ts` — 25 modules depend on it
@@ -440,3 +442,32 @@ npx madge --image call-graph.svg --extensions ts,tsx src/ --ts-config tsconfig.a
 9. `types/notification.ts` — 5 modules depend on it
 10. `lib/services/artistService.ts` — 2 modules depend on it (new)
 11. `types/artist.ts` — 2 modules depend on it (new)
+
+---
+
+### Error Handling
+```
+main.tsx
+  └─→ ErrorBoundary (class component, catches render errors)
+       └─→ ErrorFallback (shows error message + "Try Again" button)
+            └─→ App.tsx (entire app wrapped)
+```
+
+### Test Coverage (14 files, 100 tests)
+```
+__tests__/
+  authSchemas.test.ts        (8 tests)  — login/register form validation
+  authService.test.ts        (5 tests)  — login, logout, register, duplicate rejection
+  ProtectedRoute.test.tsx    (2 tests)  — redirects guest, renders when authenticated
+  GuestOnlyRoute.test.tsx    (2 tests)  — redirects authenticated, renders when guest
+  RoleGuard.test.tsx         (5 tests)  — blocks role, fallback, allows role, unauthenticated
+  playlistService.test.ts    (13 tests) — create, delete, rename, add/remove song, limits by tier
+  notificationService.test.ts (16 tests) — CRUD, mark read, delete, triggers
+  playerContext.test.tsx     (19 tests) — play/pause, next, prev, seek, volume, repeat, shuffle, queue
+  streamService.test.ts      (12 tests) — stream counting, daily limits
+  subscription.test.ts       (2 tests)  — plan upgrade, avatar restriction
+  userService.test.ts        (4 tests)  — follow, unfollow, delete account
+  storage.test.ts            (5 tests)  — JSON parsing, fallback, seeding
+  password.test.ts           (5 tests)  — hashing, verification
+  TopNav.test.tsx            (2 tests)  — logo, user display
+```

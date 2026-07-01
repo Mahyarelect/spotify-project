@@ -22,12 +22,14 @@ digraph G {
     fillcolor="#d1d5db15";
     "__tests__/GuestOnlyRoute.test.tsx" [fillcolor="#d1d5db"];
     "__tests__/ProtectedRoute.test.tsx" [fillcolor="#d1d5db"];
+    "__tests__/RoleGuard.test.tsx" [fillcolor="#d1d5db"];
     "__tests__/TopNav.test.tsx" [fillcolor="#d1d5db"];
     "__tests__/authSchemas.test.ts" [fillcolor="#d1d5db"];
     "__tests__/authService.test.ts" [fillcolor="#d1d5db"];
     "__tests__/notificationService.test.ts" [fillcolor="#d1d5db"];
     "__tests__/password.test.ts" [fillcolor="#d1d5db"];
     "__tests__/playerContext.test.tsx" [fillcolor="#d1d5db"];
+    "__tests__/playlistService.test.ts" [fillcolor="#d1d5db"];
     "__tests__/storage.test.ts" [fillcolor="#d1d5db"];
     "__tests__/streamService.test.ts" [fillcolor="#d1d5db"];
     "__tests__/subscription.test.ts" [fillcolor="#d1d5db"];
@@ -92,6 +94,15 @@ digraph G {
     "components/auth/ForgotPasswordForm.tsx" [fillcolor="#fb7185"];
     "components/auth/LoginForm.tsx" [fillcolor="#fb7185"];
     "components/auth/RegisterForm.tsx" [fillcolor="#fb7185"];
+  }
+
+  subgraph cluster_error {
+    label="error";
+    style=filled;
+    color="#f9731640";
+    fillcolor="#f9731615";
+    "components/error/ErrorBoundary.tsx" [fillcolor="#f97316"];
+    "components/error/ErrorFallback.tsx" [fillcolor="#f97316"];
   }
 
   subgraph cluster_home {
@@ -352,6 +363,10 @@ digraph G {
   "__tests__/ProtectedRoute.test.tsx" -> "components/routing/ProtectedRoute.tsx";
   "__tests__/ProtectedRoute.test.tsx" -> "lib/context/AuthContext.tsx";
   "__tests__/ProtectedRoute.test.tsx" -> "lib/services/storage.ts";
+  "__tests__/RoleGuard.test.tsx" -> "components/ui/RoleGuard.tsx";
+  "__tests__/RoleGuard.test.tsx" -> "lib/context/AuthContext.tsx";
+  "__tests__/RoleGuard.test.tsx" -> "lib/services/storage.ts";
+  "__tests__/RoleGuard.test.tsx" -> "types/user.ts";
   "__tests__/TopNav.test.tsx" -> "components/layout/TopNav.tsx";
   "__tests__/TopNav.test.tsx" -> "lib/context/AuthContext.tsx";
   "__tests__/TopNav.test.tsx" -> "lib/services/password.ts";
@@ -366,6 +381,8 @@ digraph G {
   "__tests__/playerContext.test.tsx" -> "lib/hooks/useAuth.ts";
   "__tests__/playerContext.test.tsx" -> "lib/services/storage.ts";
   "__tests__/playerContext.test.tsx" -> "types/music.ts";
+  "__tests__/playlistService.test.ts" -> "lib/services/playlistService.ts";
+  "__tests__/playlistService.test.ts" -> "lib/services/storage.ts";
   "__tests__/storage.test.ts" -> "lib/services/storage.ts";
   "__tests__/streamService.test.ts" -> "lib/services/storage.ts";
   "__tests__/streamService.test.ts" -> "lib/services/streamService.ts";
@@ -414,6 +431,7 @@ digraph G {
   "components/auth/RegisterForm.tsx" -> "lib/constants/routes.ts";
   "components/auth/RegisterForm.tsx" -> "lib/hooks/useAuth.ts";
   "components/auth/RegisterForm.tsx" -> "lib/validation/authSchemas.ts";
+  "components/error/ErrorBoundary.tsx" -> "components/error/ErrorFallback.tsx";
   "components/home/AlbumCard.tsx" -> "types/music.ts";
   "components/home/EarlyAccessBanner.tsx" -> "components/home/AlbumCard.tsx";
   "components/home/EarlyAccessBanner.tsx" -> "lib/constants/routes.ts";
@@ -459,7 +477,7 @@ digraph G {
   "components/player/QueueItem.tsx" -> "types/music.ts";
   "components/player/QueuePanel.tsx" -> "components/player/QueueItem.tsx";
   "components/player/QueuePanel.tsx" -> "lib/hooks/usePlayer.ts";
-  "components/player/controls/RepeatButton.tsx" -> "lib/context/PlayerContext.tsx";
+  "components/player/controls/RepeatButton.tsx" -> "lib/hooks/usePlayer.ts";
   "components/playlists/CreatePlaylistModal.tsx" -> "components/ui/Button.tsx";
   "components/playlists/CreatePlaylistModal.tsx" -> "components/ui/Modal.tsx";
   "components/playlists/PlaylistCardExpandable.tsx" -> "lib/hooks/usePlayer.ts";
@@ -552,6 +570,7 @@ digraph G {
   "lib/services/userService.ts" -> "lib/services/subscriptionService.ts";
   "lib/services/userService.ts" -> "types/user.ts";
   "main.tsx" -> "App.tsx";
+  "main.tsx" -> "components/error/ErrorBoundary.tsx";
   "main.tsx" -> "index.css";
   "pages/AdminDashboardPage.tsx" -> "components/admin/AdminSidebar.tsx";
   "pages/AdminDashboardPage.tsx" -> "components/admin/ArtistVerificationTable.tsx";
