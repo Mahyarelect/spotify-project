@@ -1,13 +1,117 @@
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, User } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { ROUTES } from "@/lib/constants/routes";
+import { getPlanLimits } from "@/lib/constants/plans";
+import {
+  getArtistByDisplayName,
+  getArtistAlbums,
+  getArtistSingles,
+  getArtistTotalStreams,
+  isArtistVerified,
+  getArtistSongs,
+} from "@/lib/services/artistService";
+import { followUser, unfollowUser } from "@/lib/services/userService";
+import type { User } from "@/types/user";
+import { ArtistHeader } from "@/components/artist/ArtistHeader";
+import { ArtistWorksList } from "@/components/artist/ArtistWorksList";
+import { ArtistStatsPanel } from "@/components/artist/ArtistStatsPanel";
 
 export default function ArtistPage() {
   const { artistName } = useParams();
-  const decoded = artistName ? decodeURIComponent(artistName) : "Unknown";
+  const decoded = artistName ? decodeURIComponent(artistName) : "";
+  const { user: currentUser, refreshUser } = useAuth();
+
+  const [artist, setArtist] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!decoded) {
+      setLoading(false);
+      return;
+    }
+    const found = getArtistByDisplayName(decoded);
+    setArtist(found);
+    setLoading(false);
+  }, [decoded]);
+
+  const albums = useMemo(
+    () => (artist ? getArtistAlbums(artist.displayName) : []),
+    [artist]
+  );
+  const singlesData = useMemo(
+    () => (artist ? getArtistSingles(artist.displayName) : []),
+    [artist]
+  );
+  const allSongs = useMemo(
+    () => (artist ? getArtistSongs(artist.displayName) : []),
+    [artist]
+  );
+  const totalStreams = useMemo(
+    () => (artist ? getArtistTotalStreams(artist.displayName) : 0),
+    [artist]
+  );
+  const verified = useMemo(
+    () => (artist ? isArtistVerified(artist) : false),
+    [artist]
+  );
+
+  const isFollowing = currentUser
+    ? currentUser.following.includes(artist?.id ?? "")
+    : false;
+  const isOwnProfile = currentUser?.id === artist?.id;
+
+  const canViewStats = currentUser
+    ? getPlanLimits(currentUser.planTier).viewStats
+    : false;
+
+  const handleFollow = useCallback(async () => {
+    if (!currentUser || !artist) return;
+    await followUser(currentUser.id, artist.id);
+    setArtist((prev) =>
+      prev
+        ? { ...prev, followers: [...prev.followers, currentUser.id] }
+        : prev
+    );
+    await refreshUser();
+  }, [currentUser, artist, refreshUser]);
+
+  const handleUnfollow = useCallback(async () => {
+    if (!currentUser || !artist) return;
+    await unfollowUser(currentUser.id, artist.id);
+    setArtist((prev) =>
+      prev
+        ? {
+            ...prev,
+            followers: prev.followers.filter((id) => id !== currentUser.id),
+          }
+        : prev
+    );
+    await refreshUser();
+  }, [currentUser, artist, refreshUser]);
+
+  if (loading) {
+    return <p className="p-8 text-center text-zinc-400">Loading...</p>;
+  }
+
+  if (!artist) {
+    return (
+      <div className="space-y-4 py-20 text-center">
+        <p className="text-zinc-400">Artist not found.</p>
+        <Link
+          to={ROUTES.ALBUMS}
+          className="inline-flex items-center gap-2 text-sm text-green-400 hover:text-green-300"
+        >
+          <ArrowLeft size={16} />
+          Back to Albums & Singles
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Link
         to={ROUTES.ALBUMS}
         className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200"
@@ -16,21 +120,29 @@ export default function ArtistPage() {
         Back to Albums & Singles
       </Link>
 
-      <div className="flex items-center gap-4">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800">
-          <User size={36} className="text-zinc-400" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{decoded}</h1>
-          <p className="text-sm text-zinc-400">Artist</p>
-        </div>
-      </div>
+      <ArtistHeader
+        artist={artist}
+        isVerified={verified}
+        isFollowing={isFollowing}
+        isOwnProfile={!!isOwnProfile}
+        onFollow={handleFollow}
+        onUnfollow={handleUnfollow}
+      />
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-        <p className="text-zinc-400">
-          Artist profile page is a placeholder — full artist pages will be implemented in a future phase.
-        </p>
-      </div>
+      {canViewStats && (
+        <ArtistStatsPanel
+          totalStreams={totalStreams}
+          followerCount={artist.followers.length}
+          songCount={allSongs.length}
+          albumCount={albums.length}
+        />
+      )}
+
+      <ArtistWorksList
+        albums={albums}
+        singles={singlesData.map((s) => s.song)}
+        allSongs={allSongs}
+      />
     </div>
   );
 }

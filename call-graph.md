@@ -2,7 +2,7 @@
 
 Generated from static analysis of `src/` using `madge`.
 
-- **115 modules** analyzed
+- **121 modules** analyzed
 - **0 circular dependencies** found
 
 ---
@@ -23,12 +23,13 @@ Generated from static analysis of `src/` using `madge`.
         │
         ▼
 ┌──────────────────────┐  ┌────────────────────┐  ┌─────────────┐
-│   COMPONENTS (49)    │  │    ROUTING (2)     │  │  LAYOUT (7) │
+│   COMPONENTS (53)    │  │    ROUTING (2)     │  │  LAYOUT (7) │
 │  auth/ player/ home/ │  │ ProtectedRoute     │  │  AppLayout  │
 │  albums/ playlists/  │  │ GuestOnlyRoute     │  │  TopNav     │
 │  profile/ settings/  │  └────────────────────┘  │  Sidebar    │
 │  subscription/ ui/   │                          └─────────────┘
 │  notifications/      │
+│  artist/             │
 └──────────┬───────────┘
            │
            ▼
@@ -41,7 +42,7 @@ Generated from static analysis of `src/` using `madge`.
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     SERVICES (9)                                │
+│                     SERVICES (10)                               │
 │  authService → password, storage, notificationService           │
 │  userService → storage, subscriptionService                     │
 │  subscriptionService → storage                                  │
@@ -49,16 +50,18 @@ Generated from static analysis of `src/` using `madge`.
 │  streamService → storage                                        │
 │  settingsService → userService                                  │
 │  notificationService → storage, users                           │
+│  artistService → storage, types/artist, types/music, users      │  ← NEW
 │  storage → mockData (users, plans, music)                       │
 └─────────────────────────────────────────────────────────────────┘
         │
         ▼
 ┌──────────────────────┐  ┌────────────────────┐
-│   TYPES (4)          │  │  CONSTANTS (3)     │
+│   TYPES (5)          │  │  CONSTANTS (3)     │
 │  user.ts             │  │  routes.ts         │
 │  music.ts            │  │  plans.ts          │
 │  subscription.ts     │  │  roles.ts          │
 │  notification.ts     │  └────────────────────┘
+│  artist.ts           │  ← NEW
 └──────────────────────┘
 ```
 
@@ -129,6 +132,12 @@ notificationService  ← NEW
       notifyArtistRejected, notifyMonthlyFinancial, notifyNewTicket,
       notifyArtistVerification, notifyAdminAnnouncement
 
+artistService  ← NEW
+  ├─→ storage.getUsers(), .getSongs(), .getAlbums()
+  ├─→ getArtistByDisplayName(), getArtistSongs(), getArtistAlbums(), getArtistSingles()
+  ├─→ getArtistTotalStreams(), isArtistVerified(), getArtistProfile()
+  └─→ types/artist, types/user, types/music
+
 storage (foundation — no upstream deps except mock data)
   ├─→ mockData/users
   ├─→ mockData/plans
@@ -183,7 +192,14 @@ NotificationsPage  ← NEW
 
 AlbumDetailPage → routes, usePlayer, storage
 PlayerPage → routes, usePlayer, storage
-ArtistPage → routes (placeholder)
+ArtistPage  ← REPLACED
+  ├─→ ArtistHeader → VerifiedBadge, types/user
+  ├─→ ArtistWorksList → routes, usePlayer, types/music (albums + singles + play buttons)
+  ├─→ ArtistStatsPanel (Gold-only: total streams, followers, songs, albums)
+  ├─→ artistService.getArtistByDisplayName(), .getArtistAlbums(), .getArtistSingles(), .getArtistTotalStreams()
+  ├─→ userService.followUser(), .unfollowUser()
+  ├─→ useAuth, plans, routes
+  └─→ (no direct storage import — proper architecture)
 ArtistDashboardPlaceholder → routes (placeholder)
 AdminDashboardPlaceholder → routes (placeholder)
 ```
@@ -261,6 +277,36 @@ authService.ts
   └─→ notificationService.notifyArtistVerification() after artist registration
 ```
 
+### Artist System  ← NEW
+```
+types/artist.ts
+  └─→ ArtistProfile { user, albums, singles, totalStreams, isVerified }
+
+artistService.ts
+  ├─→ storage.getUsers(), .getSongs(), .getAlbums()
+  ├─→ getArtistByDisplayName(name): User | null (matches by displayName, role=artist)
+  ├─→ getArtistSongs(name): Song[]
+  ├─→ getArtistAlbums(name): Album[]  (songIds.length > 1)
+  ├─→ getArtistSingles(name): { song, album }[]  (songIds.length === 1)
+  ├─→ getArtistTotalStreams(name): number  (sum of playCount)
+  ├─→ isArtistVerified(user): boolean  (role === "artist")
+  └─→ getArtistProfile(name): ArtistProfile | null
+
+VerifiedBadge.tsx → BadgeCheck icon + "Verified" text
+ArtistHeader.tsx → VerifiedBadge, types/user, follow/unfollow buttons
+ArtistWorksList.tsx → Album cards (play all), Singles list (play per track), usePlayer
+ArtistStatsPanel.tsx → Total streams, followers, songs, albums (Gold-only)
+
+ArtistPage.tsx
+  ├─→ ArtistHeader (avatar, name, bio, verified badge, follow/unfollow)
+  ├─→ ArtistWorksList (albums grid + singles list)
+  ├─→ ArtistStatsPanel (Gold users only, gated by getPlanLimits().viewStats)
+  ├─→ artistService (all data fetching)
+  ├─→ userService.followUser(), .unfollowUser()
+  ├─→ useAuth, plans, routes
+  └─→ (no direct storage import — proper architecture)
+```
+
 ### Component Dependencies
 ```
 LoginForm → Button, Input, routes, useAuth, authSchemas
@@ -323,12 +369,12 @@ npx madge --image call-graph.svg --extensions ts,tsx src/ --ts-config tsconfig.a
 
 | Layer | Module Count | Most-Depended-On |
 |---|---|---|
-| Types | 4 | `types/user.ts` (25 importers) |
+| Types | 5 | `types/user.ts` (25 importers) |
 | Constants | 3 | `lib/constants/routes.ts` (15 importers) |
-| Services | 9 | `lib/services/storage.ts` (13 importers) |
+| Services | 10 | `lib/services/storage.ts` (13 importers) |
 | Context | 2 | `AuthContext` (via useAuth: 14 importers) |
 | Hooks | 3 | `useAuth` (14 importers), `usePlayer` (8 importers) |
-| Components | 49 | `Button` (9 importers), `Modal` (4 importers) |
+| Components | 53 | `Button` (9 importers), `Modal` (4 importers) |
 | Pages | 17 | All import from hooks/services/components |
 
 ### Most Connected Modules (by inbound edges)
@@ -339,5 +385,7 @@ npx madge --image call-graph.svg --extensions ts,tsx src/ --ts-config tsconfig.a
 5. `types/music.ts` — 12 modules depend on it
 6. `lib/hooks/usePlayer.ts` — 8 modules depend on it
 7. `components/ui/Button.tsx` — 9 modules depend on it
-8. `lib/services/notificationService.ts` — 5 modules depend on it (new)
-9. `types/notification.ts` — 5 modules depend on it (new)
+8. `lib/services/notificationService.ts` — 5 modules depend on it
+9. `types/notification.ts` — 5 modules depend on it
+10. `lib/services/artistService.ts` — 2 modules depend on it (new)
+11. `types/artist.ts` — 2 modules depend on it (new)

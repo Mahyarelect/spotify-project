@@ -8,6 +8,7 @@ graph TD
     music["types/music.ts"]
     sub["types/subscription.ts"]
     notifType["types/notification.ts"]
+    artistType["types/artist.ts"]
 
     %% Constants
     routes["lib/constants/routes.ts"]
@@ -33,6 +34,7 @@ graph TD
     settingsSvc["lib/services/settingsService.ts"]
     passwordSvc["lib/services/password.ts"]
     notifSvc["lib/services/notificationService.ts"]
+    artistSvc["lib/services/artistService.ts"]
 
     %% Mock Data
     mockUsers["lib/mockData/users.ts"]
@@ -122,6 +124,12 @@ graph TD
     notifCard["components/notifications/NotificationCard.tsx"]
     notifList["components/notifications/NotificationList.tsx"]
     notifEmpty["components/notifications/EmptyNotificationsState.tsx"]
+
+    %% Artist Components
+    artistHeader["components/artist/ArtistHeader.tsx"]
+    verifiedBadge["components/artist/VerifiedBadge.tsx"]
+    artistWorks["components/artist/ArtistWorksList.tsx"]
+    artistStats["components/artist/ArtistStatsPanel.tsx"]
 
     %% Pages
     homePage["pages/HomePage.tsx"]
@@ -354,6 +362,28 @@ graph TD
     notifPage --> notifSvc
     notifPage --> notifType
 
+    %% === ARTIST SYSTEM ===
+    artistSvc --> storage
+    artistSvc --> artistType
+    artistSvc --> user
+    artistSvc --> music
+    artistType --> user
+    artistType --> music
+    artistHeader --> verifiedBadge
+    artistHeader --> user
+    artistWorks --> routes
+    artistWorks --> usePlayer
+    artistWorks --> music
+    artistPage --> artistHeader
+    artistPage --> artistWorks
+    artistPage --> artistStats
+    artistPage --> artistSvc
+    artistPage --> plans
+    artistPage --> routes
+    artistPage --> useAuth
+    artistPage --> userSvc
+    artistPage --> user
+
     %% === PAGES ===
     homePage --> albumCard
     homePage --> earlyBanner
@@ -440,18 +470,20 @@ graph TD
     classDef routing fill:#2dd4bf,stroke:#0d9488,color:#000
     classDef ui fill:#c084fc,stroke:#9333ea,color:#000
     classDef notifComp fill:#f472b6,stroke:#ec4899,color:#000
+    classDef artistComp fill:#a3e635,stroke:#65a30d,color:#000
     classDef page fill:#38bdf8,stroke:#0284c7,color:#000
 
     class main,app entry
-    class user,music,sub,notifType type
+    class user,music,sub,notifType,artistType type
     class routes,plans,roles constant
     class authCtx,playerCtx context
     class useAuth,usePlayer,useSubLimits hook
-    class storage,authSvc,userSvc,subSvc,streamSvc,playlistSvc,settingsSvc,passwordSvc,notifSvc service
+    class storage,authSvc,userSvc,subSvc,streamSvc,playlistSvc,settingsSvc,passwordSvc,notifSvc,artistSvc service
     class mockUsers,mockPlans,mockMusic mock
     class authSchema,profileSchema validation
     class appLayout,authLayout,topNav,sidebar,navItems,pageHeader,pageShell layout
     class protectedRoute,guestRoute routing
     class button,input,modal,roleGuard ui
     class notifCard,notifList,notifEmpty notifComp
+    class artistHeader,verifiedBadge,artistWorks,artistStats artistComp
     class homePage,loginPage,registerPage,artistRegPage,forgotPwPage,profilePage,editProfilePage,settingsPage,subPage,playlistsPage,albumsPage,albumDetailPage,artistPage,playerPage,artistDash,adminDash,notifPage page

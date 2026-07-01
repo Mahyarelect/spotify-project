@@ -46,6 +46,17 @@ digraph G {
     "components/albums/SingleCard.tsx" [fillcolor="#22d3ee"];
   }
 
+  subgraph cluster_artist {
+    label="artist";
+    style=filled;
+    color="#a3e63540";
+    fillcolor="#a3e63515";
+    "components/artist/ArtistHeader.tsx" [fillcolor="#a3e635"];
+    "components/artist/ArtistStatsPanel.tsx" [fillcolor="#a3e635"];
+    "components/artist/ArtistWorksList.tsx" [fillcolor="#a3e635"];
+    "components/artist/VerifiedBadge.tsx" [fillcolor="#a3e635"];
+  }
+
   subgraph cluster_auth {
     label="auth";
     style=filled;
@@ -218,6 +229,7 @@ digraph G {
     style=filled;
     color="#f43f5e40";
     fillcolor="#f43f5e15";
+    "lib/services/artistService.ts" [fillcolor="#f43f5e"];
     "lib/services/authService.ts" [fillcolor="#f43f5e"];
     "lib/services/notificationService.ts" [fillcolor="#f43f5e"];
     "lib/services/password.ts" [fillcolor="#f43f5e"];
@@ -267,6 +279,7 @@ digraph G {
     style=filled;
     color="#60a5fa40";
     fillcolor="#60a5fa15";
+    "types/artist.ts" [fillcolor="#60a5fa"];
     "types/music.ts" [fillcolor="#60a5fa"];
     "types/notification.ts" [fillcolor="#60a5fa"];
     "types/subscription.ts" [fillcolor="#60a5fa"];
@@ -331,6 +344,11 @@ digraph G {
   "components/albums/SingleCard.tsx" -> "components/albums/AddToPlaylistMenu.tsx";
   "components/albums/SingleCard.tsx" -> "lib/hooks/usePlayer.ts";
   "components/albums/SingleCard.tsx" -> "types/music.ts";
+  "components/artist/ArtistHeader.tsx" -> "components/artist/VerifiedBadge.tsx";
+  "components/artist/ArtistHeader.tsx" -> "types/user.ts";
+  "components/artist/ArtistWorksList.tsx" -> "lib/constants/routes.ts";
+  "components/artist/ArtistWorksList.tsx" -> "lib/hooks/usePlayer.ts";
+  "components/artist/ArtistWorksList.tsx" -> "types/music.ts";
   "components/auth/ArtistRegisterForm.tsx" -> "components/ui/Button.tsx";
   "components/auth/ArtistRegisterForm.tsx" -> "components/ui/Input.tsx";
   "components/auth/ArtistRegisterForm.tsx" -> "lib/services/authService.ts";
@@ -442,6 +460,10 @@ digraph G {
   "lib/mockData/plans.ts" -> "types/subscription.ts";
   "lib/mockData/users.ts" -> "lib/services/password.ts";
   "lib/mockData/users.ts" -> "types/user.ts";
+  "lib/services/artistService.ts" -> "lib/services/storage.ts";
+  "lib/services/artistService.ts" -> "types/artist.ts";
+  "lib/services/artistService.ts" -> "types/music.ts";
+  "lib/services/artistService.ts" -> "types/user.ts";
   "lib/services/authService.ts" -> "lib/services/notificationService.ts";
   "lib/services/authService.ts" -> "lib/services/password.ts";
   "lib/services/authService.ts" -> "lib/services/storage.ts";
@@ -485,7 +507,15 @@ digraph G {
   "pages/AlbumsPage.tsx" -> "lib/services/storage.ts";
   "pages/AlbumsPage.tsx" -> "types/music.ts";
   "pages/ArtistDashboardPlaceholder.tsx" -> "lib/constants/routes.ts";
+  "pages/ArtistPage.tsx" -> "components/artist/ArtistHeader.tsx";
+  "pages/ArtistPage.tsx" -> "components/artist/ArtistStatsPanel.tsx";
+  "pages/ArtistPage.tsx" -> "components/artist/ArtistWorksList.tsx";
+  "pages/ArtistPage.tsx" -> "lib/constants/plans.ts";
   "pages/ArtistPage.tsx" -> "lib/constants/routes.ts";
+  "pages/ArtistPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/ArtistPage.tsx" -> "lib/services/artistService.ts";
+  "pages/ArtistPage.tsx" -> "lib/services/userService.ts";
+  "pages/ArtistPage.tsx" -> "types/user.ts";
   "pages/EditProfilePage.tsx" -> "components/layout/PageHeader.tsx";
   "pages/EditProfilePage.tsx" -> "components/layout/PageShell.tsx";
   "pages/EditProfilePage.tsx" -> "components/profile/EditProfileForm.tsx";
@@ -550,5 +580,7 @@ digraph G {
   "pages/SubscriptionPage.tsx" -> "lib/services/subscriptionService.ts";
   "pages/SubscriptionPage.tsx" -> "lib/services/userService.ts";
   "pages/SubscriptionPage.tsx" -> "types/subscription.ts";
+  "types/artist.ts" -> "types/music.ts";
+  "types/artist.ts" -> "types/user.ts";
   "types/subscription.ts" -> "types/user.ts";
 }
