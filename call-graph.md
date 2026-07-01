@@ -17,13 +17,13 @@ Generated from static analysis of `src/` using `madge`.
         │
         ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        PAGES (17)                               │
+│                        PAGES (19)                               │
 │   HomePage, LoginPage, RegisterPage, NotificationsPage, etc.    │
 └─────────────────────────────────────────────────────────────────┘
         │
         ▼
 ┌──────────────────────┐  ┌────────────────────┐  ┌─────────────┐
-│   COMPONENTS (53)    │  │    ROUTING (2)     │  │  LAYOUT (7) │
+│   COMPONENTS (74)    │  │    ROUTING (2)     │  │  LAYOUT (7) │
 │  auth/ player/ home/ │  │ ProtectedRoute     │  │  AppLayout  │
 │  albums/ playlists/  │  │ GuestOnlyRoute     │  │  TopNav     │
 │  profile/ settings/  │  └────────────────────┘  │  Sidebar    │
@@ -31,6 +31,8 @@ Generated from static analysis of `src/` using `madge`.
 │  notifications/      │
 │  artist/             │
 │  artist-dashboard/   │
+│  admin/              │
+│  error/              │
 └──────────┬───────────┘
            │
            ▼
@@ -62,12 +64,14 @@ Generated from static analysis of `src/` using `madge`.
         │
         ▼
 ┌──────────────────────┐  ┌────────────────────┐
-│   TYPES (5)          │  │  CONSTANTS (3)     │
+│   TYPES (7)          │  │  CONSTANTS (3)     │
 │  user.ts             │  │  routes.ts         │
 │  music.ts            │  │  plans.ts          │
 │  subscription.ts     │  │  roles.ts          │
 │  notification.ts     │  └────────────────────┘
-│  artist.ts           │  ← NEW
+│  artist.ts           │
+│  ticket.ts           │
+│  audit.ts            │
 └──────────────────────┘
 ```
 
@@ -85,7 +89,7 @@ main.tsx
        ├─→ routes (constants)
        ├─→ AppLayout, AuthLayout
        ├─→ ProtectedRoute, GuestOnlyRoute
-       └─→ 17 page components
+       └─→ 19 page components
 ```
 
 ### Context & Hooks
