@@ -2,7 +2,7 @@
 
 Generated from static analysis of `src/` using `madge`.
 
-- **128 modules** analyzed
+- **141 modules** analyzed
 - **0 circular dependencies** found
 
 ---

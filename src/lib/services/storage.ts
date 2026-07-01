@@ -5,6 +5,8 @@ import type { User, ArtistApplication } from "@/types/user";
 import type { PlanLimits } from "@/types/subscription";
 import type { Song, Album, Playlist, RecentlyPlayed } from "@/types/music";
 import type { Notification } from "@/types/notification";
+import type { SupportTicket } from "@/types/ticket";
+import type { AuditPayment } from "@/types/audit";
 
 export const STORAGE_KEYS = {
   users: "musicapp_users",
@@ -18,6 +20,8 @@ export const STORAGE_KEYS = {
   streamCounts: "musicapp_streamCounts",
   playerPrefs: "musicapp_playerPrefs",
   notifications: "musicapp_notifications",
+  tickets: "musicapp_tickets",
+  auditPayments: "musicapp_auditPayments",
 } as const;
 
 function canUseLocalStorage(): boolean {
@@ -209,4 +213,24 @@ export function saveNotifications(userId: string, notifications: Notification[])
 
 export function getAllNotifications(): Record<string, Notification[]> {
   return readJson<Record<string, Notification[]>>(STORAGE_KEYS.notifications, {});
+}
+
+// ── Support Tickets ──
+
+export function getTickets(): SupportTicket[] {
+  return readJson<SupportTicket[]>(STORAGE_KEYS.tickets, []);
+}
+
+export function saveTickets(tickets: SupportTicket[]): void {
+  writeJson(STORAGE_KEYS.tickets, tickets);
+}
+
+// ── Audit Payments ──
+
+export function getAuditPayments(): AuditPayment[] {
+  return readJson<AuditPayment[]>(STORAGE_KEYS.auditPayments, []);
+}
+
+export function saveAuditPayments(payments: AuditPayment[]): void {
+  writeJson(STORAGE_KEYS.auditPayments, payments);
 }

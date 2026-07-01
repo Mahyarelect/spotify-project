@@ -34,6 +34,20 @@ digraph G {
     "__tests__/userService.test.ts" [fillcolor="#d1d5db"];
   }
 
+  subgraph cluster_admin {
+    label="admin";
+    style=filled;
+    color="#ef444440";
+    fillcolor="#ef444415";
+    "components/admin/AdminSidebar.tsx" [fillcolor="#ef4444"];
+    "components/admin/ArtistVerificationTable.tsx" [fillcolor="#ef4444"];
+    "components/admin/AuditPaymentsTable.tsx" [fillcolor="#ef4444"];
+    "components/admin/RevenueCharts.tsx" [fillcolor="#ef4444"];
+    "components/admin/SubscriptionPriceForm.tsx" [fillcolor="#ef4444"];
+    "components/admin/SupportTicketsTable.tsx" [fillcolor="#ef4444"];
+    "components/admin/TicketChatBox.tsx" [fillcolor="#ef4444"];
+  }
+
   subgraph cluster_albums {
     label="albums";
     style=filled;
@@ -241,8 +255,10 @@ digraph G {
     style=filled;
     color="#f43f5e40";
     fillcolor="#f43f5e15";
+    "lib/services/adminService.ts" [fillcolor="#f43f5e"];
     "lib/services/artistService.ts" [fillcolor="#f43f5e"];
     "lib/services/artistWorkService.ts" [fillcolor="#f43f5e"];
+    "lib/services/auditService.ts" [fillcolor="#f43f5e"];
     "lib/services/authService.ts" [fillcolor="#f43f5e"];
     "lib/services/notificationService.ts" [fillcolor="#f43f5e"];
     "lib/services/password.ts" [fillcolor="#f43f5e"];
@@ -251,6 +267,7 @@ digraph G {
     "lib/services/storage.ts" [fillcolor="#f43f5e"];
     "lib/services/streamService.ts" [fillcolor="#f43f5e"];
     "lib/services/subscriptionService.ts" [fillcolor="#f43f5e"];
+    "lib/services/ticketService.ts" [fillcolor="#f43f5e"];
     "lib/services/userService.ts" [fillcolor="#f43f5e"];
   }
 
@@ -268,6 +285,7 @@ digraph G {
     style=filled;
     color="#38bdf840";
     fillcolor="#38bdf815";
+    "pages/AdminDashboardPage.tsx" [fillcolor="#38bdf8"];
     "pages/AdminDashboardPlaceholder.tsx" [fillcolor="#38bdf8"];
     "pages/AlbumDetailPage.tsx" [fillcolor="#38bdf8"];
     "pages/AlbumsPage.tsx" [fillcolor="#38bdf8"];
@@ -294,9 +312,11 @@ digraph G {
     color="#60a5fa40";
     fillcolor="#60a5fa15";
     "types/artist.ts" [fillcolor="#60a5fa"];
+    "types/audit.ts" [fillcolor="#60a5fa"];
     "types/music.ts" [fillcolor="#60a5fa"];
     "types/notification.ts" [fillcolor="#60a5fa"];
     "types/subscription.ts" [fillcolor="#60a5fa"];
+    "types/ticket.ts" [fillcolor="#60a5fa"];
     "types/user.ts" [fillcolor="#60a5fa"];
   }
 
@@ -307,7 +327,7 @@ digraph G {
   "App.tsx" -> "lib/constants/routes.ts";
   "App.tsx" -> "lib/context/AuthContext.tsx";
   "App.tsx" -> "lib/context/PlayerContext.tsx";
-  "App.tsx" -> "pages/AdminDashboardPlaceholder.tsx";
+  "App.tsx" -> "pages/AdminDashboardPage.tsx";
   "App.tsx" -> "pages/AlbumDetailPage.tsx";
   "App.tsx" -> "pages/AlbumsPage.tsx";
   "App.tsx" -> "pages/ArtistDashboardPage.tsx";
@@ -353,6 +373,11 @@ digraph G {
   "__tests__/subscription.test.ts" -> "lib/services/userService.ts";
   "__tests__/userService.test.ts" -> "lib/services/storage.ts";
   "__tests__/userService.test.ts" -> "lib/services/userService.ts";
+  "components/admin/ArtistVerificationTable.tsx" -> "types/user.ts";
+  "components/admin/AuditPaymentsTable.tsx" -> "types/audit.ts";
+  "components/admin/SubscriptionPriceForm.tsx" -> "types/subscription.ts";
+  "components/admin/SupportTicketsTable.tsx" -> "types/ticket.ts";
+  "components/admin/TicketChatBox.tsx" -> "types/ticket.ts";
   "components/albums/AddToPlaylistMenu.tsx" -> "types/music.ts";
   "components/albums/AlbumCardArchive.tsx" -> "types/music.ts";
   "components/albums/SingleCard.tsx" -> "components/albums/AddToPlaylistMenu.tsx";
@@ -480,12 +505,18 @@ digraph G {
   "lib/mockData/plans.ts" -> "types/subscription.ts";
   "lib/mockData/users.ts" -> "lib/services/password.ts";
   "lib/mockData/users.ts" -> "types/user.ts";
+  "lib/services/adminService.ts" -> "lib/services/notificationService.ts";
+  "lib/services/adminService.ts" -> "lib/services/password.ts";
+  "lib/services/adminService.ts" -> "lib/services/storage.ts";
+  "lib/services/adminService.ts" -> "types/user.ts";
   "lib/services/artistService.ts" -> "lib/services/storage.ts";
   "lib/services/artistService.ts" -> "types/artist.ts";
   "lib/services/artistService.ts" -> "types/music.ts";
   "lib/services/artistService.ts" -> "types/user.ts";
   "lib/services/artistWorkService.ts" -> "lib/services/storage.ts";
   "lib/services/artistWorkService.ts" -> "types/music.ts";
+  "lib/services/auditService.ts" -> "lib/services/storage.ts";
+  "lib/services/auditService.ts" -> "types/audit.ts";
   "lib/services/authService.ts" -> "lib/services/notificationService.ts";
   "lib/services/authService.ts" -> "lib/services/password.ts";
   "lib/services/authService.ts" -> "lib/services/storage.ts";
@@ -501,20 +532,43 @@ digraph G {
   "lib/services/storage.ts" -> "lib/mockData/music.ts";
   "lib/services/storage.ts" -> "lib/mockData/plans.ts";
   "lib/services/storage.ts" -> "lib/mockData/users.ts";
+  "lib/services/storage.ts" -> "types/audit.ts";
   "lib/services/storage.ts" -> "types/music.ts";
   "lib/services/storage.ts" -> "types/notification.ts";
   "lib/services/storage.ts" -> "types/subscription.ts";
+  "lib/services/storage.ts" -> "types/ticket.ts";
   "lib/services/storage.ts" -> "types/user.ts";
   "lib/services/streamService.ts" -> "lib/services/storage.ts";
   "lib/services/streamService.ts" -> "types/user.ts";
   "lib/services/subscriptionService.ts" -> "lib/services/storage.ts";
   "lib/services/subscriptionService.ts" -> "types/subscription.ts";
   "lib/services/subscriptionService.ts" -> "types/user.ts";
+  "lib/services/ticketService.ts" -> "lib/services/storage.ts";
+  "lib/services/ticketService.ts" -> "types/ticket.ts";
   "lib/services/userService.ts" -> "lib/services/storage.ts";
   "lib/services/userService.ts" -> "lib/services/subscriptionService.ts";
   "lib/services/userService.ts" -> "types/user.ts";
   "main.tsx" -> "App.tsx";
   "main.tsx" -> "index.css";
+  "pages/AdminDashboardPage.tsx" -> "components/admin/AdminSidebar.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/admin/ArtistVerificationTable.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/admin/AuditPaymentsTable.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/admin/RevenueCharts.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/admin/SubscriptionPriceForm.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/admin/SupportTicketsTable.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/admin/TicketChatBox.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/layout/PageHeader.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/layout/PageShell.tsx";
+  "pages/AdminDashboardPage.tsx" -> "components/ui/RoleGuard.tsx";
+  "pages/AdminDashboardPage.tsx" -> "lib/hooks/useAuth.ts";
+  "pages/AdminDashboardPage.tsx" -> "lib/services/adminService.ts";
+  "pages/AdminDashboardPage.tsx" -> "lib/services/auditService.ts";
+  "pages/AdminDashboardPage.tsx" -> "lib/services/subscriptionService.ts";
+  "pages/AdminDashboardPage.tsx" -> "lib/services/ticketService.ts";
+  "pages/AdminDashboardPage.tsx" -> "types/audit.ts";
+  "pages/AdminDashboardPage.tsx" -> "types/subscription.ts";
+  "pages/AdminDashboardPage.tsx" -> "types/ticket.ts";
+  "pages/AdminDashboardPage.tsx" -> "types/user.ts";
   "pages/AdminDashboardPlaceholder.tsx" -> "lib/constants/routes.ts";
   "pages/AlbumDetailPage.tsx" -> "lib/constants/routes.ts";
   "pages/AlbumDetailPage.tsx" -> "lib/hooks/usePlayer.ts";
