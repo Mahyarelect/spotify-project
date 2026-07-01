@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { getSongs, getAlbums } from "@/lib/services/storage";
+import { getAllSongs, getAllAlbums } from "@/lib/services/musicService";
 import { useAuth } from "@/lib/hooks/useAuth";
 import * as playlistService from "@/lib/services/playlistService";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -11,8 +11,8 @@ import type { Playlist } from "@/types/music";
 
 export default function AlbumsPage() {
   const { user } = useAuth();
-  const allSongs = useMemo(() => getSongs(), []);
-  const allAlbums = useMemo(() => getAlbums(), []);
+  const allSongs = useMemo(() => getAllSongs(), []);
+  const allAlbums = useMemo(() => getAllAlbums(), []);
 
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("playCount-desc");

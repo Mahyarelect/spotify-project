@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { getSongs } from "@/lib/services/storage";
+import { getAllSongs } from "@/lib/services/musicService";
 import * as playlistService from "@/lib/services/playlistService";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +11,7 @@ import type { Playlist } from "@/types/music";
 
 export default function PlaylistsPage() {
   const { user } = useAuth();
-  const songs = useMemo(() => getSongs(), []);
+  const songs = useMemo(() => getAllSongs(), []);
 
   const [playlists, setPlaylists] = useState<Playlist[]>(() =>
     user ? playlistService.getUserPlaylists(user.id) : []

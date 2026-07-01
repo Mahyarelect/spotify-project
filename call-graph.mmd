@@ -41,6 +41,7 @@ graph TD
     adminSvc["lib/services/adminService.ts"]
     ticketSvc["lib/services/ticketService.ts"]
     auditSvc["lib/services/auditService.ts"]
+    musicSvc["lib/services/musicService.ts"]
 
     %% Mock Data
     mockUsers["lib/mockData/users.ts"]
@@ -245,6 +246,8 @@ graph TD
     storage --> sub
     storage --> music
     storage --> notifType
+    musicSvc --> storage
+    musicSvc --> music
     mockUsers --> passwordSvc
     mockUsers --> user
     mockPlans --> sub
@@ -469,7 +472,7 @@ graph TD
     homePage --> songRow
     homePage --> routes
     homePage --> useAuth
-    homePage --> storage
+    homePage --> musicSvc
     loginPage --> loginForm
     registerPage --> registerForm
     artistRegPage --> artistRegForm
@@ -512,7 +515,7 @@ graph TD
     playlistsPage --> button
     playlistsPage --> useAuth
     playlistsPage --> playlistSvc
-    playlistsPage --> storage
+    playlistsPage --> musicSvc
     playlistsPage --> music
     albumsPage --> albumCardArchive
     albumsPage --> filterSort
@@ -521,15 +524,15 @@ graph TD
     albumsPage --> pageHeader
     albumsPage --> useAuth
     albumsPage --> playlistSvc
-    albumsPage --> storage
+    albumsPage --> musicSvc
     albumsPage --> music
     albumDetailPage --> routes
     albumDetailPage --> usePlayer
-    albumDetailPage --> storage
+    albumDetailPage --> musicSvc
     artistPage --> routes
     playerPage --> routes
     playerPage --> usePlayer
-    playerPage --> storage
+    playerPage --> musicSvc
     artistDash --> routes
     adminDash --> routes
 
@@ -555,7 +558,7 @@ graph TD
     class routes,plans,roles constant
     class authCtx,playerCtx context
     class useAuth,usePlayer,useSubLimits hook
-    class storage,authSvc,userSvc,subSvc,streamSvc,playlistSvc,settingsSvc,passwordSvc,notifSvc,artistSvc,artistWorkSvc,adminSvc,ticketSvc,auditSvc service
+    class storage,authSvc,userSvc,subSvc,streamSvc,playlistSvc,settingsSvc,passwordSvc,notifSvc,artistSvc,artistWorkSvc,adminSvc,ticketSvc,auditSvc,musicSvc service
     class mockUsers,mockPlans,mockMusic mock
     class authSchema,profileSchema validation
     class appLayout,authLayout,topNav,sidebar,navItems,pageHeader,pageShell layout

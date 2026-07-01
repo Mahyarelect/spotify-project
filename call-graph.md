@@ -2,7 +2,7 @@
 
 Generated from static analysis of `src/` using `madge`.
 
-- **141 modules** analyzed
+- **142 modules** analyzed
 - **0 circular dependencies** found
 
 ---
@@ -43,7 +43,7 @@ Generated from static analysis of `src/` using `madge`.
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     SERVICES (11)                               │
+│                     SERVICES (12)                               │
 │  authService → password, storage, notificationService           │
 │  userService → storage, subscriptionService                     │
 │  subscriptionService → storage                                  │
@@ -52,7 +52,11 @@ Generated from static analysis of `src/` using `madge`.
 │  settingsService → userService                                  │
 │  notificationService → storage, users                           │
 │  artistService → storage, types/artist, types/music, users      │
-│  artistWorkService → storage, types/music, users (CRUD)  ← NEW │
+│  artistWorkService → storage, types/music, users (CRUD)         │
+│  adminService → storage, notificationService, password          │
+│  ticketService → storage, types/ticket                          │
+│  auditService → storage, types/audit, users, songs              │
+│  musicService → storage (read-only wrapper)  ← NEW              │
 │  storage → mockData (users, plans, music)                       │
 └─────────────────────────────────────────────────────────────────┘
         │
@@ -151,7 +155,7 @@ storage (foundation — no upstream deps except mock data)
 HomePage
   ├─→ SectionHeading, HorizontalCardScroller
   ├─→ AlbumCard, PlaylistCard, SongRow, EarlyAccessBanner
-  ├─→ routes, useAuth, storage
+  ├─→ routes, useAuth, musicService
 
 LoginPage → LoginForm
 RegisterPage → RegisterForm
@@ -179,12 +183,12 @@ SubscriptionPage
 PlaylistsPage
   ├─→ PageHeader, Button
   ├─→ CreatePlaylistModal, EmptyPlaylistState, PlaylistCardExpandable
-  ├─→ useAuth, playlistService, storage
+  ├─→ useAuth, playlistService, musicService
 
 AlbumsPage
   ├─→ PageHeader
   ├─→ AlbumCardArchive, SingleCard, SearchBar, FilterSortBar
-  ├─→ useAuth, playlistService, storage
+  ├─→ useAuth, playlistService, musicService
 
 NotificationsPage  ← NEW
   ├─→ PageHeader, PageShell, Button
@@ -192,8 +196,8 @@ NotificationsPage  ← NEW
   ├─→ useAuth, notificationService
   └─→ (no direct storage import — proper architecture)
 
-AlbumDetailPage → routes, usePlayer, storage
-PlayerPage → routes, usePlayer, storage
+AlbumDetailPage → routes, usePlayer, musicService
+PlayerPage → routes, usePlayer, musicService
 ArtistPage  ← REPLACED
   ├─→ ArtistHeader → VerifiedBadge, types/user
   ├─→ ArtistWorksList → routes, usePlayer, types/music (albums + singles + play buttons)

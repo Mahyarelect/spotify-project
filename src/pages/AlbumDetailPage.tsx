@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Disc3, Play, Pause, Shuffle } from "lucide-react";
 import { useMemo } from "react";
-import { getAlbums, getSongs } from "@/lib/services/storage";
+import { getAllAlbums, getAllSongs } from "@/lib/services/musicService";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 
@@ -13,8 +13,8 @@ function formatDuration(seconds: number): string {
 
 export default function AlbumDetailPage() {
   const { albumId } = useParams();
-  const albums = useMemo(() => getAlbums(), []);
-  const songs = useMemo(() => getSongs(), []);
+  const albums = useMemo(() => getAllAlbums(), []);
+  const songs = useMemo(() => getAllSongs(), []);
   const { currentSong, isPlaying, playSong, togglePlay, toggleShuffle } = usePlayer();
 
   const album = albums.find((a) => a.id === albumId);

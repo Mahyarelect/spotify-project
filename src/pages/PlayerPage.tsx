@@ -1,14 +1,14 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Music } from "lucide-react";
 import { useMemo, useEffect } from "react";
-import { getSongs } from "@/lib/services/storage";
+import { getAllSongs } from "@/lib/services/musicService";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 
 export default function PlayerPage() {
   const { songId } = useParams();
   const navigate = useNavigate();
-  const songs = useMemo(() => getSongs(), []);
+  const songs = useMemo(() => getAllSongs(), []);
   const song = songs.find((s) => s.id === songId);
   const { currentSong, playSong, expand } = usePlayer();
 

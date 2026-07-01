@@ -2,7 +2,12 @@ import { useMemo } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/constants/routes";
-import { getSongs, getAlbums, getPlaylists, getRecentlyPlayed } from "@/lib/services/storage";
+import {
+  getAllSongs,
+  getAllAlbums,
+  getAllPlaylists,
+  getRecentlyPlayed,
+} from "@/lib/services/musicService";
 
 import { SectionHeading } from "@/components/home/SectionHeading";
 import { HorizontalCardScroller } from "@/components/home/HorizontalCardScroller";
@@ -14,9 +19,9 @@ import { EarlyAccessBanner } from "@/components/home/EarlyAccessBanner";
 export default function HomePage() {
   const { user, loading } = useAuth();
 
-  const songs = useMemo(() => getSongs(), []);
-  const albums = useMemo(() => getAlbums(), []);
-  const playlists = useMemo(() => getPlaylists(), []);
+  const songs = useMemo(() => getAllSongs(), []);
+  const albums = useMemo(() => getAllAlbums(), []);
+  const playlists = useMemo(() => getAllPlaylists(), []);
 
   const recentEntries = useMemo(
     () => (user ? getRecentlyPlayed(user.id) : []),
