@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { PlayerProvider } from "@/lib/context/PlayerContext";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { ROUTES } from "@/lib/constants/routes";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
@@ -29,7 +30,8 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <PlayerProvider>
+        <LanguageProvider>
+          <PlayerProvider>
           <Routes>
             <Route element={<AppLayout />}>
               <Route path={ROUTES.HOME} element={<HomePage />} />
@@ -62,7 +64,8 @@ export default function App() {
 
             <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
           </Routes>
-        </PlayerProvider>
+          </PlayerProvider>
+        </LanguageProvider>
       </BrowserRouter>
     </AuthProvider>
   );

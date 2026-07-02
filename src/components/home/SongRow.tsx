@@ -1,6 +1,7 @@
 import { Play, Music, Pause } from "lucide-react";
 import type { Song } from "@/types/music";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -18,6 +19,7 @@ export function SongRow({
   queue?: Song[];
 }) {
   const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
+  const { t } = useTranslation();
   const isActive = currentSong?.id === song.id;
 
   const handleClick = () => {
@@ -37,7 +39,7 @@ export function SongRow({
       <button
         onClick={handleClick}
         className="flex w-8 items-center justify-center"
-        aria-label={isActive && isPlaying ? "Pause" : `Play ${song.title}`}
+        aria-label={isActive && isPlaying ? t.player.pause : t.player.playTitle.replace("{title}", song.title)}
       >
         {isActive && isPlaying ? (
           <Pause size={16} className="text-green-400" fill="currentColor" />

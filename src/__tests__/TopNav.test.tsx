@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { TopNav } from "@/components/layout/TopNav";
 import { AuthProvider } from "@/lib/context/AuthContext";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { STORAGE_KEYS } from "@/lib/services/storage";
 import { mockHashPassword } from "@/lib/services/password";
 
@@ -10,7 +11,9 @@ function renderNav() {
   return render(
     <MemoryRouter>
       <AuthProvider>
-        <TopNav />
+        <LanguageProvider>
+          <TopNav />
+        </LanguageProvider>
       </AuthProvider>
     </MemoryRouter>
   );

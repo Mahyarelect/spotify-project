@@ -6,6 +6,7 @@ import {
   BarChart3,
   Shield,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export type AdminSection =
   | "verification"
@@ -20,20 +21,22 @@ interface AdminSidebarProps {
   isSuperAdmin: boolean;
 }
 
-const ITEMS: {
-  key: AdminSection;
-  label: string;
-  icon: typeof Shield;
-  adminOnly?: boolean;
-}[] = [
-  { key: "verification", label: "Artist Verification", icon: UserCheck },
-  { key: "tickets", label: "Support Tickets", icon: MessageSquare },
-  { key: "audit", label: "Audit & Payments", icon: DollarSign },
-  { key: "pricing", label: "Subscription Pricing", icon: CreditCard, adminOnly: true },
-  { key: "revenue", label: "Revenue Overview", icon: BarChart3, adminOnly: true },
-];
-
 export function AdminSidebar({ active, onChange, isSuperAdmin }: AdminSidebarProps) {
+  const { t } = useTranslation();
+
+  const ITEMS: {
+    key: AdminSection;
+    label: string;
+    icon: typeof Shield;
+    adminOnly?: boolean;
+  }[] = [
+    { key: "verification", label: t.admin.verification, icon: UserCheck },
+    { key: "tickets", label: t.admin.tickets, icon: MessageSquare },
+    { key: "audit", label: t.admin.audit, icon: DollarSign },
+    { key: "pricing", label: t.admin.pricing, icon: CreditCard, adminOnly: true },
+    { key: "revenue", label: t.admin.revenue, icon: BarChart3, adminOnly: true },
+  ];
+
   return (
     <nav className="flex gap-1 overflow-x-auto border-b border-zinc-800 pb-px lg:flex-col lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
       {ITEMS.map((item) => {

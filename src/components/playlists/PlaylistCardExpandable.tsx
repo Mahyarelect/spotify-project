@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { Playlist, Song } from "@/types/music";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -33,6 +34,7 @@ export function PlaylistCardExpandable({
   onDelete: () => void;
   onRemoveSong: (songId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(playlist.title);
@@ -114,7 +116,7 @@ export function PlaylistCardExpandable({
           )}
           <p className="text-xs text-zinc-400">
             {playlistSongs.length}{" "}
-            {playlistSongs.length === 1 ? "song" : "songs"}
+            {playlistSongs.length === 1 ? t.playlists.song : t.playlists.songs}
             {playlist.description && ` · ${playlist.description}`}
           </p>
         </div>
@@ -124,7 +126,7 @@ export function PlaylistCardExpandable({
             <button
               onClick={handlePlayAll}
               className="rounded-full p-2 text-green-400 transition hover:bg-zinc-700"
-              aria-label={isPlaylistPlaying ? "Pause playlist" : "Play playlist"}
+              aria-label={isPlaylistPlaying ? t.playlists.pausePlaylist : t.playlists.playPlaylist}
             >
               {isPlaylistPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
             </button>
@@ -138,7 +140,7 @@ export function PlaylistCardExpandable({
                   setEditTitle(playlist.title);
                 }}
                 className="rounded-full p-1.5 text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-200"
-                title="Rename playlist"
+                title={t.playlists.renamePlaylist}
               >
                 <Pencil size={14} />
               </button>
@@ -150,7 +152,7 @@ export function PlaylistCardExpandable({
                       onDelete();
                     }}
                     className="rounded-full p-1.5 text-red-400 transition hover:bg-red-900/30"
-                    title="Confirm delete"
+                    title={t.playlists.confirmDelete}
                   >
                     <Check size={14} />
                   </button>
@@ -160,7 +162,7 @@ export function PlaylistCardExpandable({
                       setConfirmDelete(false);
                     }}
                     className="rounded-full p-1.5 text-zinc-400 transition hover:bg-zinc-700"
-                    title="Cancel"
+                    title={t.playlists.cancel}
                   >
                     <X size={14} />
                   </button>
@@ -172,7 +174,7 @@ export function PlaylistCardExpandable({
                     setConfirmDelete(true);
                   }}
                   className="rounded-full p-1.5 text-zinc-400 transition hover:bg-zinc-700 hover:text-red-400"
-                  title="Delete playlist"
+                  title={t.playlists.deletePlaylist}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -191,14 +193,14 @@ export function PlaylistCardExpandable({
         <div className="border-t border-zinc-800">
           {playlistSongs.length === 0 ? (
             <p className="p-4 text-center text-sm text-zinc-400">
-              No songs in this playlist yet.{" "}
+              {t.playlists.emptySongList}{" "}
               <Link
                 to="/albums"
                 className="text-green-400 hover:underline"
               >
-                Browse albums & singles
+                {t.playlists.browseAlbums}
               </Link>{" "}
-              to add songs.
+              {t.playlists.addSongsHint}
             </p>
           ) : (
             playlistSongs.map((song, i) => {
@@ -220,7 +222,7 @@ export function PlaylistCardExpandable({
                       }
                     }}
                     className="flex w-6 items-center justify-center sm:w-8"
-                    aria-label={isActive && isPlaying ? "Pause" : `Play ${song.title}`}
+                    aria-label={isActive && isPlaying ? t.player.pause : t.player.playTitle.replace("{title}", song.title)}
                   >
                     {isActive && isPlaying ? (
                       <Pause size={14} className="text-green-400" fill="currentColor" />
@@ -272,7 +274,7 @@ export function PlaylistCardExpandable({
                       onRemoveSong(song.id);
                     }}
                     className="rounded-full p-1 text-zinc-500 opacity-0 transition hover:bg-zinc-700 hover:text-red-400 group-hover:opacity-100"
-                    title="Remove from playlist"
+                    title={t.playlists.removeFromPlaylist}
                   >
                     <X size={14} />
                   </button>

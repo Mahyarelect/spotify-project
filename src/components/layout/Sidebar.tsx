@@ -1,14 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { Home, ListMusic, Disc3, User, Settings } from "lucide-react";
 import { ROUTES } from "@/lib/constants/routes";
-
-const links = [
-  { to: ROUTES.HOME, label: "Home", icon: Home, end: true },
-  { to: ROUTES.PLAYLISTS, label: "Playlists", icon: ListMusic },
-  { to: ROUTES.ALBUMS, label: "Albums & Singles", icon: Disc3 },
-  { to: ROUTES.PROFILE, label: "Profile", icon: User },
-  { to: ROUTES.SETTINGS, label: "Settings", icon: Settings },
-];
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function navClass({ isActive }: { isActive: boolean }) {
   return [
@@ -20,6 +13,16 @@ function navClass({ isActive }: { isActive: boolean }) {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
+
+  const links = [
+    { to: ROUTES.HOME, label: t.nav.home, icon: Home, end: true },
+    { to: ROUTES.PLAYLISTS, label: t.nav.playlists, icon: ListMusic },
+    { to: ROUTES.ALBUMS, label: t.nav.albums, icon: Disc3 },
+    { to: ROUTES.PROFILE, label: t.nav.profile, icon: User },
+    { to: ROUTES.SETTINGS, label: t.nav.settings, icon: Settings },
+  ];
+
   return (
     <aside className="hidden w-56 shrink-0 border-r border-zinc-800 bg-zinc-950 md:block">
       <nav className="flex flex-col gap-1 p-4">

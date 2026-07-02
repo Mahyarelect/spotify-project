@@ -1,5 +1,6 @@
 import { Repeat, Repeat1 } from "lucide-react";
 import type { RepeatMode } from "@/lib/hooks/usePlayer";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function RepeatButton({
   mode,
@@ -8,6 +9,7 @@ export function RepeatButton({
   mode: RepeatMode;
   onCycle: () => void;
 }) {
+  const { t } = useTranslation();
   const Icon = mode === "one" ? Repeat1 : Repeat;
   const isActive = mode !== "off";
 
@@ -15,7 +17,7 @@ export function RepeatButton({
     <button
       onClick={onCycle}
       className={`relative transition ${isActive ? "text-green-400" : "text-zinc-400 hover:text-white"}`}
-      aria-label={`Repeat: ${mode}`}
+      aria-label={t.player.repeat.replace("{mode}", mode)}
     >
       <Icon size={18} />
       {mode === "one" && (

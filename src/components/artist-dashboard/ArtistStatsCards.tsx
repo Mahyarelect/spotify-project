@@ -1,4 +1,5 @@
 import { Headphones, Users, DollarSign, Music } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface ArtistStatsCardsProps {
   totalStreams: number;
@@ -13,29 +14,30 @@ export function ArtistStatsCards({
   revenue,
   songCount,
 }: ArtistStatsCardsProps) {
+  const { t } = useTranslation();
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
         icon={<Headphones size={20} />}
-        label="Total Streams"
+        label={t.artistDashboard.totalStreams}
         value={totalStreams.toLocaleString()}
         color="text-green-400"
       />
       <StatCard
         icon={<Users size={20} />}
-        label="Listeners"
+        label={t.artistDashboard.listeners}
         value={listenerCount.toLocaleString()}
         color="text-blue-400"
       />
       <StatCard
         icon={<DollarSign size={20} />}
-        label="Revenue"
+        label={t.artistDashboard.revenue}
         value={`$${revenue.toFixed(2)}`}
         color="text-yellow-400"
       />
       <StatCard
         icon={<Music size={20} />}
-        label="Published Works"
+        label={t.artistDashboard.publishedWorks}
         value={songCount.toString()}
         color="text-purple-400"
       />

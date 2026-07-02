@@ -4,9 +4,11 @@ import type { Album } from "@/types/music";
 import { AlbumCard } from "./AlbumCard";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/constants/routes";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function EarlyAccessBanner({ albums }: { albums: Album[] }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const isGold = user?.planTier === "gold";
 
   if (albums.length === 0) return null;
@@ -15,7 +17,7 @@ export function EarlyAccessBanner({ albums }: { albums: Album[] }) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Sparkles size={20} className="text-yellow-400" />
-        <h2 className="text-2xl font-bold tracking-tight">Early Access</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t.earlyAccess.title}</h2>
       </div>
 
       {isGold ? (
@@ -35,14 +37,14 @@ export function EarlyAccessBanner({ albums }: { albums: Album[] }) {
             <div className="flex items-center gap-2 rounded-full bg-zinc-900/90 px-4 py-2">
               <Lock size={16} className="text-yellow-400" />
               <span className="text-sm font-medium text-zinc-200">
-                Gold members only
+                {t.earlyAccess.goldOnly}
               </span>
             </div>
             <Link
               to={ROUTES.SUBSCRIPTION}
               className="rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-black transition hover:bg-yellow-400"
             >
-              Upgrade to Gold
+              {t.earlyAccess.upgradeToGold}
             </Link>
           </div>
         </div>

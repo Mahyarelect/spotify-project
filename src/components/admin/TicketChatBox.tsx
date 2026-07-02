@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, Send, XCircle, CheckCircle } from "lucide-react";
 import type { SupportTicket, TicketStatus } from "@/types/ticket";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface TicketChatBoxProps {
   ticket: SupportTicket;
@@ -17,6 +18,7 @@ export function TicketChatBox({
   onSendMessage,
   onUpdateStatus,
 }: TicketChatBoxProps) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
 
   function handleSend() {
@@ -38,7 +40,7 @@ export function TicketChatBox({
           <div>
             <p className="font-medium text-zinc-100">{ticket.subject}</p>
             <p className="text-xs text-zinc-500">
-              {ticket.userName} · {ticket.priority} priority
+              {ticket.userName} · {t.admin.priorityLabel.replace("{priority}", ticket.priority)}
             </p>
           </div>
         </div>
@@ -49,7 +51,7 @@ export function TicketChatBox({
               className="flex items-center gap-1 rounded-lg bg-blue-600/20 px-2 py-1 text-xs text-blue-400 hover:bg-blue-600/30"
             >
               <CheckCircle size={12} />
-              Resolve
+              {t.admin.resolve}
             </button>
           )}
           {ticket.status !== "closed" && (
@@ -58,7 +60,7 @@ export function TicketChatBox({
               className="flex items-center gap-1 rounded-lg bg-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-600"
             >
               <XCircle size={12} />
-              Close
+              {t.admin.close}
             </button>
           )}
         </div>
@@ -99,7 +101,7 @@ export function TicketChatBox({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Type a message..."
+            placeholder={t.admin.typePlaceholder}
             className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-green-500 focus:outline-none"
           />
           <button

@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function VolumeControl({
   volume,
@@ -8,6 +9,7 @@ export function VolumeControl({
   volume: number;
   onChange: (v: number) => void;
 }) {
+  const { t } = useTranslation();
   const barRef = useRef<HTMLDivElement>(null);
   const prevVolume = useRef(volume);
 
@@ -37,7 +39,7 @@ export function VolumeControl({
       <button
         onClick={toggleMute}
         className="text-zinc-400 transition hover:text-white"
-        aria-label={volume === 0 ? "Unmute" : "Mute"}
+        aria-label={volume === 0 ? t.player.unmute : t.player.mute}
       >
         <Icon size={18} />
       </button>

@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Camera, Upload } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function AvatarUploader({
   currentUrl,
@@ -10,6 +11,7 @@ export function AvatarUploader({
   disabled: boolean;
   onUpload: (dataUrl: string) => void;
 }) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,7 +28,7 @@ export function AvatarUploader({
     <div className="space-y-2">
       <div className="w-24 h-24 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center overflow-hidden">
         {currentUrl ? (
-          <img src={currentUrl} alt="Avatar" className="w-full h-full object-cover" />
+          <img src={currentUrl} alt={t.profile.avatarAlt} className="w-full h-full object-cover" />
         ) : (
           <Camera className="w-8 h-8 text-zinc-400" />
         )}
@@ -39,10 +41,10 @@ export function AvatarUploader({
         className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50"
       >
         <Upload size={14} />
-        {disabled ? "Upgrade to upload photo" : "Upload Photo"}
+        {disabled ? t.profile.upgradeToUpload : t.profile.uploadPhoto}
       </button>
       {disabled && (
-        <p className="text-xs text-amber-600 dark:text-amber-400">Upgrade to Silver to add a profile photo</p>
+        <p className="text-xs text-amber-600 dark:text-amber-400">{t.profile.upgradeHint}</p>
       )}
     </div>
   );

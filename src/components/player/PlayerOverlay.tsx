@@ -8,6 +8,7 @@ import {
 import { useState } from "react";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PlayPauseButton } from "./controls/PlayPauseButton";
 import { SkipButton } from "./controls/SkipButton";
 import { ProgressBar } from "./controls/ProgressBar";
@@ -19,6 +20,7 @@ import { getPlanLimits } from "@/lib/constants/plans";
 import { getTodayStreamCount } from "@/lib/services/streamService";
 
 export function PlayerOverlay() {
+  const { t } = useTranslation();
   const {
     currentSong,
     isPlaying,
@@ -58,12 +60,12 @@ export function PlayerOverlay() {
         <button
           onClick={collapse}
           className="rounded-full p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-          aria-label="Minimize player"
+          aria-label={t.player.minimize}
         >
           <ChevronDown size={24} />
         </button>
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-          Now Playing
+          {t.player.nowPlaying}
         </p>
         <div className="w-10" />
       </div>
@@ -111,14 +113,14 @@ export function PlayerOverlay() {
                     onClick={collapse}
                     className="transition hover:text-green-400 hover:underline"
                   >
-                    Album
+                    {t.player.album}
                   </Link>
                 </>
               )}
             </div>
             {canViewStats && (
               <p className="mt-2 text-xs text-zinc-500">
-                {streamCount} {streamCount === 1 ? "stream" : "streams"} today
+                {t.player.streamsToday.replace("{count}", String(streamCount))}
               </p>
             )}
           </div>
@@ -160,7 +162,7 @@ export function PlayerOverlay() {
               }`}
             >
               <Mic2 size={16} />
-              Lyrics
+              {t.player.lyrics}
             </button>
             <button
               onClick={() => setActiveTab("queue")}
@@ -171,7 +173,7 @@ export function PlayerOverlay() {
               }`}
             >
               <ListMusic size={16} />
-              Queue
+              {t.player.queue}
               {queue.length > 0 && (
                 <span className="rounded-full bg-zinc-800 px-1.5 py-0.5 text-xs text-zinc-400">
                   {queue.length}
@@ -191,7 +193,7 @@ export function PlayerOverlay() {
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 py-16 text-zinc-500">
                     <Mic2 size={32} />
-                    <p className="text-sm">Lyrics not available</p>
+                    <p className="text-sm">{t.player.lyricsNotAvailable}</p>
                   </div>
                 )}
               </div>
@@ -201,7 +203,7 @@ export function PlayerOverlay() {
                 {nextSong && (
                   <div className="mt-6 border-t border-zinc-800 pt-4">
                     <p className="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                      Next up
+                      {t.player.nextUp}
                     </p>
                     <div className="flex items-center gap-3 rounded-lg bg-zinc-800/50 px-3 py-2.5">
                       <div

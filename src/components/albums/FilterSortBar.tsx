@@ -1,13 +1,7 @@
 import { ArrowUpDown } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export type SortOption = "playCount-desc" | "playCount-asc" | "releaseDate-desc" | "releaseDate-asc";
-
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "playCount-desc", label: "Most Listeners" },
-  { value: "playCount-asc", label: "Least Listeners" },
-  { value: "releaseDate-desc", label: "Newest First" },
-  { value: "releaseDate-asc", label: "Oldest First" },
-];
 
 export function FilterSortBar({
   value,
@@ -16,6 +10,15 @@ export function FilterSortBar({
   value: SortOption;
   onChange: (value: SortOption) => void;
 }) {
+  const { t } = useTranslation();
+
+  const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+    { value: "playCount-desc", label: t.albums.sortMostListeners },
+    { value: "playCount-asc", label: t.albums.sortLeastListeners },
+    { value: "releaseDate-desc", label: t.albums.sortNewestFirst },
+    { value: "releaseDate-asc", label: t.albums.sortOldestFirst },
+  ];
+
   return (
     <div className="flex items-center gap-2">
       <ArrowUpDown size={16} className="text-zinc-400" />

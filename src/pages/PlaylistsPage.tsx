@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { getAllSongs } from "@/lib/services/musicService";
 import * as playlistService from "@/lib/services/playlistService";
@@ -10,6 +11,7 @@ import { EmptyPlaylistState } from "@/components/playlists/EmptyPlaylistState";
 import type { Playlist } from "@/types/music";
 
 export default function PlaylistsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const songs = useMemo(() => getAllSongs(), []);
 
@@ -54,11 +56,11 @@ export default function PlaylistsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Playlists"
-        description={`You have ${playlists.length} of ${limitDisplay} playlists.`}
+        title={t.playlists.title}
+        description={t.playlists.description.replace("{count}", String(playlists.length)).replace("{limit}", String(limitDisplay))}
         actions={
           <Button onClick={() => setShowCreate(true)} disabled={limitReached}>
-            {limitReached ? "Limit Reached" : "New Playlist"}
+            {limitReached ? t.playlists.limitReached : t.playlists.newPlaylist}
           </Button>
         }
       />

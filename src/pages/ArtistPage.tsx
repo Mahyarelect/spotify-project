@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ROUTES } from "@/lib/constants/routes";
 import { getPlanLimits } from "@/lib/constants/plans";
@@ -19,6 +20,7 @@ import { ArtistWorksList } from "@/components/artist/ArtistWorksList";
 import { ArtistStatsPanel } from "@/components/artist/ArtistStatsPanel";
 
 export default function ArtistPage() {
+  const { t } = useTranslation();
   const { artistName } = useParams();
   const decoded = artistName ? decodeURIComponent(artistName) : "";
   const { user: currentUser, refreshUser } = useAuth();
@@ -92,19 +94,19 @@ export default function ArtistPage() {
   }, [currentUser, artist, refreshUser]);
 
   if (loading) {
-    return <p className="p-8 text-center text-zinc-400">Loading...</p>;
+    return <p className="p-8 text-center text-zinc-400">{t.artist.loading}</p>;
   }
 
   if (!artist) {
     return (
       <div className="space-y-4 py-20 text-center">
-        <p className="text-zinc-400">Artist not found.</p>
+        <p className="text-zinc-400">{t.artist.notFound}</p>
         <Link
           to={ROUTES.ALBUMS}
           className="inline-flex items-center gap-2 text-sm text-green-400 hover:text-green-300"
         >
           <ArrowLeft size={16} />
-          Back to Albums & Singles
+          {t.artist.backToAlbums}
         </Link>
       </div>
     );
@@ -117,7 +119,7 @@ export default function ArtistPage() {
         className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200"
       >
         <ArrowLeft size={16} />
-        Back to Albums & Singles
+        {t.artist.backToAlbums}
       </Link>
 
       <ArtistHeader

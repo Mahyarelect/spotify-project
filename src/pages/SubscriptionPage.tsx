@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { PlanCard } from "@/components/subscription/PlanCard";
@@ -10,6 +11,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import type { PlanLimits } from "@/types/subscription";
 
 export default function SubscriptionPage() {
+  const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const [plans, setPlans] = useState<PlanLimits[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<PlanLimits | null>(null);
@@ -40,8 +42,8 @@ export default function SubscriptionPage() {
   return (
     <>
       <PageHeader
-        title="Subscription"
-        description={`Current plan: ${user.planTier}${user.planRenewsAt ? ` · Renews ${new Date(user.planRenewsAt).toLocaleDateString()}` : ""}`}
+        title={t.subscription.title}
+        description={`${t.subscription.currentPlan.replace("{planTier}", user.planTier)}${user.planRenewsAt ? ` · ${t.subscription.renews.replace("{date}", new Date(user.planRenewsAt).toLocaleDateString())}` : ""}`}
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 mb-10">
@@ -60,7 +62,7 @@ export default function SubscriptionPage() {
       </div>
 
       <PageShell>
-        <h2 className="text-lg font-semibold mb-4">Plan Comparison</h2>
+        <h2 className="text-lg font-semibold mb-4">{t.subscription.planComparison}</h2>
         <PlanComparisonTable plans={plans} />
       </PageShell>
 

@@ -3,6 +3,7 @@ import { Music, Disc3 } from "lucide-react";
 import type { Song, Album } from "@/types/music";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { ROUTES } from "@/lib/constants/routes";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function formatDuration(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -21,13 +22,14 @@ export function ArtistWorksList({
   singles,
   allSongs,
 }: ArtistWorksListProps) {
+  const { t } = useTranslation();
   const { playSong } = usePlayer();
 
   return (
     <div className="space-y-8">
       {albums.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold">Albums</h2>
+          <h2 className="text-xl font-bold">{t.artist.albums}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {albums.map((album) => {
               const albumSongs = allSongs.filter((s) =>
@@ -49,7 +51,7 @@ export function ArtistWorksList({
                     {album.title}
                   </h3>
                   <p className="text-sm text-zinc-400">
-                    {album.songIds.length} songs ·{" "}
+                    {album.songIds.length} {t.common.songs} ·{" "}
                     {new Date(album.releaseDate).getFullYear()}
                   </p>
                   <button
@@ -59,7 +61,7 @@ export function ArtistWorksList({
                     }}
                     className="mt-2 text-xs text-green-400 hover:text-green-300"
                   >
-                    Play All
+                    {t.artist.playAll}
                   </button>
                 </Link>
               );
@@ -70,7 +72,7 @@ export function ArtistWorksList({
 
       {singles.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold">Singles</h2>
+          <h2 className="text-xl font-bold">{t.artist.singles}</h2>
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             {singles.map((song, i) => (
               <div
@@ -101,7 +103,7 @@ export function ArtistWorksList({
                   </p>
                 </div>
                 <span className="text-xs text-zinc-500">
-                  {song.playCount.toLocaleString()} plays
+                  {song.playCount.toLocaleString()} {t.artist.plays}
                 </span>
                 <button
                   onClick={() => playSong(song, [song])}
@@ -119,7 +121,7 @@ export function ArtistWorksList({
       {albums.length === 0 && singles.length === 0 && (
         <div className="py-12 text-center text-zinc-500">
           <Disc3 size={32} className="mx-auto mb-2 text-zinc-600" />
-          <p className="text-sm">No published works yet.</p>
+          <p className="text-sm">{t.artist.noWorks}</p>
         </div>
       )}
     </div>

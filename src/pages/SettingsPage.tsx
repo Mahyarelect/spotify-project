@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageShell } from "@/components/layout/PageShell";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -13,6 +14,7 @@ import { ROUTES } from "@/lib/constants/routes";
 import type { NotificationPrefs } from "@/types/user";
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
@@ -56,7 +58,7 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Manage notifications, sound, language, and account deletion." />
+      <PageHeader title={t.settings.title} description={t.settings.description} />
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
           <PageShell>
@@ -71,17 +73,17 @@ export default function SettingsPage() {
         </div>
         <div className="space-y-6">
           <PageShell className="h-fit">
-            <h2 className="text-lg font-semibold">Subscription</h2>
-            <p className="mt-2 text-sm text-zinc-400">Current plan: {user.planTier}</p>
+            <h2 className="text-lg font-semibold">{t.settings.subscriptionHeading}</h2>
+            <p className="mt-2 text-sm text-zinc-400">{t.settings.currentPlan.replace("{planTier}", user.planTier)}</p>
             <Link
               to={ROUTES.SUBSCRIPTION}
               className="mt-4 inline-flex rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-black"
             >
-              Manage subscription
+              {t.settings.manageSubscription}
             </Link>
           </PageShell>
           <PageShell className="h-fit border-red-900/60">
-            <h3 className="font-semibold text-lg mb-3">Account</h3>
+            <h3 className="font-semibold text-lg mb-3">{t.settings.accountHeading}</h3>
             <DeleteAccountDialog onDelete={handleDeleteAccount} />
           </PageShell>
         </div>

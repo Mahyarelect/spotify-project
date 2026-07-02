@@ -3,6 +3,7 @@ import { Play, Music, Pause } from "lucide-react";
 import type { Song, Playlist } from "@/types/music";
 import { AddToPlaylistMenu } from "./AddToPlaylistMenu";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -24,6 +25,7 @@ export function SingleCard({
   onRemoveFromPlaylist: (playlistId: string, songId: string) => void;
 }) {
   const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
+  const { t } = useTranslation();
   const isActive = currentSong?.id === song.id;
 
   const handlePlay = () => {
@@ -46,7 +48,7 @@ export function SingleCard({
         onClick={handlePlay}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded sm:h-11 sm:w-11"
         style={{ backgroundColor: song.coverColor }}
-        aria-label={isActive && isPlaying ? "Pause" : `Play ${song.title}`}
+        aria-label={isActive && isPlaying ? t.player.pause : t.player.playTitle.replace("{title}", song.title)}
       >
         {isActive && isPlaying ? (
           <Pause size={16} className="text-white" fill="currentColor" />

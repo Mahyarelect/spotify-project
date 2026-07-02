@@ -1,15 +1,17 @@
 import { ListMusic } from "lucide-react";
 import { QueueItem } from "./QueueItem";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function QueuePanel() {
+  const { t } = useTranslation();
   const { queue, currentIndex, removeFromQueue, reorderQueue, stop } = usePlayer();
 
   if (queue.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-zinc-500">
         <ListMusic size={32} />
-        <p className="text-sm">No songs in queue</p>
+        <p className="text-sm">{t.queue.empty}</p>
       </div>
     );
   }
@@ -17,12 +19,12 @@ export function QueuePanel() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-sm font-semibold text-zinc-300">Queue</h3>
+        <h3 className="text-sm font-semibold text-zinc-300">{t.queue.heading}</h3>
         <button
           onClick={stop}
           className="text-xs text-zinc-500 transition hover:text-red-400"
         >
-          Clear all
+          {t.queue.clearAll}
         </button>
       </div>
       <div className="max-h-72 space-y-0.5 overflow-y-auto pr-1 lg:max-h-96">

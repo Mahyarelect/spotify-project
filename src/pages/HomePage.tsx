@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/constants/routes";
@@ -17,6 +18,7 @@ import { SongRow } from "@/components/home/SongRow";
 import { EarlyAccessBanner } from "@/components/home/EarlyAccessBanner";
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   const songs = useMemo(() => getAllSongs(), []);
@@ -58,26 +60,26 @@ export default function HomePage() {
   );
 
   if (loading) {
-    return <p className="text-center text-zinc-400">Loading...</p>;
+    return <p className="text-center text-zinc-400">{t.home.loading}</p>;
   }
 
   if (!user) {
     return (
       <div className="space-y-4 py-20 text-center">
-        <h1 className="text-3xl font-bold">Music App</h1>
-        <p className="text-zinc-400">Stream your favorite music anywhere.</p>
+        <h1 className="text-3xl font-bold">{t.home.title}</h1>
+        <p className="text-zinc-400">{t.home.tagline}</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             to={ROUTES.LOGIN}
             className="rounded-lg bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700"
           >
-            Sign In
+            {t.home.signIn}
           </Link>
           <Link
             to={ROUTES.REGISTER}
             className="rounded-lg bg-zinc-700 px-6 py-3 font-medium text-zinc-200 hover:bg-zinc-600"
           >
-            Register
+            {t.home.register}
           </Link>
         </div>
       </div>
@@ -87,12 +89,12 @@ export default function HomePage() {
   return (
     <div className="space-y-10">
       <h1 className="text-3xl font-bold tracking-tight">
-        Welcome, {user.displayName}
+        {t.home.welcome.replace("{displayName}", user.displayName)}
       </h1>
 
       {recentPlaylists.length > 0 && (
         <section className="space-y-4">
-          <SectionHeading title="Recently Listened" />
+          <SectionHeading title={t.home.recentlyListened} />
           <HorizontalCardScroller>
             {recentPlaylists.map(
               (playlist) =>
@@ -103,7 +105,7 @@ export default function HomePage() {
       )}
 
       <section className="space-y-4">
-        <SectionHeading title="New Albums" />
+        <SectionHeading title={t.home.newAlbums} />
         <HorizontalCardScroller>
           {newAlbums.map((album) => (
             <AlbumCard key={album.id} album={album} />
@@ -112,7 +114,7 @@ export default function HomePage() {
       </section>
 
       <section className="space-y-4">
-        <SectionHeading title="Popular Songs" />
+        <SectionHeading title={t.home.popularSongs} />
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
           {popularSongs.map((song, i) => (
             <SongRow key={song.id} song={song} index={i} queue={popularSongs} />

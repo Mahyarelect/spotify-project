@@ -1,6 +1,7 @@
 import { User as UserIcon } from "lucide-react";
 import type { User } from "@/types/user";
 import { VerifiedBadge } from "./VerifiedBadge";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface ArtistHeaderProps {
   artist: User;
@@ -19,6 +20,8 @@ export function ArtistHeader({
   onFollow,
   onUnfollow,
 }: ArtistHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
       <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-zinc-800">
@@ -54,13 +57,13 @@ export function ArtistHeader({
             <span className="font-semibold text-zinc-100">
               {artist.followers.length}
             </span>{" "}
-            <span className="text-zinc-400">Followers</span>
+            <span className="text-zinc-400">{t.artist.followers}</span>
           </div>
           <div>
             <span className="font-semibold text-zinc-100">
               {artist.following.length}
             </span>{" "}
-            <span className="text-zinc-400">Following</span>
+            <span className="text-zinc-400">{t.profile.following}</span>
           </div>
         </div>
 
@@ -73,7 +76,7 @@ export function ArtistHeader({
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
-            {isFollowing ? "Unfollow" : "Follow"}
+            {isFollowing ? t.profile.unfollow : t.profile.follow}
           </button>
         )}
       </div>

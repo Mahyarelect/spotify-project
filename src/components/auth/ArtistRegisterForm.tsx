@@ -6,8 +6,10 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function ArtistRegisterForm() {
+  const { t } = useTranslation();
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState("");
 
@@ -29,14 +31,14 @@ export function ArtistRegisterForm() {
       setSubmitted(true);
     } catch (error) {
       if (error instanceof Error && error.message === "An account with this email already exists") {
-        setServerError("An account with this email already exists.");
+        setServerError(t.registerArtist.emailExists);
         return;
       }
       if (error instanceof Error && error.message === "An artist application with this email is already pending or approved") {
-        setServerError("An artist application with this email is already pending or approved.");
+        setServerError(t.registerArtist.alreadyPending);
         return;
       }
-      setServerError("Registration failed. Please try again.");
+      setServerError(t.registerArtist.failed);
     }
   };
 
@@ -44,9 +46,9 @@ export function ArtistRegisterForm() {
     return (
       <div className="text-center space-y-4 py-8">
         <div className="text-4xl">🎵</div>
-        <h2 className="text-xl font-semibold dark:text-white">Application Submitted</h2>
-        <p className="text-zinc-500 dark:text-zinc-400">Your artist application is pending review. We&apos;ll notify you once a decision has been made.</p>
-        <Link to="/login" className="inline-block text-green-600 hover:underline">Back to Login</Link>
+        <h2 className="text-xl font-semibold dark:text-white">{t.registerArtist.submittedTitle}</h2>
+        <p className="text-zinc-500 dark:text-zinc-400">{t.registerArtist.submittedMessage}</p>
+        <Link to="/login" className="inline-block text-green-600 hover:underline">{t.registerArtist.backToLogin}</Link>
       </div>
     );
   }
@@ -56,16 +58,16 @@ export function ArtistRegisterForm() {
       {serverError && (
         <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">{serverError}</div>
       )}
-      <Input label="Email" type="email" placeholder="you@example.com" error={errors.email?.message} {...register("email")} />
-      <Input label="Password" type="password" placeholder="••••••••" error={errors.password?.message} {...register("password")} />
-      <Input label="Artist / Stage Name" placeholder="Your stage name" error={errors.artistName?.message} {...register("artistName")} />
-      <Input label="Portfolio URL" placeholder="https://your-portfolio.com" error={errors.portfolioUrl?.message} {...register("portfolioUrl")} />
+      <Input label={t.registerArtist.emailLabel} type="email" placeholder={t.registerArtist.emailPlaceholder} error={errors.email?.message} {...register("email")} />
+      <Input label={t.registerArtist.passwordLabel} type="password" placeholder={t.registerArtist.passwordPlaceholder} error={errors.password?.message} {...register("password")} />
+      <Input label={t.registerArtist.artistNameLabel} placeholder={t.registerArtist.artistNamePlaceholder} error={errors.artistName?.message} {...register("artistName")} />
+      <Input label={t.registerArtist.portfolioUrlLabel} placeholder={t.registerArtist.portfolioUrlPlaceholder} error={errors.portfolioUrl?.message} {...register("portfolioUrl")} />
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Submitting..." : "Submit Application"}
+        {isSubmitting ? t.registerArtist.submitting : t.registerArtist.submit}
       </Button>
       <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-        Already have an account?{" "}
-        <Link to="/login" className="text-green-600 hover:underline">Sign in</Link>
+        {t.registerArtist.hasAccount}{" "}
+        <Link to="/login" className="text-green-600 hover:underline">{t.registerArtist.signIn}</Link>
       </p>
     </form>
   );

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ImageIcon, X } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface CoverUploaderProps {
   value: string;
@@ -14,11 +15,12 @@ const COVER_COLORS = [
 
 export function CoverUploader({ value, onChange }: CoverUploaderProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-zinc-300">
-        Cover Art
+        {t.workForm.coverArtLabel}
       </label>
       <div className="flex items-start gap-4">
         <div
@@ -37,7 +39,7 @@ export function CoverUploader({ value, onChange }: CoverUploaderProps) {
             onClick={() => setShowPicker((v) => !v)}
             className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700"
           >
-            {value ? "Change Color" : "Pick a Color"}
+            {value ? t.workForm.changeColor : t.workForm.pickColor}
           </button>
           {value && (
             <button
@@ -45,7 +47,7 @@ export function CoverUploader({ value, onChange }: CoverUploaderProps) {
               onClick={() => onChange("")}
               className="ml-2 text-sm text-zinc-500 hover:text-red-400"
             >
-              <X size={14} className="inline" /> Remove
+              <X size={14} className="inline" /> {t.workForm.remove}
             </button>
           )}
           {showPicker && (

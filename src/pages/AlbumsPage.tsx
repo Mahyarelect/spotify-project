@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllSongs, getAllAlbums } from "@/lib/services/musicService";
 import { useAuth } from "@/lib/hooks/useAuth";
 import * as playlistService from "@/lib/services/playlistService";
@@ -10,6 +11,7 @@ import { SingleCard } from "@/components/albums/SingleCard";
 import type { Playlist } from "@/types/music";
 
 export default function AlbumsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const allSongs = useMemo(() => getAllSongs(), []);
   const allAlbums = useMemo(() => getAllAlbums(), []);
@@ -117,8 +119,8 @@ export default function AlbumsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Albums & Singles"
-        description="Search and discover music. Filter by listeners or release date."
+        title={t.albums.title}
+        description={t.albums.description}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -126,7 +128,7 @@ export default function AlbumsPage() {
           <SearchBar
             value={query}
             onChange={setQuery}
-            placeholder="Search by song or artist name..."
+            placeholder={t.albums.searchPlaceholder}
           />
         </div>
         <FilterSortBar value={sort} onChange={setSort} />
@@ -134,7 +136,7 @@ export default function AlbumsPage() {
 
       {filteredAlbums.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Albums</h2>
+          <h2 className="text-lg font-semibold">{t.albums.albumsHeading}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {filteredAlbums.map((album) => (
               <AlbumCardArchive key={album.id} album={album} />
@@ -144,10 +146,10 @@ export default function AlbumsPage() {
       )}
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Songs</h2>
+        <h2 className="text-lg font-semibold">{t.albums.songsHeading}</h2>
         {filteredSongs.length === 0 ? (
           <p className="py-8 text-center text-zinc-400">
-            No songs found matching your search.
+            {t.albums.noSongsFound}
           </p>
         ) : (
           <div className="space-y-1">

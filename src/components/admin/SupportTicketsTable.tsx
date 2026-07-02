@@ -1,5 +1,6 @@
 import { MessageSquare, Clock, AlertTriangle } from "lucide-react";
 import type { SupportTicket } from "@/types/ticket";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATUS_COLORS: Record<string, string> = {
   open: "bg-green-500/10 text-green-400",
@@ -24,11 +25,13 @@ export function SupportTicketsTable({
   tickets,
   onSelect,
 }: SupportTicketsTableProps) {
+  const { t } = useTranslation();
+
   if (tickets.length === 0) {
     return (
       <div className="rounded-xl border border-zinc-800 p-8 text-center text-zinc-500">
         <MessageSquare size={32} className="mx-auto mb-2 text-zinc-600" />
-        <p className="text-sm">No support tickets yet.</p>
+        <p className="text-sm">{t.admin.ticketsEmpty}</p>
       </div>
     );
   }
@@ -38,11 +41,11 @@ export function SupportTicketsTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
-            <th className="px-4 py-3">Subject</th>
-            <th className="hidden px-4 py-3 sm:table-cell">User</th>
-            <th className="hidden px-4 py-3 md:table-cell">Priority</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="hidden px-4 py-3 lg:table-cell">Updated</th>
+            <th className="px-4 py-3">{t.admin.subject}</th>
+            <th className="hidden px-4 py-3 sm:table-cell">{t.admin.user}</th>
+            <th className="hidden px-4 py-3 md:table-cell">{t.admin.priority}</th>
+            <th className="px-4 py-3">{t.admin.status}</th>
+            <th className="hidden px-4 py-3 lg:table-cell">{t.admin.updated}</th>
           </tr>
         </thead>
         <tbody>
@@ -57,8 +60,7 @@ export function SupportTicketsTable({
                 <td className="px-4 py-3">
                   <p className="font-medium text-zinc-100">{ticket.subject}</p>
                   <p className="text-xs text-zinc-500">
-                    {ticket.messages.length} message
-                    {ticket.messages.length !== 1 ? "s" : ""}
+                    {ticket.messages.length} {ticket.messages.length !== 1 ? t.admin.messages : t.admin.message}
                   </p>
                 </td>
                 <td className="hidden px-4 py-3 text-zinc-400 sm:table-cell">

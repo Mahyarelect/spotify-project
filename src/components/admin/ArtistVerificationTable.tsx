@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import type { ArtistApplication } from "@/types/user";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface ArtistVerificationTableProps {
   applications: ArtistApplication[];
@@ -13,6 +14,7 @@ export function ArtistVerificationTable({
   onApprove,
   onReject,
 }: ArtistVerificationTableProps) {
+  const { t } = useTranslation();
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -27,7 +29,7 @@ export function ArtistVerificationTable({
     return (
       <div className="rounded-xl border border-zinc-800 p-8 text-center text-zinc-500">
         <CheckCircle size={32} className="mx-auto mb-2 text-zinc-600" />
-        <p className="text-sm">No pending verification requests.</p>
+        <p className="text-sm">{t.admin.verificationEmpty}</p>
       </div>
     );
   }
@@ -51,11 +53,11 @@ export function ArtistVerificationTable({
                   className="inline-flex items-center gap-1 text-sm text-green-400 hover:text-green-300"
                 >
                   <ExternalLink size={12} />
-                  Portfolio
+                  {t.admin.portfolio}
                 </a>
               )}
               <p className="text-xs text-zinc-600">
-                Submitted {new Date(app.submittedAt).toLocaleDateString()}
+                {t.admin.submitted.replace("{date}", new Date(app.submittedAt).toLocaleDateString())}
               </p>
             </div>
 
@@ -65,14 +67,14 @@ export function ArtistVerificationTable({
                 className="flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
               >
                 <CheckCircle size={14} />
-                Approve
+                {t.admin.approve}
               </button>
               <button
                 onClick={() => setRejectingId(app.id)}
                 className="flex items-center gap-1 rounded-lg bg-red-600/20 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-600/30"
               >
                 <XCircle size={14} />
-                Reject
+                {t.admin.reject}
               </button>
             </div>
           </div>
@@ -83,14 +85,14 @@ export function ArtistVerificationTable({
                 type="text"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Rejection reason..."
+                placeholder={t.admin.rejectPlaceholder}
                 className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-100 focus:border-red-500 focus:outline-none"
               />
               <button
                 onClick={() => handleReject(app.id)}
                 className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
               >
-                Confirm
+                {t.admin.confirm}
               </button>
               <button
                 onClick={() => {
@@ -99,7 +101,7 @@ export function ArtistVerificationTable({
                 }}
                 className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200"
               >
-                Cancel
+                {t.admin.cancel}
               </button>
             </div>
           )}

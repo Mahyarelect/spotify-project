@@ -1,5 +1,6 @@
 import type { User } from "@/types/user";
 import { User as UserIcon } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function ProfileCard({
   user,
@@ -18,6 +19,8 @@ export function ProfileCard({
   isFollowing?: boolean;
   streamsToday?: number;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6 space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -50,22 +53,22 @@ export function ProfileCard({
       <div className="flex gap-6 text-sm">
         <div>
           <span className="font-semibold dark:text-zinc-200">{user.followers.length}</span>{" "}
-          <span className="text-zinc-500 dark:text-zinc-400">Followers</span>
+          <span className="text-zinc-500 dark:text-zinc-400">{t.profile.followers}</span>
         </div>
         <div>
           <span className="font-semibold dark:text-zinc-200">{user.following.length}</span>{" "}
-          <span className="text-zinc-500 dark:text-zinc-400">Following</span>
+          <span className="text-zinc-500 dark:text-zinc-400">{t.profile.following}</span>
         </div>
         <div>
           <span className="font-semibold dark:text-zinc-200">{streamsToday}</span>{" "}
-          <span className="text-zinc-500 dark:text-zinc-400">Streams today</span>
+          <span className="text-zinc-500 dark:text-zinc-400">{t.profile.streamsToday}</span>
         </div>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
         {viewerIsOwner ? (
           <button onClick={onEdit} className="w-full rounded-lg bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600 sm:w-auto">
-            Edit Profile
+            {t.profile.editProfile}
           </button>
         ) : (
           <button
@@ -76,7 +79,7 @@ export function ProfileCard({
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
-            {isFollowing ? "Unfollow" : "Follow"}
+            {isFollowing ? t.profile.unfollow : t.profile.follow}
           </button>
         )}
       </div>

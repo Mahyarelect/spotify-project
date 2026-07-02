@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageShell } from "@/components/layout/PageShell";
@@ -42,6 +43,7 @@ function getCurrentMonth(): string {
 }
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "admin";
 
@@ -137,14 +139,14 @@ export default function AdminDashboardPage() {
       allow={["admin", "support"]}
       fallback={
         <div className="py-20 text-center text-zinc-400">
-          <p>Only admin and support users can access this dashboard.</p>
+          <p>{t.admin.accessDenied}</p>
         </div>
       }
     >
       <PageShell>
         <PageHeader
-          title="Admin Dashboard"
-          description={`Signed in as ${user.displayName} (${user.role})`}
+          title={t.admin.title}
+          description={t.admin.signedInAs.replace("{displayName}", user.displayName).replace("{role}", user.role)}
         />
 
         <div className="flex flex-col gap-6 lg:flex-row">
@@ -157,7 +159,7 @@ export default function AdminDashboardPage() {
           <div className="flex-1 space-y-6">
             {activeSection === "verification" && (
               <section className="space-y-4">
-                <h2 className="text-lg font-bold">Artist Verification Requests</h2>
+                <h2 className="text-lg font-bold">{t.admin.verificationHeading}</h2>
                 <ArtistVerificationTable
                   applications={applications}
                   onApprove={handleApprove}
@@ -168,7 +170,7 @@ export default function AdminDashboardPage() {
 
             {activeSection === "tickets" && (
               <section className="space-y-4">
-                <h2 className="text-lg font-bold">Support Tickets</h2>
+                <h2 className="text-lg font-bold">{t.admin.ticketsHeading}</h2>
                 {selectedTicket ? (
                   <TicketChatBox
                     ticket={selectedTicket}
@@ -189,7 +191,7 @@ export default function AdminDashboardPage() {
             {activeSection === "audit" && (
               <section className="space-y-4">
                 <h2 className="text-lg font-bold">
-                  Monthly Audit & Payments — {getCurrentMonth()}
+                  {t.admin.auditHeading.replace("{month}", getCurrentMonth())}
                 </h2>
                 <AuditPaymentsTable
                   payments={payments}
@@ -202,7 +204,7 @@ export default function AdminDashboardPage() {
 
             {activeSection === "pricing" && isSuperAdmin && (
               <section className="space-y-4">
-                <h2 className="text-lg font-bold">Subscription Pricing</h2>
+                <h2 className="text-lg font-bold">{t.admin.pricingHeading}</h2>
                 <SubscriptionPriceForm
                   plans={plans}
                   onSave={handleSavePrices}
@@ -212,7 +214,7 @@ export default function AdminDashboardPage() {
 
             {activeSection === "revenue" && isSuperAdmin && (
               <section className="space-y-4">
-                <h2 className="text-lg font-bold">Revenue Overview</h2>
+                <h2 className="text-lg font-bold">{t.admin.revenueHeading}</h2>
                 <RevenueCharts {...revenueStats} />
               </section>
             )}

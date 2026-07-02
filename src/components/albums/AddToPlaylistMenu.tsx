@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ListPlus, Check } from "lucide-react";
 import type { Playlist } from "@/types/music";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function AddToPlaylistMenu({
   playlists,
@@ -15,6 +16,7 @@ export function AddToPlaylistMenu({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -34,7 +36,7 @@ export function AddToPlaylistMenu({
           setOpen(!open);
         }}
         className="rounded-full p-1.5 text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-200"
-        title="Add to playlist"
+        title={t.playlists.addToPlaylist}
       >
         <ListPlus size={16} />
       </button>
@@ -43,7 +45,7 @@ export function AddToPlaylistMenu({
         <div className="absolute right-0 top-full z-30 mt-1 w-56 rounded-lg border border-zinc-700 bg-zinc-800 py-1 shadow-xl">
           {playlists.length === 0 ? (
             <p className="px-3 py-2 text-xs text-zinc-400">
-              No playlists yet. Create one first.
+              {t.playlists.noneYet}
             </p>
           ) : (
             playlists.map((pl) => {

@@ -1,11 +1,13 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Music } from "lucide-react";
 import { useMemo, useEffect } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllSongs } from "@/lib/services/musicService";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 
 export default function PlayerPage() {
+  const { t } = useTranslation();
   const { songId } = useParams();
   const navigate = useNavigate();
   const songs = useMemo(() => getAllSongs(), []);
@@ -25,9 +27,9 @@ export default function PlayerPage() {
   if (!song) {
     return (
       <div className="space-y-4 py-20 text-center">
-        <p className="text-zinc-400">Song not found.</p>
+        <p className="text-zinc-400">{t.player.notFound}</p>
         <Link to={ROUTES.ALBUMS} className="text-green-400 hover:underline">
-          Back to Albums & Singles
+          {t.player.backToAlbums}
         </Link>
       </div>
     );
@@ -40,7 +42,7 @@ export default function PlayerPage() {
         className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200"
       >
         <ArrowLeft size={16} />
-        Back to Albums & Singles
+        {t.player.backToAlbums}
       </Link>
 
       <div
@@ -56,7 +58,7 @@ export default function PlayerPage() {
       </div>
 
       <p className="text-xs text-zinc-500">
-        Loading player...
+        {t.player.loading}
       </p>
     </div>
   );

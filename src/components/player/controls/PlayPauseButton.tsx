@@ -1,4 +1,5 @@
 import { Play, Pause } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function PlayPauseButton({
   isPlaying,
@@ -9,6 +10,7 @@ export function PlayPauseButton({
   onClick: () => void;
   size?: "sm" | "md" | "lg";
 }) {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: "h-8 w-8",
     md: "h-9 w-9",
@@ -20,7 +22,7 @@ export function PlayPauseButton({
     <button
       onClick={onClick}
       className={`flex ${sizeClasses[size]} items-center justify-center rounded-full bg-white text-black transition hover:scale-105 active:scale-95`}
-      aria-label={isPlaying ? "Pause" : "Play"}
+      aria-label={isPlaying ? t.player.pause : t.player.play}
     >
       {isPlaying ? (
         <Pause size={iconSize[size]} fill="currentColor" />

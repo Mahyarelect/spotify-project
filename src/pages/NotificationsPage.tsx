@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import {
   getNotifications,
@@ -14,6 +15,7 @@ import { EmptyNotificationsState } from "@/components/notifications/EmptyNotific
 import type { Notification } from "@/types/notification";
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>(() =>
     user ? getNotifications(user.id) : []
@@ -52,16 +54,16 @@ export default function NotificationsPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Notifications"
+        title={t.notifications.title}
         description={
           unreadCount > 0
-            ? `You have ${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
-            : "All caught up"
+            ? t.notifications.unreadCount.replace("{count}", String(unreadCount))
+            : t.notifications.allCaughtUp
         }
         actions={
           unreadCount > 0 ? (
             <Button variant="secondary" onClick={handleMarkAllRead}>
-              Mark all as read
+              {t.notifications.markAllRead}
             </Button>
           ) : undefined
         }

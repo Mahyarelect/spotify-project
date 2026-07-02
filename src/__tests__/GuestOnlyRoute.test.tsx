@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { GuestOnlyRoute } from "@/components/routing/GuestOnlyRoute";
 import { AuthProvider } from "@/lib/context/AuthContext";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { STORAGE_KEYS } from "@/lib/services/storage";
 import { mockHashPassword } from "@/lib/services/password";
 
@@ -10,12 +11,14 @@ function renderGuestOnly() {
   return render(
     <MemoryRouter initialEntries={["/login"]}>
       <AuthProvider>
-        <Routes>
-          <Route element={<GuestOnlyRoute />}>
-            <Route path="/login" element={<div>Login Page</div>} />
-          </Route>
-          <Route path="/" element={<div>Home Page</div>} />
-        </Routes>
+        <LanguageProvider>
+          <Routes>
+            <Route element={<GuestOnlyRoute />}>
+              <Route path="/login" element={<div>Login Page</div>} />
+            </Route>
+            <Route path="/" element={<div>Home Page</div>} />
+          </Routes>
+        </LanguageProvider>
       </AuthProvider>
     </MemoryRouter>
   );

@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { ROUTES } from "@/lib/constants/routes";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { z } from "zod";
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
+  const { t } = useTranslation();
   const { registerListener } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
@@ -37,10 +39,10 @@ export function RegisterForm() {
       navigate(ROUTES.HOME);
     } catch (error) {
       if (error instanceof Error && error.message === "Email already exists") {
-        setServerError("An account with this email already exists.");
+        setServerError(t.register.emailExists);
         return;
       }
-      setServerError("Registration failed. Please try again.");
+      setServerError(t.register.failed);
     }
   };
 
@@ -52,12 +54,12 @@ export function RegisterForm() {
             {serverError}
           </div>
         )}
-        <Input label="Display Name" placeholder="Your name" error={errors.displayName?.message} {...register("displayName")} />
-        <Input label="Email" type="email" placeholder="you@example.com" error={errors.email?.message} {...register("email")} />
-        <Input label="Password" type="password" placeholder="••••••••" error={errors.password?.message} {...register("password")} />
-        <Input label="Confirm Password" type="password" placeholder="••••••••" error={errors.confirmPassword?.message} {...register("confirmPassword")} />
+        <Input label={t.register.displayNameLabel} placeholder={t.register.displayNamePlaceholder} error={errors.displayName?.message} {...register("displayName")} />
+        <Input label={t.register.emailLabel} type="email" placeholder={t.register.emailPlaceholder} error={errors.email?.message} {...register("email")} />
+        <Input label={t.register.passwordLabel} type="password" placeholder={t.register.passwordPlaceholder} error={errors.password?.message} {...register("password")} />
+        <Input label={t.register.confirmPasswordLabel} type="password" placeholder={t.register.confirmPasswordPlaceholder} error={errors.confirmPassword?.message} {...register("confirmPassword")} />
         <Input
-          label="Birth Date"
+          label={t.register.birthDateLabel}
           type="date"
           min={dateInputValueYearsAgo(MAX_AGE_YEARS)}
           max={dateInputValueYearsAgo(MIN_AGE_YEARS)}
@@ -65,44 +67,44 @@ export function RegisterForm() {
           {...register("birthDate")}
         />
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Gender</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.register.genderLabel}</label>
           <select
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 border-zinc-300"
             {...register("gender")}
           >
-            <option value="">Select...</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-            <option value="unspecified">Prefer not to say</option>
+            <option value="">{t.register.genderSelect}</option>
+            <option value="male">{t.register.genderMale}</option>
+            <option value="female">{t.register.genderFemale}</option>
+            <option value="other">{t.register.genderOther}</option>
+            <option value="unspecified">{t.register.genderUnspecified}</option>
           </select>
           {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
         </div>
         <div className="flex items-center gap-2">
           <input type="checkbox" id="acceptPolicy" className="rounded border-zinc-300" {...register("acceptPolicy")} />
           <label htmlFor="acceptPolicy" className="text-sm text-zinc-600 dark:text-zinc-400">
-            I accept the{" "}
+            {t.register.acceptPolicy}{" "}
             <button type="button" onClick={() => setPolicyOpen(true)} className="text-green-600 hover:underline">
-              privacy policy
+              {t.register.privacyPolicy}
             </button>
           </label>
         </div>
         {errors.acceptPolicy && <p className="text-sm text-red-500">{errors.acceptPolicy.message}</p>}
         <Button type="submit" disabled={!isValid || isSubmitting} className="w-full">
-          {isSubmitting ? "Creating account..." : "Create Account"}
+          {isSubmitting ? t.register.submitting : t.register.submit}
         </Button>
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Already have an account?{" "}
-          <Link to="/login" className="text-green-600 hover:underline">Sign in</Link>
+          {t.register.hasAccount}{" "}
+          <Link to="/login" className="text-green-600 hover:underline">{t.register.signIn}</Link>
         </p>
       </form>
 
-      <Modal open={policyOpen} onClose={() => setPolicyOpen(false)} title="Privacy Policy">
+      <Modal open={policyOpen} onClose={() => setPolicyOpen(false)} title={t.register.policyTitle}>
         <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-3">
-          <p><strong>Mock Privacy Policy</strong></p>
-          <p>This is a mock privacy policy for Phase 1 of the music streaming app project. No real data is collected or processed.</p>
-          <p>In the production version, user data will be handled in accordance with applicable privacy regulations and stored securely on our backend servers.</p>
-          <p>By using this application, you agree to the collection and use of information as outlined in this policy.</p>
+          <p><strong>{t.register.policyMockTitle}</strong></p>
+          <p>{t.register.policyMockText}</p>
+          <p>{t.register.policyProductionText}</p>
+          <p>{t.register.policyAgreement}</p>
         </div>
       </Modal>
     </>

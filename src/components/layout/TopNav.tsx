@@ -5,14 +5,18 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ROUTES } from "@/lib/constants/routes";
 import { getUnreadCount } from "@/lib/services/notificationService";
-import { sidebarNavItems } from "./navItems";
+import { getSidebarNavItems } from "./navItems";
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function TopNav() {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const sidebarNavItems = getSidebarNavItems(t);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -41,7 +45,7 @@ export function TopNav() {
     <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link to={ROUTES.HOME} className="text-xl font-bold text-green-400">
-          Music App
+          {t.layout.appName}
         </Link>
 
         <div className="flex items-center gap-3">
@@ -50,7 +54,7 @@ export function TopNav() {
               <Link
                 to={ROUTES.NOTIFICATIONS}
                 className="relative flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200"
-                aria-label="Notifications"
+                aria-label={t.nav.notifications}
               >
                 <Bell size={18} />
                 {getUnreadCount(user.id) > 0 && (
@@ -85,7 +89,7 @@ export function TopNav() {
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 text-zinc-100 transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500 md:hidden"
             aria-label={
-              isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+              isMobileMenuOpen ? t.nav.closeMenu : t.nav.openMenu
             }
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-navigation"
@@ -126,7 +130,7 @@ export function TopNav() {
                 onClick={handleSignOut}
                 className="mt-1 rounded-lg px-3 py-2 text-left text-sm font-medium text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200"
               >
-                Sign Out
+                {t.nav.signOut}
               </button>
             ) : null}
           </div>

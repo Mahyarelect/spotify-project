@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { UploadAudioMock } from "./UploadAudioMock";
 import { CoverUploader } from "./CoverUploader";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export type WorkType = "single" | "album";
 
@@ -36,6 +37,7 @@ const GENRES = [
 export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProps) {
   const isEdit = !!initialData;
   const isSong = type === "single";
+  const { t } = useTranslation();
 
   const existingSong = isSong ? (initialData as Song) : undefined;
   const existingAlbum = !isSong ? (initialData as Album) : undefined;
@@ -66,7 +68,7 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
       <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">
-            {isEdit ? "Edit" : "New"} {isSong ? "Single" : "Album"}
+            {isEdit ? (isSong ? t.workForm.editSingle : t.workForm.editAlbum) : (isSong ? t.workForm.newSingle : t.workForm.newAlbum)}
           </h2>
           <button
             onClick={onCancel}
@@ -78,23 +80,23 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Title"
+            label={t.workForm.titleLabel}
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            placeholder={isSong ? "Song title" : "Album title"}
+            placeholder={isSong ? t.workForm.songPlaceholder : t.workForm.albumPlaceholder}
             required
           />
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-zinc-300">
-              Genre
+              {t.workForm.genreLabel}
             </label>
             <select
               value={form.genre}
               onChange={(e) => update("genre", e.target.value)}
               className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-green-500 focus:outline-none"
             >
-              <option value="">Select genre</option>
+              <option value="">{t.workForm.genreSelect}</option>
               {GENRES.map((g) => (
                 <option key={g} value={g}>
                   {g}
@@ -106,7 +108,7 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
           {isSong && (
             <>
               <Input
-                label="Release Year"
+                label={t.workForm.releaseYearLabel}
                 type="number"
                 value={form.releaseYear}
                 onChange={(e) => update("releaseYear", e.target.value)}
@@ -114,24 +116,24 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
                 max="2099"
               />
               <Input
-                label="Collaborators"
+                label={t.workForm.collaboratorsLabel}
                 value={form.collaborators}
                 onChange={(e) => update("collaborators", e.target.value)}
-                placeholder="Comma-separated names"
+                placeholder={t.workForm.collaboratorsPlaceholder}
               />
               <UploadAudioMock
                 onDurationParsed={(dur) => update("durationSec", dur)}
               />
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-zinc-300">
-                  Lyrics
+                  {t.workForm.lyricsLabel}
                 </label>
                 <textarea
                   value={form.lyrics}
                   onChange={(e) => update("lyrics", e.target.value)}
                   rows={4}
                   className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-green-500 focus:outline-none"
-                  placeholder="Paste lyrics here..."
+                  placeholder={t.workForm.lyricsPlaceholder}
                 />
               </div>
             </>
@@ -140,7 +142,7 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
           {!isSong && (
             <>
               <Input
-                label="Release Date"
+                label={t.workForm.releaseDateLabel}
                 type="date"
                 value={form.releaseDate}
                 onChange={(e) => update("releaseDate", e.target.value)}
@@ -152,7 +154,7 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
                   onChange={(e) => update("isEarlyAccess", e.target.checked)}
                   className="rounded border-zinc-600 bg-zinc-800 text-green-500 focus:ring-green-500"
                 />
-                Early Access (Gold only)
+                {t.workForm.earlyAccess}
               </label>
             </>
           )}
@@ -164,10 +166,10 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
 
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="secondary" type="button" onClick={onCancel}>
-              Cancel
+              {t.workForm.cancel}
             </Button>
             <Button type="submit">
-              {isEdit ? "Save Changes" : `Publish ${isSong ? "Single" : "Album"}`}
+              {isEdit ? t.workForm.saveChanges : (isSong ? t.workForm.publishSingle : t.workForm.publishAlbum)}
             </Button>
           </div>
         </form>

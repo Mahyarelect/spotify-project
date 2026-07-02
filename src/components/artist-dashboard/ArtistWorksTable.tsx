@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Edit, Trash2, Music, Disc3, ChevronDown, ChevronUp } from "lucide-react";
 import type { Song, Album } from "@/types/music";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface ArtistWorksTableProps {
   songs: Song[];
@@ -21,6 +22,7 @@ export function ArtistWorksTable({
 }: ArtistWorksTableProps) {
   const [activeTab, setActiveTab] = useState<"songs" | "albums">("songs");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-4">
@@ -34,7 +36,7 @@ export function ArtistWorksTable({
           }`}
         >
           <Music size={14} className="mr-1 inline" />
-          Songs ({songs.length})
+          {t.artistDashboard.songs.replace("{count}", String(songs.length))}
         </button>
         <button
           onClick={() => setActiveTab("albums")}
@@ -45,7 +47,7 @@ export function ArtistWorksTable({
           }`}
         >
           <Disc3 size={14} className="mr-1 inline" />
-          Albums ({albums.length})
+          {t.artistDashboard.albums.replace("{count}", String(albums.length))}
         </button>
       </div>
 
@@ -53,17 +55,17 @@ export function ArtistWorksTable({
         <div className="rounded-xl border border-zinc-800">
           {songs.length === 0 ? (
             <p className="p-6 text-center text-sm text-zinc-500">
-              No songs yet. Create your first single above.
+              {t.artistDashboard.noSongs}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
-                  <th className="px-4 py-3">Title</th>
-                  <th className="hidden px-4 py-3 sm:table-cell">Genre</th>
-                  <th className="hidden px-4 py-3 md:table-cell">Plays</th>
-                  <th className="hidden px-4 py-3 lg:table-cell">Duration</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3">{t.artistDashboard.tableTitle}</th>
+                  <th className="hidden px-4 py-3 sm:table-cell">{t.artistDashboard.genre}</th>
+                  <th className="hidden px-4 py-3 md:table-cell">{t.artistDashboard.plays}</th>
+                  <th className="hidden px-4 py-3 lg:table-cell">{t.artistDashboard.duration}</th>
+                  <th className="px-4 py-3 text-right">{t.artistDashboard.tableActions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -93,11 +95,11 @@ export function ArtistWorksTable({
                           </p>
                           {expandedId === song.id && (
                             <div className="mt-1 space-y-0.5 text-xs text-zinc-500">
-                              {song.lyrics && <p>Has lyrics</p>}
+                              {song.lyrics && <p>{t.artistDashboard.hasLyrics}</p>}
                               {song.collaborators &&
                                 song.collaborators.length > 0 && (
                                   <p>
-                                    With: {song.collaborators.join(", ")}
+                                    {t.artistDashboard.with.replace("{collaborators}", song.collaborators.join(", "))}
                                   </p>
                                 )}
                             </div>
@@ -124,14 +126,14 @@ export function ArtistWorksTable({
                       <button
                         onClick={() => onEditSong(song)}
                         className="mr-2 rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
-                        title="Edit"
+                        title={t.artistDashboard.edit}
                       >
                         <Edit size={14} />
                       </button>
                       <button
                         onClick={() => onDeleteSong(song.id)}
                         className="rounded p-1 text-zinc-500 hover:bg-red-950 hover:text-red-400"
-                        title="Delete"
+                        title={t.artistDashboard.delete}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -148,17 +150,17 @@ export function ArtistWorksTable({
         <div className="rounded-xl border border-zinc-800">
           {albums.length === 0 ? (
             <p className="p-6 text-center text-sm text-zinc-500">
-              No albums yet. Create your first album above.
+              {t.artistDashboard.noAlbums}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
-                  <th className="px-4 py-3">Title</th>
-                  <th className="hidden px-4 py-3 sm:table-cell">Genre</th>
-                  <th className="hidden px-4 py-3 md:table-cell">Songs</th>
-                  <th className="hidden px-4 py-3 lg:table-cell">Released</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3">{t.artistDashboard.tableTitle}</th>
+                  <th className="hidden px-4 py-3 sm:table-cell">{t.artistDashboard.genre}</th>
+                  <th className="hidden px-4 py-3 md:table-cell">{t.artistDashboard.songsCount}</th>
+                  <th className="hidden px-4 py-3 lg:table-cell">{t.artistDashboard.released}</th>
+                  <th className="px-4 py-3 text-right">{t.artistDashboard.tableActions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -181,7 +183,7 @@ export function ArtistWorksTable({
                           </p>
                           {album.isEarlyAccess && (
                             <span className="text-[10px] font-medium text-yellow-400">
-                              Early Access
+                              {t.artistDashboard.earlyAccess}
                             </span>
                           )}
                         </div>
@@ -200,14 +202,14 @@ export function ArtistWorksTable({
                       <button
                         onClick={() => onEditAlbum(album)}
                         className="mr-2 rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
-                        title="Edit"
+                        title={t.artistDashboard.edit}
                       >
                         <Edit size={14} />
                       </button>
                       <button
                         onClick={() => onDeleteAlbum(album.id)}
                         className="rounded p-1 text-zinc-500 hover:bg-red-950 hover:text-red-400"
-                        title="Delete"
+                        title={t.artistDashboard.delete}
                       >
                         <Trash2 size={14} />
                       </button>

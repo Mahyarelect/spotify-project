@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageShell } from "@/components/layout/PageShell";
@@ -26,6 +27,7 @@ import type { Song, Album } from "@/types/music";
 import { Music, Disc3 } from "lucide-react";
 
 export default function ArtistDashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const [refreshKey, setRefresh] = useState(0);
@@ -81,18 +83,13 @@ export default function ArtistDashboardPage() {
   }
 
   function handleDeleteSong(songId: string) {
-    if (!window.confirm("Delete this song? This cannot be undone.")) return;
+    if (!window.confirm(t.artistDashboard.deleteSongConfirm)) return;
     deleteSong(songId);
     triggerRefresh();
   }
 
   function handleDeleteAlbum(albumId: string) {
-    if (
-      !window.confirm(
-        "Delete this album and all its songs? This cannot be undone."
-      )
-    )
-      return;
+    if (!window.confirm(t.artistDashboard.deleteAlbumConfirm)) return;
     deleteAlbum(albumId);
     triggerRefresh();
   }
@@ -176,23 +173,23 @@ export default function ArtistDashboardPage() {
       allow={["artist"]}
       fallback={
         <div className="py-20 text-center text-zinc-400">
-          <p>Only verified artists can access this dashboard.</p>
+          <p>{t.artistDashboard.accessDenied}</p>
         </div>
       }
     >
       <PageShell>
         <PageHeader
-          title="Artist Dashboard"
-          description={`Welcome back, ${user.displayName}`}
+          title={t.artistDashboard.title}
+          description={t.artistDashboard.welcome.replace("{displayName}", user.displayName)}
           actions={
             <div className="flex gap-2">
               <Button variant="secondary" onClick={openNewAlbum}>
                 <Disc3 size={16} className="mr-1 inline" />
-                New Album
+                {t.artistDashboard.newAlbum}
               </Button>
               <Button onClick={openNewSingle}>
                 <Music size={16} className="mr-1 inline" />
-                New Single
+                {t.artistDashboard.newSingle}
               </Button>
             </div>
           }

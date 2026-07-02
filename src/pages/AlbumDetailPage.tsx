@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Disc3, Play, Pause, Shuffle } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllAlbums, getAllSongs } from "@/lib/services/musicService";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePlayer } from "@/lib/hooks/usePlayer";
@@ -12,6 +13,7 @@ function formatDuration(seconds: number): string {
 }
 
 export default function AlbumDetailPage() {
+  const { t } = useTranslation();
   const { albumId } = useParams();
   const albums = useMemo(() => getAllAlbums(), []);
   const songs = useMemo(() => getAllSongs(), []);
@@ -26,9 +28,9 @@ export default function AlbumDetailPage() {
   if (!album) {
     return (
       <div className="space-y-4 py-20 text-center">
-        <p className="text-zinc-400">Album not found.</p>
+        <p className="text-zinc-400">{t.albumDetail.notFound}</p>
         <Link to={ROUTES.ALBUMS} className="text-green-400 hover:underline">
-          Back to Albums & Singles
+          {t.albumDetail.backToAlbums}
         </Link>
       </div>
     );
@@ -60,7 +62,7 @@ export default function AlbumDetailPage() {
         className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200"
       >
         <ArrowLeft size={16} />
-        Back to Albums & Singles
+        {t.albumDetail.backToAlbums}
       </Link>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -71,7 +73,7 @@ export default function AlbumDetailPage() {
           <Disc3 size={64} className="text-white/60" />
         </div>
         <div>
-          <p className="text-sm text-zinc-400">Album</p>
+          <p className="text-sm text-zinc-400">{t.albumDetail.album}</p>
           <h1 className="text-3xl font-bold tracking-tight">{album.title}</h1>
           <p className="text-zinc-400">
             <Link
@@ -87,7 +89,7 @@ export default function AlbumDetailPage() {
               year: "numeric",
             })}
             {" · "}
-            {albumSongs.length} {albumSongs.length === 1 ? "song" : "songs"}
+            {albumSongs.length} {albumSongs.length === 1 ? t.albumDetail.song : t.albumDetail.songs}
           </p>
           <div className="mt-3 flex items-center gap-2">
             <button
@@ -95,14 +97,14 @@ export default function AlbumDetailPage() {
               className="flex items-center gap-2 rounded-full bg-green-500 px-5 py-2 text-sm font-semibold text-black transition hover:bg-green-400"
             >
               {isAlbumPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
-              {isAlbumPlaying ? "Pause" : "Play All"}
+              {isAlbumPlaying ? t.albumDetail.pause : t.albumDetail.playAll}
             </button>
             <button
               onClick={handleShufflePlay}
               className="flex items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-zinc-500 hover:text-white"
             >
               <Shuffle size={16} />
-              Shuffle
+              {t.albumDetail.shuffle}
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import type { PlanLimits } from "@/types/subscription";
 import { BILLING_INTERVALS } from "@/lib/constants/plans";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function UpgradeModal({
   plan,
@@ -16,15 +17,16 @@ export function UpgradeModal({
   onConfirm: (months: number) => void;
 }) {
   const [months, setMonths] = useState(1);
+  const { t } = useTranslation();
 
   return (
-    <Modal open={open} onClose={onClose} title={`Upgrade to ${plan.tier}`}>
+    <Modal open={open} onClose={onClose} title={t.subscription.upgradeTitle.replace("{tier}", plan.tier)}>
       <div className="space-y-4">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          You&apos;re about to upgrade to the <strong className="capitalize dark:text-zinc-200">{plan.tier}</strong> plan at ${plan.priceMonthly}/mo.
+          {t.subscription.upgradePrompt.replace("{tier}", plan.tier).replace("{price}", String(plan.priceMonthly))}
         </p>
         <div className="space-y-1">
-          <label className="block text-sm font-medium dark:text-zinc-300">Billing cycle</label>
+          <label className="block text-sm font-medium dark:text-zinc-300">{t.subscription.billingCycle}</label>
           <div className="flex gap-2">
             {BILLING_INTERVALS.map((m) => (
               <button
@@ -36,15 +38,15 @@ export function UpgradeModal({
                     : "bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
                 }`}
               >
-                {m}mo
+                {t.subscription.months.replace("{m}", String(m))}
               </button>
             ))}
           </div>
         </div>
-        <p className="text-xs text-zinc-400 dark:text-zinc-500">Payment will be processed in Phase 2 via a real payment gateway.</p>
+        <p className="text-xs text-zinc-400 dark:text-zinc-500">{t.subscription.paymentNotice}</p>
         <div className="flex gap-2 justify-end">
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => onConfirm(months)}>Confirm Upgrade</Button>
+          <Button variant="secondary" onClick={onClose}>{t.subscription.cancel}</Button>
+          <Button onClick={() => onConfirm(months)}>{t.subscription.confirmUpgrade}</Button>
         </div>
       </div>
     </Modal>

@@ -3,18 +3,21 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoute";
 import { AuthProvider } from "@/lib/context/AuthContext";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { STORAGE_KEYS } from "@/lib/services/storage";
 
 function TestApp({ authenticated = false }: { authenticated?: boolean }) {
   return (
     <MemoryRouter initialEntries={authenticated ? ["/protected"] : ["/protected"]}>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<div>Login Page</div>} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/protected" element={<div>Protected Content</div>} />
-          </Route>
-        </Routes>
+        <LanguageProvider>
+          <Routes>
+            <Route path="/login" element={<div>Login Page</div>} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/protected" element={<div>Protected Content</div>} />
+            </Route>
+          </Routes>
+        </LanguageProvider>
       </AuthProvider>
     </MemoryRouter>
   );

@@ -1,14 +1,17 @@
 import { Search, X } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function SearchBar({
   value,
   onChange,
-  placeholder = "Search...",
+  placeholder,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
 }) {
+  const { t } = useTranslation();
+  const defaultPlaceholder = placeholder ?? t.albums.searchPlaceholder;
   return (
     <div className="relative">
       <Search
@@ -19,7 +22,7 @@ export function SearchBar({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={defaultPlaceholder}
         className="w-full rounded-lg border border-zinc-700 bg-zinc-800 py-2.5 pl-10 pr-10 text-sm text-zinc-100 placeholder-zinc-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
       />
       {value && (

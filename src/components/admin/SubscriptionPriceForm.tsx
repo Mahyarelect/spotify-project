@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CreditCard, Check } from "lucide-react";
 import type { PlanLimits } from "@/types/subscription";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface SubscriptionPriceFormProps {
   plans: PlanLimits[];
@@ -11,6 +12,7 @@ export function SubscriptionPriceForm({
   plans,
   onSave,
 }: SubscriptionPriceFormProps) {
+  const { t } = useTranslation();
   const silverPlan = plans.find((p) => p.tier === "silver");
   const goldPlan = plans.find((p) => p.tier === "gold");
 
@@ -35,14 +37,14 @@ export function SubscriptionPriceForm({
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
       <div className="mb-4 flex items-center gap-2 text-sm font-medium text-zinc-300">
         <CreditCard size={16} className="text-green-400" />
-        Subscription Pricing
+        {t.admin.pricingTitle}
       </div>
 
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <label className="block text-sm text-zinc-400">
-              Silver (monthly)
+              {t.admin.silver}
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
@@ -60,7 +62,7 @@ export function SubscriptionPriceForm({
           </div>
           <div className="space-y-1">
             <label className="block text-sm text-zinc-400">
-              Gold (monthly)
+              {t.admin.gold}
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
@@ -79,9 +81,9 @@ export function SubscriptionPriceForm({
         </div>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-3 text-xs text-zinc-500">
-          <p>Free tier: $0.00 (hardcoded)</p>
+          <p>{t.admin.freeNote}</p>
           <p className="mt-1">
-            Changes take effect immediately and are stored in the database.
+            {t.admin.changesNote}
           </p>
         </div>
 
@@ -92,10 +94,10 @@ export function SubscriptionPriceForm({
           {saved ? (
             <>
               <Check size={16} />
-              Saved!
+              {t.admin.saved}
             </>
           ) : (
-            "Save Prices"
+            t.admin.savePrices
           )}
         </button>
       </div>

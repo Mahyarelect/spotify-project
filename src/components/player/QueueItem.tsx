@@ -1,5 +1,6 @@
 import { X, Music, GripVertical } from "lucide-react";
 import type { Song } from "@/types/music";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -26,6 +27,7 @@ export function QueueItem({
   isFirst: boolean;
   isLast: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 transition ${
@@ -37,7 +39,7 @@ export function QueueItem({
           onClick={onMoveUp}
           disabled={isFirst}
           className="text-zinc-600 transition hover:text-zinc-300 disabled:invisible"
-          aria-label="Move up"
+          aria-label={t.queue.moveUp}
         >
           <GripVertical size={12} />
         </button>
@@ -45,7 +47,7 @@ export function QueueItem({
           onClick={onMoveDown}
           disabled={isLast}
           className="text-zinc-600 transition hover:text-zinc-300 disabled:invisible"
-          aria-label="Move down"
+          aria-label={t.queue.moveDown}
         >
           <GripVertical size={12} />
         </button>
@@ -68,7 +70,7 @@ export function QueueItem({
       <button
         onClick={onRemove}
         className="rounded p-1 text-zinc-600 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
-        aria-label={`Remove ${song.title} from queue`}
+        aria-label={t.queue.remove.replace("{title}", song.title)}
       >
         <X size={14} />
       </button>

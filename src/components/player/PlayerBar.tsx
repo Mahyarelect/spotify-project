@@ -8,8 +8,10 @@ import { VolumeControl } from "./controls/VolumeControl";
 import { RepeatButton } from "./controls/RepeatButton";
 import { ShuffleButton } from "./controls/ShuffleButton";
 import { useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function PlayerBar() {
+  const { t } = useTranslation();
   const {
     currentSong,
     isPlaying,
@@ -130,7 +132,7 @@ export function PlayerBar() {
             <button
               onClick={() => setShowQueue((v) => !v)}
               className={`text-zinc-400 transition hover:text-white ${showQueue ? "text-green-400" : ""}`}
-              aria-label="Toggle queue"
+              aria-label={t.player.toggleQueue}
             >
               <ListMusic size={18} />
             </button>
@@ -173,7 +175,7 @@ export function PlayerBar() {
           <button
             onClick={expand}
             className="text-zinc-400"
-            aria-label="Expand player"
+            aria-label={t.player.expand}
           >
             <ChevronUp size={20} />
           </button>

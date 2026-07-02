@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { EditProfileForm } from "@/components/profile/EditProfileForm";
@@ -7,6 +8,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { ROUTES } from "@/lib/constants/routes";
 
 export default function EditProfilePage() {
+  const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
 
@@ -20,7 +22,7 @@ export default function EditProfilePage() {
 
   return (
     <>
-      <PageHeader title="Edit Profile" />
+      <PageHeader title={t.editProfile.title} />
       <PageShell>
         <EditProfileForm user={user} onSave={handleSave} />
       </PageShell>

@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Notification, NotificationType } from "@/types/notification";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const TYPE_CONFIG: Record<
   NotificationType,
@@ -59,7 +60,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, t: ReturnType<typeof useTranslation>["t"]): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -68,10 +69,10 @@ function formatRelativeTime(dateStr: string): string {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  if (diffSec < 60) return "Just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHour < 24) return `${diffHour}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
+  if (diffSec < 60) return t.notifications.justNow;
+  if (diffMin < 60) return t.notifications.minutesAgo.replace("{n}", String(diffMin));
+  if (diffHour < 24) return t.notifications.hoursAgo.replace("{n}", String(diffHour));
+  if (diffDay < 7) return t.notifications.daysAgo.replace("{n}", String(diffDay));
   return date.toLocaleDateString();
 }
 
@@ -87,6 +88,7 @@ export function NotificationCard({
   onDelete,
 }: NotificationCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const config = TYPE_CONFIG[notification.type];
   const Icon = config.icon;
 
@@ -130,7 +132,7 @@ export function NotificationCard({
           {notification.message}
         </p>
         <p className="mt-1 text-[11px] text-zinc-600">
-          {formatRelativeTime(notification.createdAt)}
+          {formatRelativeTime(notification.createdAt, t)}
         </p>
       </div>
 
@@ -140,7 +142,7 @@ export function NotificationCard({
           onDelete(notification.id);
         }}
         className="shrink-0 rounded p-1 text-zinc-600 opacity-0 transition hover:bg-zinc-800 hover:text-red-400 group-hover:opacity-100"
-        aria-label="Delete notification"
+        aria-label={t.notifications.delete}
       >
         <Trash2 size={14} />
       </button>
