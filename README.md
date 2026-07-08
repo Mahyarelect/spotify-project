@@ -15,10 +15,10 @@ Open [http://localhost:5173](http://localhost:5173).
 
 | Email | Password | Role |
 |---|---|---|
-| alice@example.com | Password123! | Listener (free) |
-| bob@example.com | Password123! | Artist (silver) |
-| carol@example.com | Password123! | Admin (gold) |
-| dave@example.com | Password123! | Support (free) |
+| mahyar@example.com | Password123! | Listener (free) |
+| ali@example.com | Password123! | Artist (silver) |
+| hasan@example.com | Password123! | Admin (gold) |
+| parsa@example.com | Password123! | Support (free) |
 
 ## Features
 
