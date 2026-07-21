@@ -4,6 +4,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 from apps.common.domain import DomainError
 from apps.common.events import (
@@ -12,6 +13,7 @@ from apps.common.events import (
     artist_application_submitted,
 )
 from apps.subscriptions.services import ensure_free_subscription
+from apps.subscriptions.selectors import get_effective_entitlements
 
 from .models import ArtistApplication, User, UserPreference
 
@@ -189,3 +191,72 @@ def send_password_reset(*, user: User, frontend_origin: str) -> None:
         None,
         [user.email],
     )
+
+
+@transaction.atomic
+def update_own_profile(*, user: User, changes: dict) -> User:
+    allowed_fields = {"display_name", "bio", "birth_date", "gender"}
+    for field, value in changes.items():
+        if field in allowed_fields:
+            setattr(user, field, value)
+    user.full_clean(exclude={"password"}, validate_unique=False, validate_constraints=False)
+    user.save(update_fields=(*changes.keys(), "updated_at"))
+    return user
+
+
+@transaction.atomic
+def set_avatar(*, user: User, avatar) -> User:
+    entitlement = get_effective_entitlements(user)
+    if not entitlement.profile_image_allowed:
+        raise DomainError(
+            "profile_image_not_allowed",
+            "Your current subscription does not include profile images.",
+            status_code=403,
+            fields={"avatar": ["Upgrade to Silver or Gold to upload a profile image."]},
+        )
+    old_name = user.avatar.name if user.avatar else None
+    old_storage = user.avatar.storage if user.avatar else None
+    user.avatar = avatar
+    user.save(update_fields=("avatar", "updated_at"))
+    if old_name and old_storage and old_name != user.avatar.name:
+        transaction.on_commit(lambda: old_storage.delete(old_name))
+    return user
+
+
+@transaction.atomic
+def follow_user(*, follower: User, target: User) -> None:
+    if follower.pk == target.pk:
+        raise DomainError("self_follow_not_allowed", "You cannot follow yourself.")
+    locked = {
+        item.pk: item
+        for item in User.objects.select_for_update().filter(pk__in=(follower.pk, target.pk))
+    }
+    locked[follower.pk].following.add(locked[target.pk])
+
+
+@transaction.atomic
+def unfollow_user(*, follower: User, target: User) -> None:
+    if follower.pk == target.pk:
+        raise DomainError("self_follow_not_allowed", "You cannot unfollow yourself.")
+    locked = {
+        item.pk: item
+        for item in User.objects.select_for_update().filter(pk__in=(follower.pk, target.pk))
+    }
+    locked[follower.pk].following.remove(locked[target.pk])
+
+
+@transaction.atomic
+def delete_own_account(*, user: User, current_password: str) -> None:
+    if not user.check_password(current_password):
+        raise DomainError(
+            "invalid_current_password",
+            "The current password is incorrect.",
+            fields={"current_password": ["The current password is incorrect."]},
+        )
+    old_name = user.avatar.name if user.avatar else None
+    old_storage = user.avatar.storage if user.avatar else None
+    for token in OutstandingToken.objects.filter(user=user):
+        BlacklistedToken.objects.get_or_create(token=token)
+    user.delete()
+    if old_name and old_storage:
+        transaction.on_commit(lambda: old_storage.delete(old_name))

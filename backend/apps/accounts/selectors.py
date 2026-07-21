@@ -14,3 +14,17 @@ def get_current_user(user_id):
         .annotate(following_count_value=Count("following", distinct=True))
         .get(pk=user_id)
     )
+
+
+def get_public_profile(username: str, viewer=None):
+    user = (
+        User.objects.annotate(followers_count_value=Count("followers", distinct=True))
+        .annotate(following_count_value=Count("following", distinct=True))
+        .get(username=username)
+    )
+    user.is_following_value = bool(
+        viewer
+        and viewer.is_authenticated
+        and viewer.following.filter(pk=user.pk).exists()
+    )
+    return user

@@ -1,3 +1,6 @@
+from datetime import date
+
+from PIL import Image, UnidentifiedImageError
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -6,7 +9,15 @@ from apps.subscriptions.selectors import get_effective_entitlements
 from ..models import User, UserPreference
 
 
-class UserPreferenceSerializer(serializers.ModelSerializer):
+class RejectUnknownFieldsMixin:
+    def to_internal_value(self, data):
+        unknown = set(data.keys()) - set(self.fields.keys())
+        if unknown:
+            raise serializers.ValidationError({field: ["Unknown field."] for field in sorted(unknown)})
+        return super().to_internal_value(data)
+
+
+class UserPreferenceSerializer(RejectUnknownFieldsMixin, serializers.ModelSerializer):
     new_releases_from_followed = serializers.BooleanField(source="notify_new_releases")
     subscription_expiry = serializers.BooleanField(source="notify_subscription_expiry")
     ticket_updates = serializers.BooleanField(source="notify_ticket_updates")
@@ -20,6 +31,40 @@ class UserPreferenceSerializer(serializers.ModelSerializer):
             "sound_enabled",
             "language",
         )
+
+
+class ProfileUpdateSerializer(RejectUnknownFieldsMixin, serializers.Serializer):
+    display_name = serializers.CharField(max_length=150, required=False)
+    bio = serializers.CharField(max_length=300, allow_blank=True, required=False)
+    birth_date = serializers.DateField(required=False)
+    gender = serializers.ChoiceField(choices=User.Gender.choices, required=False)
+    avatar = serializers.ImageField(required=False, write_only=True)
+
+    def validate_birth_date(self, value):
+        today = date.today()
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+        if value > today or age < 13 or age > 120:
+            raise serializers.ValidationError("Please enter a valid birth date for a user aged 13 to 120.")
+        return value
+
+    def validate_avatar(self, value):
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Profile images must be 5 MB or smaller.")
+        try:
+            image = Image.open(value)
+            image.verify()
+            image_format = image.format
+        except (UnidentifiedImageError, OSError, SyntaxError) as error:
+            raise serializers.ValidationError("Upload a valid image.") from error
+        finally:
+            value.seek(0)
+        if image_format not in {"JPEG", "PNG", "WEBP"}:
+            raise serializers.ValidationError("Only JPEG, PNG, and WebP images are supported.")
+        return value
+
+
+class AccountDeleteSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True, trim_whitespace=False)
 
 
 class SubscriptionLimitsSerializer(serializers.Serializer):
@@ -107,3 +152,38 @@ class CurrentUserSerializer(serializers.ModelSerializer):
                 "statistics_allowed": entitlement.statistics_allowed,
             },
         }
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+    followers_count = serializers.IntegerField(source="followers_count_value", read_only=True)
+    following_count = serializers.IntegerField(source="following_count_value", read_only=True)
+    is_following = serializers.BooleanField(source="is_following_value", read_only=True)
+    plan = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "display_name",
+            "avatar_url",
+            "bio",
+            "role",
+            "artist_verified",
+            "plan",
+            "followers_count",
+            "following_count",
+            "is_following",
+        )
+
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_avatar_url(self, user):
+        if not user.avatar:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(user.avatar.url) if request else user.avatar.url
+
+    @extend_schema_field(serializers.ChoiceField(choices=("free", "silver", "gold")))
+    def get_plan(self, user):
+        return get_effective_entitlements(user).plan_code
