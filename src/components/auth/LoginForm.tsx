@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { ROLE_HOME_ROUTE } from "@/lib/constants/routes";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ApiError } from "@/lib/api/apiError";
 
 export function LoginForm() {
   const { t } = useTranslation();
@@ -26,8 +27,12 @@ export function LoginForm() {
     try {
       const { role } = await login(data.email, data.password);
       navigate(ROLE_HOME_ROUTE[role as keyof typeof ROLE_HOME_ROUTE] ?? "/", { replace: true });
-    } catch {
-      setServerError(t.login.invalidCredentials);
+    } catch (error) {
+      if (error instanceof ApiError && error.code !== "invalid_credentials") {
+        setServerError(error.message);
+      } else {
+        setServerError(t.login.invalidCredentials);
+      }
     }
   };
 

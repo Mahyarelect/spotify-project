@@ -1,5 +1,4 @@
 import type { User, PlanTier } from "@/types/user";
-import { getPlanLimits } from "@/lib/constants/plans";
 
 export function useSubscriptionLimits(user: User | null) {
   if (!user) {
@@ -13,22 +12,29 @@ export function useSubscriptionLimits(user: User | null) {
       playlistsRemaining: 0,
       maxPlaylists: 0,
       tier: "free" as PlanTier,
-      planLimits: getPlanLimits("free"),
+      planLimits: {
+        dailyStreamLimit: 0,
+        maxPlaylists: 0,
+        profileImageAllowed: false,
+        downloadAllowed: false,
+        earlyAccessAllowed: false,
+        statisticsAllowed: false,
+      },
     };
   }
 
-  const limits = getPlanLimits(user.planTier);
+  const limits = user.subscription.limits;
 
   return {
     canUploadProfileImage: limits.profileImageAllowed,
     canDownload: limits.downloadAllowed,
-    canViewStats: limits.viewStats,
-    hasEarlyAccess: limits.earlyAccess,
+    canViewStats: limits.statisticsAllowed,
+    hasEarlyAccess: limits.earlyAccessAllowed,
     dailyStreamsRemaining: limits.dailyStreamLimit ?? Infinity,
     dailyStreamLimit: limits.dailyStreamLimit ?? 0,
     playlistsRemaining: limits.maxPlaylists ?? Infinity,
     maxPlaylists: limits.maxPlaylists ?? 0,
-    tier: user.planTier,
+    tier: user.subscription.plan,
     planLimits: limits,
   };
 }

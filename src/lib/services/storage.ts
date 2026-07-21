@@ -11,7 +11,6 @@ import type { AuditPayment } from "@/types/audit";
 export const STORAGE_KEYS = {
   users: "musicapp_users",
   artistApplications: "musicapp_artistApplications",
-  currentSessionUserId: "musicapp_currentSessionUserId",
   plans: "musicapp_plans",
   songs: "musicapp_songs",
   albums: "musicapp_albums",
@@ -87,21 +86,6 @@ export function getPlans(): PlanLimits[] {
 
 export function savePlans(plans: PlanLimits[]): void {
   writeJson(STORAGE_KEYS.plans, plans);
-}
-
-export function getSessionUserId(): string | null {
-  if (!canUseLocalStorage()) return null;
-  return window.localStorage.getItem(STORAGE_KEYS.currentSessionUserId);
-}
-
-export function setSessionUserId(userId: string): void {
-  if (!canUseLocalStorage()) return;
-  window.localStorage.setItem(STORAGE_KEYS.currentSessionUserId, userId);
-}
-
-export function clearSessionUserId(): void {
-  if (!canUseLocalStorage()) return;
-  window.localStorage.removeItem(STORAGE_KEYS.currentSessionUserId);
 }
 
 // ── Music: Songs ──

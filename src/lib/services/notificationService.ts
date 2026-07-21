@@ -125,7 +125,7 @@ export function notifyNewTicket(_ticketId: string): void {
   const users = getUsers();
   const supportUsers = users.filter((u) => u.role === "support" || u.role === "admin");
   for (const user of supportUsers) {
-    if (user.notificationLimits.ticketUpdates) {
+    if (user.preferences.ticketUpdates) {
       createNotification({
         userId: user.id,
         type: "new_ticket",
@@ -137,7 +137,7 @@ export function notifyNewTicket(_ticketId: string): void {
   }
 }
 
-export function notifyArtistVerification(applicationId: string, artistName: string): void {
+export function notifyArtistVerification(_applicationId: string, artistName: string): void {
   const users = getUsers();
   const supportUsers = users.filter((u) => u.role === "support" || u.role === "admin");
   for (const user of supportUsers) {

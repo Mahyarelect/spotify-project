@@ -27,8 +27,8 @@ export default function PlaylistsPage() {
 
   if (!user) return null;
 
-  const limit = playlistService.getPlaylistLimit(user.planTier);
-  const limitReached = !playlistService.canCreatePlaylist(user.id, user.planTier);
+  const limit = user.subscription.limits.maxPlaylists;
+  const limitReached = limit !== null && playlists.length >= limit;
 
   const handleCreate = (title: string, description?: string) => {
     playlistService.createPlaylist(user.id, title, description);

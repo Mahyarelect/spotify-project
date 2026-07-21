@@ -433,6 +433,6 @@ export const en = {
     song: "song",
     songs: "songs",
   },
-} as const;
+};
 
 export type Translations = typeof en;

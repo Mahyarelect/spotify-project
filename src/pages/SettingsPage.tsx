@@ -23,35 +23,37 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    setPrefs(user.notificationLimits);
-    setSound(user.soundEnabled);
-    setLanguage(user.language);
+    setPrefs({
+      newReleasesFromFollowed: user.preferences.newReleasesFromFollowed,
+      subscriptionExpiry: user.preferences.subscriptionExpiry,
+      ticketUpdates: user.preferences.ticketUpdates,
+    });
+    setSound(user.preferences.soundEnabled);
+    setLanguage(user.preferences.language);
   }, [user]);
 
   if (!user || !prefs) return null;
 
-  const userId = user.id;
-
   async function handleNotifChange(nextPrefs: NotificationPrefs) {
     setPrefs(nextPrefs);
-    await settingsService.updateNotificationPrefs(userId, nextPrefs);
+    await settingsService.updateNotificationPrefs(nextPrefs);
     await refreshUser();
   }
 
   async function handleSoundChange(enabled: boolean) {
     setSound(enabled);
-    await settingsService.updateSoundEnabled(userId, enabled);
+    await settingsService.updateSoundEnabled(enabled);
     await refreshUser();
   }
 
   async function handleLanguageChange(lang: "en" | "fa") {
     setLanguage(lang);
-    await settingsService.updateLanguage(userId, lang);
+    await settingsService.updateLanguage(lang);
     await refreshUser();
   }
 
-  async function handleDeleteAccount() {
-    await userService.deleteAccount(userId);
+  async function handleDeleteAccount(currentPassword: string) {
+    await userService.deleteAccount(currentPassword);
     logout();
     navigate(ROUTES.LOGIN, { replace: true });
   }
@@ -74,7 +76,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <PageShell className="h-fit">
             <h2 className="text-lg font-semibold">{t.settings.subscriptionHeading}</h2>
-            <p className="mt-2 text-sm text-zinc-400">{t.settings.currentPlan.replace("{planTier}", user.planTier)}</p>
+            <p className="mt-2 text-sm text-zinc-400">{t.settings.currentPlan.replace("{planTier}", user.subscription.plan)}</p>
             <Link
               to={ROUTES.SUBSCRIPTION}
               className="mt-4 inline-flex rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-black"

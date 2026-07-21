@@ -1,89 +1,98 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { followUser, unfollowUser, deleteAccount } from "@/lib/services/userService";
-import { getUsers, STORAGE_KEYS } from "@/lib/services/storage";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  deleteAccount,
+  followUser,
+  getCurrentUser,
+  getUserByUsername,
+  unfollowUser,
+  updateProfile,
+} from "@/lib/services/userService";
+import { jsonResponse, makeUserDto } from "./apiFixtures";
 
-function seedUsers() {
-  const users = [
-    {
-      id: "u1",
-      email: "alice@example.com",
-      passwordHash: "hash",
-      displayName: "Alice",
-      username: "alice",
-      role: "listener" as const,
-      birthDate: "1995-01-01",
-      gender: "female" as const,
-      avatarUrl: null,
-      planTier: "free" as const,
-      planRenewsAt: null,
-      followers: [],
-      following: [],
-      notificationLimits: { newReleasesFromFollowed: true, subscriptionExpiry: true, ticketUpdates: false },
-      soundEnabled: true,
-      language: "en" as const,
-      createdAt: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: "u2",
-      email: "bob@example.com",
-      passwordHash: "hash",
-      displayName: "Bob",
-      username: "bob",
-      role: "listener" as const,
-      birthDate: "1995-01-01",
-      gender: "male" as const,
-      avatarUrl: null,
-      planTier: "free" as const,
-      planRenewsAt: null,
-      followers: [],
-      following: [],
-      notificationLimits: { newReleasesFromFollowed: true, subscriptionExpiry: true, ticketUpdates: false },
-      soundEnabled: true,
-      language: "en" as const,
-      createdAt: "2025-01-01T00:00:00Z",
-    },
-  ];
-  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
-}
+const publicProfile = {
+  id: "22222222-2222-4222-8222-222222222222",
+  username: "artist",
+  display_name: "Artist",
+  avatar_url: null,
+  bio: "Bio",
+  role: "artist" as const,
+  artist_verified: true,
+  plan: "gold" as const,
+  followers_count: 10,
+  following_count: 2,
+  is_following: true,
+};
 
 describe("userService", () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
+    vi.restoreAllMocks();
   });
 
-  it("cannot follow self", async () => {
-    seedUsers();
-    await expect(followUser("u1", "u1")).rejects.toThrow("Cannot follow yourself");
+  it("does not request /me when no session token exists", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    await expect(getCurrentUser()).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("following same user twice does not duplicate IDs", async () => {
-    seedUsers();
-    await followUser("u1", "u2");
-    await followUser("u1", "u2");
-    const users = getUsers();
-    const alice = users.find((u) => u.id === "u1")!;
-    const bob = users.find((u) => u.id === "u2")!;
-    expect(alice.following.filter((id) => id === "u2")).toHaveLength(1);
-    expect(bob.followers.filter((id) => id === "u1")).toHaveLength(1);
+  it("maps the private /me response without exposing password data", async () => {
+    sessionStorage.setItem("musicapp_access_token", "access");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(makeUserDto()));
+
+    const user = await getCurrentUser();
+
+    expect(user?.displayName).toBe("Test User");
+    expect(user?.subscription.limits.dailyStreamLimit).toBe(60);
+    expect(user).not.toHaveProperty("passwordHash");
   });
 
-  it("unfollow removes both sides", async () => {
-    seedUsers();
-    await followUser("u1", "u2");
-    await unfollowUser("u1", "u2");
-    const users = getUsers();
-    const alice = users.find((u) => u.id === "u1")!;
-    const bob = users.find((u) => u.id === "u2")!;
-    expect(alice.following).not.toContain("u2");
-    expect(bob.followers).not.toContain("u1");
+  it("maps public profiles and keeps private fields absent", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(publicProfile));
+
+    const profile = await getUserByUsername("artist");
+
+    expect(profile.isFollowing).toBe(true);
+    expect(profile.followersCount).toBe(10);
+    expect(profile).not.toHaveProperty("email");
   });
 
-  it("delete account removes user and session", async () => {
-    seedUsers();
-    localStorage.setItem(STORAGE_KEYS.currentSessionUserId, "u1");
-    await deleteAccount("u1");
-    const users = getUsers();
-    expect(users.find((u) => u.id === "u1")).toBeUndefined();
-    expect(localStorage.getItem(STORAGE_KEYS.currentSessionUserId)).toBeNull();
+  it("uses idempotent username follow endpoints", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse(publicProfile))
+      .mockResolvedValueOnce(jsonResponse({ ...publicProfile, is_following: false }));
+
+    await followUser("artist");
+    await unfollowUser("artist");
+
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/v1/users/artist/follow/");
+    expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe("POST");
+    expect((fetchMock.mock.calls[1][1] as RequestInit).method).toBe("DELETE");
+  });
+
+  it("sends profile changes as multipart data", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(makeUserDto()));
+    const avatar = new File(["image"], "avatar.png", { type: "image/png" });
+
+    await updateProfile({ displayName: "Changed", bio: "Updated", avatar });
+
+    const request = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(request.body).toBeInstanceOf(FormData);
+    expect((request.body as FormData).get("display_name")).toBe("Changed");
+    expect((request.body as FormData).get("avatar")).toBe(avatar);
+    expect(new Headers(request.headers).has("Content-Type")).toBe(false);
+  });
+
+  it("requires the current password for account deletion", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
+
+    await deleteAccount("Password123!");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/users/me/",
+      expect.objectContaining({
+        method: "DELETE",
+        body: JSON.stringify({ current_password: "Password123!" }),
+      }),
+    );
   });
 });

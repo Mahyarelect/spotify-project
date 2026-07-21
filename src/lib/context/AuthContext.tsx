@@ -1,27 +1,22 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
-  useCallback,
   type ReactNode,
 } from "react";
-import type { User } from "@/types/user";
+import { AUTH_EXPIRED_EVENT } from "@/lib/api/httpClient";
+import { clearTokens, hasSessionTokens } from "@/lib/api/tokenStore";
+import type { Gender, Role, User } from "@/types/user";
 import * as authService from "@/lib/services/authService";
 import * as userService from "@/lib/services/userService";
-import { notifySubscriptionExpiry } from "@/lib/services/notificationService";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ role: string }>;
-  registerListener: (data: {
-    displayName: string;
-    email: string;
-    password: string;
-    birthDate: string;
-    gender: "male" | "female" | "other" | "unspecified";
-  }) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ role: Role }>;
+  registerListener: (data: authService.ListenerRegistrationInput) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -33,24 +28,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadUser = useCallback(async () => {
-    const u = await userService.getCurrentUser();
-    setUser(u);
-    setLoading(false);
-    if (u?.planRenewsAt && u.planTier !== "free") {
-      notifySubscriptionExpiry(u.id, u.planTier, u.planRenewsAt);
+    try {
+      if (!hasSessionTokens()) {
+        setUser(null);
+        return;
+      }
+      setUser(await userService.getCurrentUser());
+    } catch {
+      clearTokens();
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadUser();
+    void loadUser();
   }, [loadUser]);
 
+  useEffect(() => {
+    const expire = () => setUser(null);
+    window.addEventListener(AUTH_EXPIRED_EVENT, expire);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, expire);
+  }, []);
+
   const login = async (email: string, password: string) => {
-    const { user: u, role } = await authService.login(email, password);
-    setUser(u);
-    if (u.planRenewsAt && u.planTier !== "free") {
-      notifySubscriptionExpiry(u.id, u.planTier, u.planRenewsAt);
-    }
+    const { user: nextUser, role } = await authService.login(email, password);
+    setUser(nextUser);
     return { role };
   };
 
@@ -58,34 +62,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName: string;
     email: string;
     password: string;
+    confirmPassword: string;
     birthDate: string;
-    gender: "male" | "female" | "other" | "unspecified";
+    gender: Gender;
+    acceptPolicy: boolean;
   }) => {
-    const u = await authService.registerListener(data);
-    setUser(u);
+    setUser(await authService.registerListener(data));
   };
 
   const logout = () => {
-    authService.logout();
     setUser(null);
+    void authService.logout();
   };
 
   const refreshUser = async () => {
-    const u = await userService.getCurrentUser();
-    setUser(u);
+    setUser(await userService.getCurrentUser());
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, login, registerListener, logout, refreshUser }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, registerListener, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  return context;
 }

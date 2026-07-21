@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { GuestOnlyRoute } from "@/components/routing/GuestOnlyRoute";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
-import { STORAGE_KEYS } from "@/lib/services/storage";
-import { mockHashPassword } from "@/lib/services/password";
+import { authenticate } from "./apiFixtures";
 
 function renderGuestOnly() {
   return render(
@@ -27,6 +26,8 @@ function renderGuestOnly() {
 describe("GuestOnlyRoute", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it("renders children when not authenticated", async () => {
@@ -35,33 +36,7 @@ describe("GuestOnlyRoute", () => {
   });
 
   it("redirects authenticated user away from login", async () => {
-    const mockUsers = [
-      {
-        id: "u1",
-        email: "test@example.com",
-        passwordHash: mockHashPassword("Password123!"),
-        displayName: "Test User",
-        username: "test",
-        role: "listener",
-        birthDate: "1995-01-01",
-        gender: "male" as const,
-        avatarUrl: null,
-        planTier: "free" as const,
-        planRenewsAt: null,
-        followers: [],
-        following: [],
-        notificationLimits: {
-          newReleasesFromFollowed: true,
-          subscriptionExpiry: true,
-          ticketUpdates: false,
-        },
-        soundEnabled: true,
-        language: "en" as const,
-        createdAt: "2025-01-01T00:00:00Z",
-      },
-    ];
-    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(mockUsers));
-    localStorage.setItem(STORAGE_KEYS.currentSessionUserId, "u1");
+    authenticate();
     renderGuestOnly();
     expect(await screen.findByText("Home Page")).toBeInTheDocument();
   });

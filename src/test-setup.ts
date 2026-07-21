@@ -32,3 +32,8 @@ if (typeof globalThis.localStorage === "undefined") {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).localStorage = new LocalStoragePolyfill();
 }
+
+if (typeof globalThis.sessionStorage === "undefined") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).sessionStorage = new LocalStoragePolyfill();
+}

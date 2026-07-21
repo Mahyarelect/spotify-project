@@ -28,7 +28,7 @@ export function UpgradeModal({
         <div className="space-y-1">
           <label className="block text-sm font-medium dark:text-zinc-300">{t.subscription.billingCycle}</label>
           <div className="flex gap-2">
-            {BILLING_INTERVALS.map((m) => (
+            {(plan.allowedBillingMonths ?? [...BILLING_INTERVALS]).map((m) => (
               <button
                 key={m}
                 onClick={() => setMonths(m)}

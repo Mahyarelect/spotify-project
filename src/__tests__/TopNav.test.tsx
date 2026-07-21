@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { TopNav } from "@/components/layout/TopNav";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
-import { STORAGE_KEYS } from "@/lib/services/storage";
-import { mockHashPassword } from "@/lib/services/password";
+import { authenticate } from "./apiFixtures";
 
 function renderNav() {
   return render(
@@ -22,6 +21,8 @@ function renderNav() {
 describe("TopNav", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it("shows the app logo", async () => {
@@ -30,33 +31,7 @@ describe("TopNav", () => {
   });
 
   it("shows user display name when logged in", async () => {
-    const mockUsers = [
-      {
-        id: "u1",
-        email: "test@example.com",
-        passwordHash: mockHashPassword("Password123!"),
-        displayName: "Test User",
-        username: "test",
-        role: "listener",
-        birthDate: "1995-01-01",
-        gender: "male" as const,
-        avatarUrl: null,
-        planTier: "free" as const,
-        planRenewsAt: null,
-        followers: [],
-        following: [],
-        notificationLimits: {
-          newReleasesFromFollowed: true,
-          subscriptionExpiry: true,
-          ticketUpdates: false,
-        },
-        soundEnabled: true,
-        language: "en" as const,
-        createdAt: "2025-01-01T00:00:00Z",
-      },
-    ];
-    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(mockUsers));
-    localStorage.setItem(STORAGE_KEYS.currentSessionUserId, "u1");
+    authenticate();
     renderNav();
     expect(await screen.findByText("Test User")).toBeInTheDocument();
   });

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ApiError } from "@/lib/api/apiError";
 
 export function ArtistRegisterForm() {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ export function ArtistRegisterForm() {
   const onSubmit = async (data: {
     email: string;
     password: string;
+    confirmPassword: string;
     artistName: string;
     portfolioUrl: string;
   }) => {
@@ -30,15 +32,15 @@ export function ArtistRegisterForm() {
       await authService.registerArtist(data);
       setSubmitted(true);
     } catch (error) {
-      if (error instanceof Error && error.message === "An account with this email already exists") {
+      if (error instanceof ApiError && error.code === "email_exists") {
         setServerError(t.registerArtist.emailExists);
         return;
       }
-      if (error instanceof Error && error.message === "An artist application with this email is already pending or approved") {
+      if (error instanceof ApiError && error.code === "artist_application_exists") {
         setServerError(t.registerArtist.alreadyPending);
         return;
       }
-      setServerError(t.registerArtist.failed);
+      setServerError(error instanceof ApiError ? error.message : t.registerArtist.failed);
     }
   };
 
@@ -60,6 +62,7 @@ export function ArtistRegisterForm() {
       )}
       <Input label={t.registerArtist.emailLabel} type="email" placeholder={t.registerArtist.emailPlaceholder} error={errors.email?.message} {...register("email")} />
       <Input label={t.registerArtist.passwordLabel} type="password" placeholder={t.registerArtist.passwordPlaceholder} error={errors.password?.message} {...register("password")} />
+      <Input label={t.register.confirmPasswordLabel} type="password" placeholder={t.register.confirmPasswordPlaceholder} error={errors.confirmPassword?.message} {...register("confirmPassword")} />
       <Input label={t.registerArtist.artistNameLabel} placeholder={t.registerArtist.artistNamePlaceholder} error={errors.artistName?.message} {...register("artistName")} />
       <Input label={t.registerArtist.portfolioUrlLabel} placeholder={t.registerArtist.portfolioUrlPlaceholder} error={errors.portfolioUrl?.message} {...register("portfolioUrl")} />
       <Button type="submit" disabled={isSubmitting} className="w-full">

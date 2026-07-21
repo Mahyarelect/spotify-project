@@ -14,8 +14,8 @@ export default function EditProfilePage() {
 
   if (!user) return null;
 
-  const handleSave = async (data: { displayName: string; bio?: string; avatarUrl?: string }) => {
-    await userService.updateProfile(user.id, data);
+  const handleSave = async (data: { displayName: string; bio?: string; avatar?: File }) => {
+    await userService.updateProfile(data);
     await refreshUser();
     navigate(ROUTES.PROFILE);
   };

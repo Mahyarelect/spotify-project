@@ -37,7 +37,7 @@ export function getArtistListenerCount(artistName: string): number {
   const artist = users.find(
     (u) => u.id === [...artistIds][0]
   );
-  return artist?.followers?.length ?? 0;
+  return artist?.followersCount ?? 0;
 }
 
 export function getArtistRevenue(artistName: string): number {

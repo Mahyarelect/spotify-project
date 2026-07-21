@@ -9,7 +9,7 @@ export function AvatarUploader({
 }: {
   currentUrl: string | null;
   disabled: boolean;
-  onUpload: (dataUrl: string) => void;
+  onUpload: (file: File, dataUrl: string) => void;
 }) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -19,7 +19,7 @@ export function AvatarUploader({
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      onUpload(reader.result as string);
+      onUpload(file, reader.result as string);
     };
     reader.readAsDataURL(file);
   };

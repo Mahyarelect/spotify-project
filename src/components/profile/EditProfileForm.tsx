@@ -14,11 +14,12 @@ export function EditProfileForm({
   onSave,
 }: {
   user: User;
-  onSave: (data: { displayName: string; bio?: string; avatarUrl?: string }) => void;
+  onSave: (data: { displayName: string; bio?: string; avatar?: File }) => void;
 }) {
   const { t } = useTranslation();
   const limits = useSubscriptionLimits(user);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatarUrl);
+  const [avatar, setAvatar] = useState<File | undefined>();
   const canUploadAvatar = limits.canUploadProfileImage;
 
   const {
@@ -33,7 +34,7 @@ export function EditProfileForm({
   const onSubmit = (data: { displayName: string; bio?: string }) => {
     onSave({
       ...data,
-      avatarUrl: canUploadAvatar ? (avatarUrl ?? user.avatarUrl ?? undefined) : (user.avatarUrl ?? undefined),
+      avatar: canUploadAvatar ? avatar : undefined,
     });
   };
 
@@ -42,7 +43,10 @@ export function EditProfileForm({
       <AvatarUploader
         currentUrl={avatarUrl}
         disabled={!canUploadAvatar}
-        onUpload={(dataUrl) => setAvatarUrl(dataUrl)}
+        onUpload={(file, dataUrl) => {
+          setAvatar(file);
+          setAvatarUrl(dataUrl);
+        }}
       />
       <Input label={t.profile.displayNameLabel} error={errors.displayName?.message} {...register("displayName")} />
       <div className="space-y-1">

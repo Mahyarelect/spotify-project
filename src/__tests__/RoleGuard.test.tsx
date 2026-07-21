@@ -1,39 +1,13 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { RoleGuard } from "@/components/ui/RoleGuard";
-import { STORAGE_KEYS } from "@/lib/services/storage";
 import type { Role } from "@/types/user";
+import { authenticate } from "./apiFixtures";
 
 function seedUser(role: Role) {
-  const mockUsers = [
-    {
-      id: "u1",
-      email: "test@example.com",
-      passwordHash: "hash",
-      displayName: "Test User",
-      username: "testuser",
-      role,
-      birthDate: "1995-01-01",
-      gender: "male" as const,
-      avatarUrl: null,
-      planTier: "free" as const,
-      planRenewsAt: null,
-      followers: [],
-      following: [],
-      notificationLimits: {
-        newReleasesFromFollowed: true,
-        subscriptionExpiry: true,
-        ticketUpdates: false,
-      },
-      soundEnabled: true,
-      language: "en" as const,
-      createdAt: "2025-01-01T00:00:00Z",
-    },
-  ];
-  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(mockUsers));
-  localStorage.setItem(STORAGE_KEYS.currentSessionUserId, "u1");
+  authenticate(role);
 }
 
 function renderGuard(allow: Role[], fallbackText?: string) {
@@ -54,6 +28,8 @@ function renderGuard(allow: Role[], fallbackText?: string) {
 describe("RoleGuard", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it("renders children when user role is allowed", async () => {

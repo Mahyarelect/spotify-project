@@ -78,12 +78,18 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
-export const artistRegisterSchema = z.object({
-  email: z.string().trim().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  artistName: z.string().min(2, "Artist name must be at least 2 characters"),
-  portfolioUrl: z.string().trim().min(1, "Portfolio is required").url("Enter a valid URL"),
-});
+export const artistRegisterSchema = z
+  .object({
+    email: z.string().trim().email("Please enter a valid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Confirm your password"),
+    artistName: z.string().min(2, "Artist name must be at least 2 characters"),
+    portfolioUrl: z.string().trim().min(1, "Portfolio is required").url("Enter a valid URL"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),

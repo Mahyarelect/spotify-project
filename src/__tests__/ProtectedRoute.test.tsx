@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoute";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
-import { STORAGE_KEYS } from "@/lib/services/storage";
+import { authenticate } from "./apiFixtures";
 
 function TestApp({ authenticated = false }: { authenticated?: boolean }) {
   return (
@@ -26,6 +26,8 @@ function TestApp({ authenticated = false }: { authenticated?: boolean }) {
 describe("ProtectedRoute", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it("redirects unauthenticated user to /login", async () => {
@@ -35,33 +37,7 @@ describe("ProtectedRoute", () => {
   });
 
   it("renders children when authenticated", async () => {
-    const mockUsers = [
-      {
-        id: "u1",
-        email: "test@example.com",
-        passwordHash: "hash",
-        displayName: "Test",
-        username: "test",
-        role: "listener",
-        birthDate: "1995-01-01",
-        gender: "male" as const,
-        avatarUrl: null,
-        planTier: "free" as const,
-        planRenewsAt: null,
-        followers: [],
-        following: [],
-        notificationLimits: {
-          newReleasesFromFollowed: true,
-          subscriptionExpiry: true,
-          ticketUpdates: false,
-        },
-        soundEnabled: true,
-        language: "en" as const,
-        createdAt: "2025-01-01T00:00:00Z",
-      },
-    ];
-    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(mockUsers));
-    localStorage.setItem(STORAGE_KEYS.currentSessionUserId, "u1");
+    authenticate();
     render(<TestApp authenticated />);
     const content = await screen.findByText("Protected Content");
     expect(content).toBeInTheDocument();

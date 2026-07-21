@@ -1,4 +1,4 @@
-import type { User } from "@/types/user";
+import type { PublicProfile, User } from "@/types/user";
 import { User as UserIcon } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -11,7 +11,7 @@ export function ProfileCard({
   isFollowing,
   streamsToday = 0,
 }: {
-  user: User;
+  user: User | PublicProfile;
   viewerIsOwner: boolean;
   onEdit?: () => void;
   onFollow?: () => void;
@@ -20,6 +20,7 @@ export function ProfileCard({
   streamsToday?: number;
 }) {
   const { t } = useTranslation();
+  const plan = "subscription" in user ? user.subscription.plan : user.plan;
 
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow p-6 space-y-4">
@@ -36,14 +37,14 @@ export function ProfileCard({
           <p className="text-sm text-zinc-500 dark:text-zinc-400 break-all">@{user.username}</p>
           <span
             className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full ${
-              user.planTier === "gold"
+              plan === "gold"
                 ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300"
-                : user.planTier === "silver"
+                : plan === "silver"
                   ? "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
                   : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
             }`}
           >
-            {user.planTier.charAt(0).toUpperCase() + user.planTier.slice(1)}
+            {plan.charAt(0).toUpperCase() + plan.slice(1)}
           </span>
         </div>
       </div>
@@ -52,11 +53,11 @@ export function ProfileCard({
 
       <div className="flex gap-6 text-sm">
         <div>
-          <span className="font-semibold dark:text-zinc-200">{user.followers.length}</span>{" "}
+          <span className="font-semibold dark:text-zinc-200">{user.followersCount}</span>{" "}
           <span className="text-zinc-500 dark:text-zinc-400">{t.profile.followers}</span>
         </div>
         <div>
-          <span className="font-semibold dark:text-zinc-200">{user.following.length}</span>{" "}
+          <span className="font-semibold dark:text-zinc-200">{user.followingCount}</span>{" "}
           <span className="text-zinc-500 dark:text-zinc-400">{t.profile.following}</span>
         </div>
         <div>

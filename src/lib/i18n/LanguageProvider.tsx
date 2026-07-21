@@ -4,7 +4,7 @@ import { I18nProvider, type Lang } from "./useTranslation";
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const lang: Lang = user?.language ?? "en";
+  const lang: Lang = user?.preferences.language ?? "en";
 
   useEffect(() => {
     const html = document.documentElement;

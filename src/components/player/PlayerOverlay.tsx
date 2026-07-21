@@ -16,7 +16,6 @@ import { VolumeControl } from "./controls/VolumeControl";
 import { RepeatButton } from "./controls/RepeatButton";
 import { ShuffleButton } from "./controls/ShuffleButton";
 import { QueuePanel } from "./QueuePanel";
-import { getPlanLimits } from "@/lib/constants/plans";
 import { getTodayStreamCount } from "@/lib/services/streamService";
 
 export function PlayerOverlay() {
@@ -46,7 +45,7 @@ export function PlayerOverlay() {
 
   if (!isExpanded || !currentSong) return null;
 
-  const canViewStats = user ? getPlanLimits(user.planTier).viewStats : false;
+  const canViewStats = user?.subscription.limits.statisticsAllowed ?? false;
   const streamCount = user ? getTodayStreamCount(user.id) : 0;
   const nextSong =
     queue.length > 0 && currentIndex + 1 < queue.length

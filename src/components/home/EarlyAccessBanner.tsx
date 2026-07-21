@@ -9,7 +9,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 export function EarlyAccessBanner({ albums }: { albums: Album[] }) {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const isGold = user?.planTier === "gold";
+  const isGold = user?.subscription.limits.earlyAccessAllowed === true;
 
   if (albums.length === 0) return null;
 

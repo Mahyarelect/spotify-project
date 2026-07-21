@@ -1,12 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { AuthProvider } from "@/lib/context/AuthContext";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { PlayerProvider, usePlayer } from "@/lib/context/PlayerContext";
 import { STORAGE_KEYS } from "@/lib/services/storage";
 import type { Song } from "@/types/music";
 import type { ReactNode } from "react";
+import type { User } from "@/types/user";
+import { makeUser } from "./apiFixtures";
+
+const authState = vi.hoisted(() => ({ user: null as User | null }));
+vi.mock("@/lib/hooks/useAuth", () => ({
+  useAuth: () => ({ user: authState.user, loading: false }),
+}));
 
 const MOCK_SONG_A: Song = {
   id: "test-a",
@@ -61,7 +67,7 @@ function PlayerConsumer() {
       <span data-testid="shuffle">{player.shuffle ? "true" : "false"}</span>
       <span data-testid="volume">{player.volume}</span>
       <span data-testid="expanded">{player.isExpanded ? "true" : "false"}</span>
-      <span data-testid="user">{user?.planTier ?? "none"}</span>
+      <span data-testid="user">{user?.subscription.plan ?? "none"}</span>
       <span data-testid="loading">{loading ? "true" : "false"}</span>
     </div>
   );
@@ -70,45 +76,18 @@ function PlayerConsumer() {
 function TestWrapper({ children }: { children: ReactNode }) {
   return (
     <MemoryRouter>
-      <AuthProvider>
-        <PlayerProvider>{children}</PlayerProvider>
-      </AuthProvider>
+      <PlayerProvider>{children}</PlayerProvider>
     </MemoryRouter>
   );
 }
 
 function setupUser(tier: "free" | "silver" | "gold" = "silver") {
-  const mockUsers = [
-    {
-      id: "test-user",
-      email: "test@example.com",
-      passwordHash: "hash",
-      displayName: "Test User",
-      username: "testuser",
-      role: "listener",
-      birthDate: "1995-01-01",
-      gender: "male" as const,
-      avatarUrl: null,
-      planTier: tier,
-      planRenewsAt: null,
-      followers: [],
-      following: [],
-      notificationLimits: {
-        newReleasesFromFollowed: true,
-        subscriptionExpiry: true,
-        ticketUpdates: false,
-      },
-      soundEnabled: true,
-      language: "en" as const,
-      createdAt: "2025-01-01T00:00:00Z",
-    },
-  ];
-  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(mockUsers));
-  localStorage.setItem(STORAGE_KEYS.currentSessionUserId, "test-user");
+  authState.user = { ...makeUser(tier), id: "test-user" };
 }
 
 beforeEach(() => {
   localStorage.clear();
+  authState.user = null;
   playerActions = null;
   authLoaded = false;
 });

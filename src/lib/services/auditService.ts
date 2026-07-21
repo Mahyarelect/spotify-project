@@ -91,10 +91,11 @@ export function getRevenueStats(): {
 
   const tierCounts: Record<string, { count: number; revenue: number }> = {};
   for (const user of users) {
-    if (!tierCounts[user.planTier]) {
-      tierCounts[user.planTier] = { count: 0, revenue: 0 };
+    const tier = user.subscription.plan;
+    if (!tierCounts[tier]) {
+      tierCounts[tier] = { count: 0, revenue: 0 };
     }
-    tierCounts[user.planTier].count++;
+    tierCounts[tier].count++;
   }
 
   const tierPrices: Record<string, number> = { free: 0, silver: 9.99, gold: 14.99 };

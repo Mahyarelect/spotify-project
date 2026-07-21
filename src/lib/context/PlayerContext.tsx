@@ -144,7 +144,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     (song: Song, queue?: Song[]) => {
       // Stream enforcement
       if (user) {
-        if (!canStream(user.id, user.planTier)) {
+        if (!canStream(user.id, user.subscription.plan)) {
           setState((prev) => ({
             ...prev,
             streamError: "Daily stream limit reached (60/day). Upgrade to Silver or Gold for unlimited streams.",
@@ -199,7 +199,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       // Record stream for new song
       if (user) {
-        if (!canStream(user.id, user.planTier)) {
+        if (!canStream(user.id, user.subscription.plan)) {
           return {
             ...prev,
             streamError: "Daily stream limit reached (60/day). Upgrade to Silver or Gold for unlimited streams.",

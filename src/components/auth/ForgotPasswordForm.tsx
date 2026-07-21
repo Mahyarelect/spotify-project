@@ -12,6 +12,7 @@ export function ForgotPasswordForm() {
   const { t } = useTranslation();
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState("");
+  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -20,9 +21,14 @@ export function ForgotPasswordForm() {
   } = useForm({ resolver: zodResolver(forgotPasswordSchema) });
 
   const onSubmit = async (data: { email: string }) => {
-    const res = await authService.forgotPassword(data.email);
-    setMessage(res.message);
-    setSubmitted(true);
+    setServerError("");
+    try {
+      const res = await authService.forgotPassword(data.email);
+      setMessage(res.message);
+      setSubmitted(true);
+    } catch {
+      setServerError("Unable to request a reset link. Please try again.");
+    }
   };
 
   if (submitted) {
@@ -38,6 +44,7 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {serverError && <p className="text-sm text-red-500">{serverError}</p>}
       <p className="text-sm text-zinc-500 dark:text-zinc-400">{t.forgotPassword.instruction}</p>
       <Input label={t.forgotPassword.emailLabel} type="email" placeholder={t.forgotPassword.emailPlaceholder} error={errors.email?.message} {...register("email")} />
       <Button type="submit" disabled={isSubmitting} className="w-full">

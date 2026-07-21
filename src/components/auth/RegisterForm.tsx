@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { ROUTES } from "@/lib/constants/routes";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { z } from "zod";
+import { ApiError } from "@/lib/api/apiError";
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
@@ -23,6 +24,7 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting, isValid },
   } = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema), mode: "onChange" });
 
@@ -33,16 +35,33 @@ export function RegisterForm() {
         displayName: data.displayName,
         email: data.email,
         password: data.password,
+        confirmPassword: data.confirmPassword,
         birthDate: data.birthDate,
         gender: data.gender,
+        acceptPolicy: data.acceptPolicy,
       });
       navigate(ROUTES.HOME);
     } catch (error) {
-      if (error instanceof Error && error.message === "Email already exists") {
+      if (error instanceof ApiError) {
+        const fieldMap: Record<string, keyof RegisterFormValues> = {
+          display_name: "displayName",
+          email: "email",
+          password: "password",
+          password_confirm: "confirmPassword",
+          birth_date: "birthDate",
+          gender: "gender",
+          accept_policy: "acceptPolicy",
+        };
+        for (const [field, messages] of Object.entries(error.fields ?? {})) {
+          const formField = fieldMap[field];
+          if (formField && messages[0]) setError(formField, { message: messages[0] });
+        }
+      }
+      if (error instanceof ApiError && error.code === "email_exists") {
         setServerError(t.register.emailExists);
         return;
       }
-      setServerError(t.register.failed);
+      setServerError(error instanceof ApiError ? error.message : t.register.failed);
     }
   };
 

@@ -1,10 +1,10 @@
 import { User as UserIcon } from "lucide-react";
-import type { User } from "@/types/user";
+import type { PublicProfile, User } from "@/types/user";
 import { VerifiedBadge } from "./VerifiedBadge";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface ArtistHeaderProps {
-  artist: User;
+  artist: User | PublicProfile;
   isVerified: boolean;
   isFollowing: boolean;
   isOwnProfile: boolean;
@@ -55,13 +55,13 @@ export function ArtistHeader({
         <div className="flex items-center gap-6 text-sm">
           <div>
             <span className="font-semibold text-zinc-100">
-              {artist.followers.length}
+              {artist.followersCount}
             </span>{" "}
             <span className="text-zinc-400">{t.artist.followers}</span>
           </div>
           <div>
             <span className="font-semibold text-zinc-100">
-              {artist.following.length}
+              {artist.followingCount}
             </span>{" "}
             <span className="text-zinc-400">{t.profile.following}</span>
           </div>

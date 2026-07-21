@@ -6,7 +6,6 @@ import {
   saveUsers,
 } from "./storage";
 import { notifyArtistApproved, notifyArtistRejected } from "./notificationService";
-import { mockHashPassword } from "./password";
 
 function createId(prefix: string): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -46,7 +45,6 @@ export function approveApplication(applicationId: string): ArtistApplication {
     users.push({
       id: createId("u"),
       email: app.email,
-      passwordHash: app.passwordHash || mockHashPassword("Password123!"),
       displayName: app.artistName,
       username,
       role: "artist",
@@ -54,18 +52,31 @@ export function approveApplication(applicationId: string): ArtistApplication {
       gender: "unspecified",
       avatarUrl: null,
       bio: "",
-      planTier: "free",
-      planRenewsAt: null,
-      followers: [],
-      following: [],
-      notificationLimits: {
+      artistVerified: true,
+      followersCount: 0,
+      followingCount: 0,
+      streamsToday: 0,
+      preferences: {
         newReleasesFromFollowed: true,
         subscriptionExpiry: true,
         ticketUpdates: true,
+        soundEnabled: true,
+        language: "en",
       },
-      soundEnabled: true,
-      language: "en",
-      createdAt: new Date().toISOString(),
+      subscription: {
+        plan: "free",
+        status: "active",
+        startsAt: new Date().toISOString(),
+        expiresAt: null,
+        limits: {
+          dailyStreamLimit: 60,
+          maxPlaylists: 6,
+          profileImageAllowed: false,
+          downloadAllowed: false,
+          earlyAccessAllowed: false,
+          statisticsAllowed: false,
+        },
+      },
     });
     saveUsers(users);
   } else {

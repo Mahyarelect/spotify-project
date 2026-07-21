@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 import * as userService from "@/lib/services/userService";
 import { ROUTES } from "@/lib/constants/routes";
-import type { User } from "@/types/user";
+import type { PublicProfile, User } from "@/types/user";
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { username } = useParams();
-  const [streamsToday] = useState(12);
-  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const [profileUser, setProfileUser] = useState<User | PublicProfile | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
@@ -19,9 +18,7 @@ export default function ProfilePage() {
       if (username) {
         const found = await userService.getUserByUsername(username);
         setProfileUser(found);
-        if (user) {
-          setIsFollowing(user.following.includes(found?.id ?? ""));
-        }
+        setIsFollowing(found.isFollowing);
       } else {
         setProfileUser(user);
       }
@@ -35,14 +32,16 @@ export default function ProfilePage() {
 
   const handleFollow = async () => {
     if (!user) return;
-    await userService.followUser(user.id, profileUser.id);
-    setIsFollowing(true);
+    const updated = await userService.followUser(profileUser.username);
+    setProfileUser(updated);
+    setIsFollowing(updated.isFollowing);
   };
 
   const handleUnfollow = async () => {
     if (!user) return;
-    await userService.unfollowUser(user.id, profileUser.id);
-    setIsFollowing(false);
+    const updated = await userService.unfollowUser(profileUser.username);
+    setProfileUser(updated);
+    setIsFollowing(updated.isFollowing);
   };
 
   return (
@@ -54,7 +53,7 @@ export default function ProfilePage() {
         onFollow={handleFollow}
         onUnfollow={handleUnfollow}
         isFollowing={isFollowing}
-        streamsToday={streamsToday}
+        streamsToday={"streamsToday" in profileUser ? (profileUser.streamsToday ?? 0) : 0}
       />
     </>
   );
