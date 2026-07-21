@@ -4,9 +4,11 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 export function NotificationSettings({
   prefs,
   onChange,
+  disabled = false,
 }: {
   prefs: NotificationPrefs;
   onChange: (prefs: NotificationPrefs) => void;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const toggles = [
@@ -24,6 +26,7 @@ export function NotificationSettings({
           <input
             type="checkbox"
             checked={prefs[key]}
+            disabled={disabled}
             onChange={(e) => onChange({ ...prefs, [key]: e.target.checked })}
             className="rounded border-zinc-300"
           />

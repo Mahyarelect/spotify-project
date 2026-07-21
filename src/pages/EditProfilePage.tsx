@@ -6,6 +6,7 @@ import * as userService from "@/lib/services/userService";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageShell } from "@/components/layout/PageShell";
 import { ROUTES } from "@/lib/constants/routes";
+import type { Gender } from "@/types/user";
 
 export default function EditProfilePage() {
   const { t } = useTranslation();
@@ -14,7 +15,13 @@ export default function EditProfilePage() {
 
   if (!user) return null;
 
-  const handleSave = async (data: { displayName: string; bio?: string; avatar?: File }) => {
+  const handleSave = async (data: {
+    displayName: string;
+    bio?: string;
+    birthDate: string;
+    gender: Gender;
+    avatar?: File;
+  }) => {
     await userService.updateProfile(data);
     await refreshUser();
     navigate(ROUTES.PROFILE);

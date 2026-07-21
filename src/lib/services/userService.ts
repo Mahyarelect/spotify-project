@@ -36,8 +36,8 @@ export function deleteAccount(currentPassword: string): Promise<void> {
   });
 }
 
-export async function getUserByUsername(username: string): Promise<PublicProfile> {
-  return mapPublicProfile(await apiRequest<PublicProfileDto>(`users/${encodeURIComponent(username)}/`));
+export async function getUserByUsername(username: string, signal?: AbortSignal): Promise<PublicProfile> {
+  return mapPublicProfile(await apiRequest<PublicProfileDto>(`users/${encodeURIComponent(username)}/`, { signal }));
 }
 
 export async function followUser(username: string): Promise<PublicProfile> {

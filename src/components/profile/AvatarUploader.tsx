@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Upload } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { validateAvatarFile } from "@/lib/validation/profileSchemas";
 
 export function AvatarUploader({
   currentUrl,
@@ -9,31 +10,52 @@ export function AvatarUploader({
 }: {
   currentUrl: string | null;
   disabled: boolean;
-  onUpload: (file: File, dataUrl: string) => void;
+  onUpload: (file: File) => void;
 }) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      onUpload(file, reader.result as string);
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-    reader.readAsDataURL(file);
+  }, [previewUrl]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const validationError = validateAvatarFile(file);
+    if (validationError) {
+      setError(validationError);
+      event.target.value = "";
+      return;
+    }
+    const nextPreview = URL.createObjectURL(file);
+    setPreviewUrl(nextPreview);
+    setError(null);
+    onUpload(file);
   };
 
   return (
     <div className="space-y-2">
       <div className="w-24 h-24 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center overflow-hidden">
-        {currentUrl ? (
-          <img src={currentUrl} alt={t.profile.avatarAlt} className="w-full h-full object-cover" />
+        {previewUrl || currentUrl ? (
+          <img src={previewUrl ?? currentUrl ?? ""} alt={t.profile.avatarAlt} className="w-full h-full object-cover" />
         ) : (
           <Camera className="w-8 h-8 text-zinc-400" />
         )}
       </div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleChange} disabled={disabled} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleChange}
+        disabled={disabled}
+        aria-label={t.profile.uploadPhoto}
+      />
       <button
         type="button"
         disabled={disabled}
@@ -43,9 +65,8 @@ export function AvatarUploader({
         <Upload size={14} />
         {disabled ? t.profile.upgradeToUpload : t.profile.uploadPhoto}
       </button>
-      {disabled && (
-        <p className="text-xs text-amber-600 dark:text-amber-400">{t.profile.upgradeHint}</p>
-      )}
+      {disabled && <p className="text-xs text-amber-600 dark:text-amber-400">{t.profile.upgradeHint}</p>}
+      {error && <p role="alert" className="text-xs text-red-500">{error}</p>}
     </div>
   );
 }
