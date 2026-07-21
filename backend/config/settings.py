@@ -35,6 +35,8 @@ def _postgres_database(url: str) -> dict[str, object]:
         "HOST": parsed.hostname or "localhost",
         "PORT": parsed.port or 5432,
         "CONN_MAX_AGE": 60,
+        "OPTIONS": {"connect_timeout": int(os.getenv("DATABASE_CONNECT_TIMEOUT", "3"))},
+        "TIME_ZONE": os.getenv("DATABASE_TIME_ZONE") or None,
     }
 
 
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     "apps.common",
+    "apps.accounts",
 ]
 
 MIDDLEWARE = [
@@ -107,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "UTC")
 USE_I18N = True
 USE_TZ = True
 
@@ -115,6 +118,7 @@ STATIC_URL = "/static/"
 MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
 MEDIA_ROOT = BASE_DIR / os.getenv("MEDIA_ROOT", "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "accounts.User"
 
 CORS_ALLOWED_ORIGINS = [os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")]
 
