@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.subscriptions.selectors import get_effective_entitlements
+from apps.subscriptions.models import SubscriptionPlan, UserSubscription
 
 from ..models import User, UserPreference
 
@@ -77,8 +78,8 @@ class SubscriptionLimitsSerializer(serializers.Serializer):
 
 
 class CurrentSubscriptionSerializer(serializers.Serializer):
-    plan = serializers.ChoiceField(choices=("free", "silver", "gold"))
-    status = serializers.ChoiceField(choices=("active", "expired", "cancelled"))
+    plan = serializers.ChoiceField(choices=SubscriptionPlan.Code.choices)
+    status = serializers.ChoiceField(choices=UserSubscription.Status.choices)
     starts_at = serializers.DateTimeField()
     expires_at = serializers.DateTimeField(allow_null=True)
     limits = SubscriptionLimitsSerializer()
@@ -184,6 +185,6 @@ class PublicProfileSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return request.build_absolute_uri(user.avatar.url) if request else user.avatar.url
 
-    @extend_schema_field(serializers.ChoiceField(choices=("free", "silver", "gold")))
+    @extend_schema_field(serializers.ChoiceField(choices=SubscriptionPlan.Code.choices))
     def get_plan(self, user):
         return get_effective_entitlements(user).plan_code

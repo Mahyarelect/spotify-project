@@ -149,8 +149,10 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "ENUM_NAME_OVERRIDES": {
         "ArtistApplicationStatusEnum": "apps.accounts.models.ArtistApplication.Status",
+        "PlanTierEnum": "apps.subscriptions.models.SubscriptionPlan.Code",
         "SubscriptionStatusEnum": "apps.subscriptions.models.UserSubscription.Status",
         "SubscriptionOrderStatusEnum": "apps.subscriptions.models.SubscriptionOrder.Status",
+        "BillingMonthsEnum": "apps.subscriptions.models.SubscriptionOrder.Months",
     },
 }
 
