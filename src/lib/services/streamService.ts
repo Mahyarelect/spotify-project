@@ -1,5 +1,4 @@
 import { getStreamCount, incrementStreamCount } from "./storage";
-import type { PlanTier } from "@/types/user";
 
 export function getTodayString(): string {
   const d = new Date();
@@ -13,9 +12,9 @@ export function getTodayStreamCount(userId: string): number {
   return getStreamCount(userId, getTodayString());
 }
 
-export function canStream(userId: string, planTier: PlanTier): boolean {
-  if (planTier === "silver" || planTier === "gold") return true;
-  return getTodayStreamCount(userId) < 60;
+export function canStream(userId: string, dailyStreamLimit: number | null): boolean {
+  if (dailyStreamLimit === null) return true;
+  return getTodayStreamCount(userId) < dailyStreamLimit;
 }
 
 export function recordStream(userId: string): void {

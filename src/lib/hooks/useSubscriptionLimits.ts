@@ -24,13 +24,16 @@ export function useSubscriptionLimits(user: User | null) {
   }
 
   const limits = user.subscription.limits;
+  const streamsUsed = user.streamsToday ?? 0;
 
   return {
     canUploadProfileImage: limits.profileImageAllowed,
     canDownload: limits.downloadAllowed,
     canViewStats: limits.statisticsAllowed,
     hasEarlyAccess: limits.earlyAccessAllowed,
-    dailyStreamsRemaining: limits.dailyStreamLimit ?? Infinity,
+    dailyStreamsRemaining: limits.dailyStreamLimit === null
+      ? Infinity
+      : Math.max(0, limits.dailyStreamLimit - streamsUsed),
     dailyStreamLimit: limits.dailyStreamLimit ?? 0,
     playlistsRemaining: limits.maxPlaylists ?? Infinity,
     maxPlaylists: limits.maxPlaylists ?? 0,

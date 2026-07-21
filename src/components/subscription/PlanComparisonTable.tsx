@@ -1,6 +1,7 @@
 import type { PlanLimits } from "@/types/subscription";
 import { Check, X } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
             <td className="py-3 px-4 dark:text-white">{t.subscription.price}</td>
             {plans.map((p) => (
               <td key={p.tier} className="text-center py-3 px-4">
-                {p.priceMonthly === 0 ? t.subscription.free : `$${p.priceMonthly}/mo`}
+                {p.priceMonthly === 0 ? t.subscription.free : `${formatCurrency(p.priceMonthly, p.currency)}/mo`}
               </td>
             ))}
           </tr>

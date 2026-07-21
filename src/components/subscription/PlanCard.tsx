@@ -1,6 +1,7 @@
 import type { PlanLimits } from "@/types/subscription";
 import { Check, X } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export function PlanCard({
   plan,
@@ -25,7 +26,7 @@ export function PlanCard({
         {isCurrent && <span className="px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">{t.subscription.current}</span>}
       </div>
       <div className="text-3xl font-bold dark:text-white">
-        {plan.priceMonthly === 0 ? t.subscription.free : `$${plan.priceMonthly}/mo`}
+        {plan.priceMonthly === 0 ? t.subscription.free : `${formatCurrency(plan.priceMonthly, plan.currency)}/mo`}
       </div>
       <ul className="space-y-2 text-sm dark:text-zinc-300">
         <li className="flex items-center gap-2">

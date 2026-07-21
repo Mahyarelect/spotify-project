@@ -56,34 +56,29 @@ describe("recordStream", () => {
   });
 });
 
-describe("canStream", () => {
-  it("allows streaming for silver users regardless of count", () => {
+describe("canStream with backend-provided limits", () => {
+  it("allows streaming when the backend limit is unlimited", () => {
     for (let i = 0; i < 100; i++) recordStream("u1");
-    expect(canStream("u1", "silver")).toBe(true);
-  });
-
-  it("allows streaming for gold users regardless of count", () => {
-    for (let i = 0; i < 100; i++) recordStream("u1");
-    expect(canStream("u1", "gold")).toBe(true);
+    expect(canStream("u1", null)).toBe(true);
   });
 
   it("allows streaming for free users under the limit", () => {
     for (let i = 0; i < 59; i++) recordStream("u1");
-    expect(canStream("u1", "free")).toBe(true);
+    expect(canStream("u1", 60)).toBe(true);
   });
 
   it("allows streaming at exactly 59 streams for free users", () => {
     for (let i = 0; i < 59; i++) recordStream("u1");
-    expect(canStream("u1", "free")).toBe(true);
+    expect(canStream("u1", 60)).toBe(true);
   });
 
   it("blocks streaming at 60 streams for free users", () => {
     for (let i = 0; i < 60; i++) recordStream("u1");
-    expect(canStream("u1", "free")).toBe(false);
+    expect(canStream("u1", 60)).toBe(false);
   });
 
   it("blocks streaming beyond 60 streams for free users", () => {
     for (let i = 0; i < 65; i++) recordStream("u1");
-    expect(canStream("u1", "free")).toBe(false);
+    expect(canStream("u1", 60)).toBe(false);
   });
 });

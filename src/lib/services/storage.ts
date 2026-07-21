@@ -1,8 +1,6 @@
 import { MOCK_USERS } from "@/lib/mockData/users";
-import { MOCK_PLANS } from "@/lib/mockData/plans";
 import { MOCK_SONGS, MOCK_ALBUMS, MOCK_PLAYLISTS } from "@/lib/mockData/music";
 import type { User, ArtistApplication } from "@/types/user";
-import type { PlanLimits } from "@/types/subscription";
 import type { Song, Album, Playlist, RecentlyPlayed } from "@/types/music";
 import type { Notification } from "@/types/notification";
 import type { SupportTicket } from "@/types/ticket";
@@ -11,7 +9,6 @@ import type { AuditPayment } from "@/types/audit";
 export const STORAGE_KEYS = {
   users: "musicapp_users",
   artistApplications: "musicapp_artistApplications",
-  plans: "musicapp_plans",
   songs: "musicapp_songs",
   albums: "musicapp_albums",
   playlists: "musicapp_playlists",
@@ -73,19 +70,6 @@ export function getArtistApplications(): ArtistApplication[] {
 
 export function saveArtistApplications(applications: ArtistApplication[]): void {
   writeJson(STORAGE_KEYS.artistApplications, applications);
-}
-
-export function getPlans(): PlanLimits[] {
-  if (!hasStorageKey(STORAGE_KEYS.plans)) {
-    const seeded = deepClone(MOCK_PLANS);
-    writeJson(STORAGE_KEYS.plans, seeded);
-    return seeded;
-  }
-  return readJson<PlanLimits[]>(STORAGE_KEYS.plans, []);
-}
-
-export function savePlans(plans: PlanLimits[]): void {
-  writeJson(STORAGE_KEYS.plans, plans);
 }
 
 // ── Music: Songs ──

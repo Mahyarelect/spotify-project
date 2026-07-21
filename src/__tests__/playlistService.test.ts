@@ -4,7 +4,6 @@ import {
   deletePlaylist,
   getUserPlaylists,
   canCreatePlaylist,
-  getPlaylistLimit,
   renamePlaylist,
   addSongToPlaylist,
   removeSongFromPlaylist,
@@ -93,34 +92,22 @@ describe("playlistService.removeSongFromPlaylist", () => {
   });
 });
 
-describe("playlistService playlist limits by subscription", () => {
-  it("free tier limit is 6", () => {
-    expect(getPlaylistLimit("free")).toBe(6);
-  });
-
-  it("silver tier limit is 100", () => {
-    expect(getPlaylistLimit("silver")).toBe(100);
-  });
-
-  it("gold tier has no limit (null)", () => {
-    expect(getPlaylistLimit("gold")).toBeNull();
-  });
-
-  it("free user can create playlists under the limit", () => {
-    expect(canCreatePlaylist("u1", "free")).toBe(true);
+describe("playlistService uses backend-provided limits", () => {
+  it("allows playlist creation under the provided limit", () => {
+    expect(canCreatePlaylist("u1", 6)).toBe(true);
   });
 
   it("free user cannot create playlists at the limit", () => {
     for (let i = 0; i < 6; i++) {
       createPlaylist("u1", `Playlist ${i}`);
     }
-    expect(canCreatePlaylist("u1", "free")).toBe(false);
+    expect(canCreatePlaylist("u1", 6)).toBe(false);
   });
 
   it("gold user can always create playlists", () => {
     for (let i = 0; i < 20; i++) {
       createPlaylist("u1", `Playlist ${i}`);
     }
-    expect(canCreatePlaylist("u1", "gold")).toBe(true);
+    expect(canCreatePlaylist("u1", null)).toBe(true);
   });
 });

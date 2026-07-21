@@ -35,21 +35,15 @@ export default function SubscriptionPage() {
 
   if (!user) return null;
 
-  const handleUpgrade = async (months: number) => {
-    if (!selectedPlan) return;
-    setError(null);
-    try {
-      const order = await subscriptionService.createOrder(selectedPlan.tier, months);
-      if (order.paymentUrl) {
-        window.location.assign(order.paymentUrl);
-        return;
-      }
-      await subscriptionService.confirmMockOrder(order.orderId);
-      await refreshUser();
-      setSelectedPlan(null);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to create subscription order.");
-    }
+  const handleCreateOrder = async (months: number) => {
+    if (!selectedPlan) throw new Error("Select a plan before creating an order.");
+    return subscriptionService.createOrder(selectedPlan.tier, months);
+  };
+
+  const handleConfirmOrder = async (orderId: string) => {
+    await subscriptionService.confirmMockOrder(orderId);
+    await refreshUser();
+    setSelectedPlan(null);
   };
 
   const renewal = user.subscription.expiresAt
@@ -94,7 +88,8 @@ export default function SubscriptionPage() {
           plan={selectedPlan}
           open
           onClose={() => setSelectedPlan(null)}
-          onConfirm={handleUpgrade}
+          onCreateOrder={handleCreateOrder}
+          onConfirm={handleConfirmOrder}
         />
       )}
     </>

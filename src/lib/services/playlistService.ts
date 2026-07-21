@@ -1,7 +1,5 @@
 import type { Playlist } from "@/types/music";
-import type { PlanTier } from "@/types/user";
 import { getPlaylists, savePlaylists } from "./storage";
-import { getPlanLimits } from "@/lib/constants/plans";
 
 function createId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -35,14 +33,9 @@ export function getPlaylistCount(userId: string): number {
   return getUserPlaylists(userId).length;
 }
 
-export function canCreatePlaylist(userId: string, tier: PlanTier): boolean {
-  const limits = getPlanLimits(tier);
-  if (limits.maxPlaylists === null) return true;
-  return getPlaylistCount(userId) < limits.maxPlaylists;
-}
-
-export function getPlaylistLimit(tier: PlanTier): number | null {
-  return getPlanLimits(tier).maxPlaylists;
+export function canCreatePlaylist(userId: string, maxPlaylists: number | null): boolean {
+  if (maxPlaylists === null) return true;
+  return getPlaylistCount(userId) < maxPlaylists;
 }
 
 export function createPlaylist(

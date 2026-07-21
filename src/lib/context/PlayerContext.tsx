@@ -144,10 +144,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     (song: Song, queue?: Song[]) => {
       // Stream enforcement
       if (user) {
-        if (!canStream(user.id, user.subscription.plan)) {
+        if (!canStream(user.id, user.subscription.limits.dailyStreamLimit)) {
           setState((prev) => ({
             ...prev,
-            streamError: "Daily stream limit reached (60/day). Upgrade to Silver or Gold for unlimited streams.",
+            streamError: `Daily stream limit reached (${user.subscription.limits.dailyStreamLimit}/day). Upgrade your plan for more streams.`,
           }));
           return;
         }
@@ -199,10 +199,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       // Record stream for new song
       if (user) {
-        if (!canStream(user.id, user.subscription.plan)) {
+        if (!canStream(user.id, user.subscription.limits.dailyStreamLimit)) {
           return {
             ...prev,
-            streamError: "Daily stream limit reached (60/day). Upgrade to Silver or Gold for unlimited streams.",
+            streamError: `Daily stream limit reached (${user.subscription.limits.dailyStreamLimit}/day). Upgrade your plan for more streams.`,
             isPlaying: false,
           };
         }
