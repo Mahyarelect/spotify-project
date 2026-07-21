@@ -42,7 +42,7 @@ def _postgres_database(url: str) -> dict[str, object]:
 
 _load_local_env()
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-development-key")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-development-key-change-me-at-least-32-bytes")
 DEBUG = _env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = [
     host.strip()
@@ -121,7 +121,8 @@ MEDIA_ROOT = BASE_DIR / os.getenv("MEDIA_ROOT", "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
-CORS_ALLOWED_ORIGINS = [os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")]
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+CORS_ALLOWED_ORIGINS = [FRONTEND_ORIGIN]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -146,6 +147,11 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Authentication, profiles, preferences, and subscriptions API.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "ArtistApplicationStatusEnum": "apps.accounts.models.ArtistApplication.Status",
+        "SubscriptionStatusEnum": "apps.subscriptions.models.UserSubscription.Status",
+        "SubscriptionOrderStatusEnum": "apps.subscriptions.models.SubscriptionOrder.Status",
+    },
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

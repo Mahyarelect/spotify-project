@@ -1,7 +1,10 @@
 from collections.abc import Mapping, Sequence
 
 from rest_framework.exceptions import ErrorDetail
+from rest_framework.response import Response
 from rest_framework.views import exception_handler
+
+from .domain import DomainError
 
 
 def _plain(value):
@@ -15,6 +18,18 @@ def _plain(value):
 
 
 def api_exception_handler(exc, context):
+    if isinstance(exc, DomainError):
+        return Response(
+            {
+                "error": {
+                    "code": exc.code,
+                    "message": exc.message,
+                    **({"fields": exc.fields} if exc.fields else {}),
+                }
+            },
+            status=exc.status_code,
+        )
+
     response = exception_handler(exc, context)
     if response is None:
         return None
