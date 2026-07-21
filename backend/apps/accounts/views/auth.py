@@ -33,6 +33,7 @@ def _tokens_for(user):
 class RegisterView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ListenerRegistrationSerializer
+    throttle_scope = "listener_registration"
 
     @extend_schema(
         responses={
@@ -67,6 +68,7 @@ class RegisterView(GenericAPIView):
 class ArtistApplicationCreateView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ArtistApplicationCreateSerializer
+    throttle_scope = "artist_registration"
 
     @extend_schema(responses={201: ArtistApplicationSerializer})
     def post(self, request):
@@ -85,6 +87,7 @@ class ArtistApplicationCreateView(GenericAPIView):
 class LoginView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
+    throttle_scope = "login"
 
     @extend_schema(
         responses={
@@ -142,6 +145,7 @@ class LogoutView(GenericAPIView):
 class PasswordResetRequestView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = PasswordResetRequestSerializer
+    throttle_scope = "password_reset"
 
     @extend_schema(
         responses={202: inline_serializer("PasswordResetAccepted", fields={"message": serializers.CharField()})}

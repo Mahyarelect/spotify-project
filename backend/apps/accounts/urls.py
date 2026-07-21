@@ -1,6 +1,10 @@
 from django.urls import path
 
-from .views.artist_application import ArtistApplicationApproveView, ArtistApplicationRejectView
+from .views.artist_application import (
+    ArtistApplicationApproveView,
+    ArtistApplicationListView,
+    ArtistApplicationRejectView,
+)
 from .views.auth import (
     ArtistApplicationCreateView,
     LoginView,
@@ -25,6 +29,11 @@ urlpatterns = [
     path("users/me/preferences/", PreferencesView.as_view(), name="user-preferences"),
     path("users/<str:username>/", PublicProfileView.as_view(), name="public-profile"),
     path("users/<str:username>/follow/", FollowView.as_view(), name="follow-user"),
+    path(
+        "admin/artist-applications/",
+        ArtistApplicationListView.as_view(),
+        name="artist-application-list",
+    ),
     path(
         "admin/artist-applications/<uuid:application_id>/approve/",
         ArtistApplicationApproveView.as_view(),

@@ -1,15 +1,14 @@
 import type { ArtistProfile } from "@/types/artist";
 import type { User } from "@/types/user";
 import type { Song, Album } from "@/types/music";
-import { getUsers } from "./storage";
+import { MOCK_USERS } from "@/lib/mockData/users";
 import { getSongs, getAlbums } from "./storage";
 
 export function getArtistByDisplayName(
   displayName: string
 ): User | null {
-  const users = getUsers();
   return (
-    users.find(
+    MOCK_USERS.find(
       (u) =>
         u.role === "artist" &&
         u.displayName.toLowerCase() === displayName.toLowerCase()

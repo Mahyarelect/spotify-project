@@ -4,8 +4,8 @@ import {
   saveSongs,
   getAlbums,
   saveAlbums,
-  getUsers,
 } from "./storage";
+import { MOCK_USERS } from "@/lib/mockData/users";
 
 function createId(prefix: string): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -33,8 +33,7 @@ export function getArtistListenerCount(artistName: string): number {
   );
   const artistIds = new Set(songs.map((s) => s.artistId).filter(Boolean));
   if (artistIds.size === 0) return 0;
-  const users = getUsers();
-  const artist = users.find(
+  const artist = MOCK_USERS.find(
     (u) => u.id === [...artistIds][0]
   );
   return artist?.followersCount ?? 0;

@@ -1,5 +1,6 @@
 import type { AuditPayment } from "@/types/audit";
-import { getAuditPayments, saveAuditPayments, getSongs, getUsers } from "./storage";
+import { getAuditPayments, saveAuditPayments, getSongs } from "./storage";
+import { MOCK_USERS } from "@/lib/mockData/users";
 
 function createId(prefix: string): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -19,7 +20,7 @@ export function getAuditPaymentsByMonth(month: string): AuditPayment[] {
 }
 
 export function generateMonthlyAudit(month: string): AuditPayment[] {
-  const users = getUsers().filter((u) => u.role === "artist");
+  const users = MOCK_USERS.filter((u) => u.role === "artist");
   const songs = getSongs();
   const existing = getAuditPayments();
   const existingIds = new Set(existing.filter((p) => p.month === month).map((p) => p.artistId));
@@ -76,7 +77,7 @@ export function getRevenueStats(): {
   pendingAmount: number;
   byTier: { tier: string; count: number; revenue: number }[];
 } {
-  const users = getUsers();
+  const users = MOCK_USERS;
   const songs = getSongs();
   const payments = getAuditPayments();
 

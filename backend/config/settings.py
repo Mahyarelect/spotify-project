@@ -132,6 +132,13 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "apps.common.exceptions.api_exception_handler",
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.ScopedRateThrottle",),
+    "DEFAULT_THROTTLE_RATES": {
+        "login": os.getenv("LOGIN_THROTTLE_RATE", "20/minute"),
+        "listener_registration": os.getenv("REGISTRATION_THROTTLE_RATE", "20/hour"),
+        "artist_registration": os.getenv("ARTIST_REGISTRATION_THROTTLE_RATE", "20/hour"),
+        "password_reset": os.getenv("PASSWORD_RESET_THROTTLE_RATE", "10/hour"),
+    },
 }
 
 SIMPLE_JWT = {

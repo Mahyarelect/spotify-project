@@ -1,14 +1,10 @@
-import { MOCK_USERS } from "@/lib/mockData/users";
 import { MOCK_SONGS, MOCK_ALBUMS, MOCK_PLAYLISTS } from "@/lib/mockData/music";
-import type { User, ArtistApplication } from "@/types/user";
 import type { Song, Album, Playlist, RecentlyPlayed } from "@/types/music";
 import type { Notification } from "@/types/notification";
 import type { SupportTicket } from "@/types/ticket";
 import type { AuditPayment } from "@/types/audit";
 
 export const STORAGE_KEYS = {
-  users: "musicapp_users",
-  artistApplications: "musicapp_artistApplications",
   songs: "musicapp_songs",
   albums: "musicapp_albums",
   playlists: "musicapp_playlists",
@@ -49,27 +45,6 @@ export function hasStorageKey(key: string): boolean {
 
 function deepClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
-}
-
-export function getUsers(): User[] {
-  if (!hasStorageKey(STORAGE_KEYS.users)) {
-    const seeded = deepClone(MOCK_USERS);
-    writeJson(STORAGE_KEYS.users, seeded);
-    return seeded;
-  }
-  return readJson<User[]>(STORAGE_KEYS.users, []);
-}
-
-export function saveUsers(users: User[]): void {
-  writeJson(STORAGE_KEYS.users, users);
-}
-
-export function getArtistApplications(): ArtistApplication[] {
-  return readJson<ArtistApplication[]>(STORAGE_KEYS.artistApplications, []);
-}
-
-export function saveArtistApplications(applications: ArtistApplication[]): void {
-  writeJson(STORAGE_KEYS.artistApplications, applications);
 }
 
 // ── Music: Songs ──

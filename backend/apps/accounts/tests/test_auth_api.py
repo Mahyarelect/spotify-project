@@ -269,3 +269,38 @@ def test_listener_cannot_review_artist_application():
     response = client.post(f"/api/v1/admin/artist-applications/{created.data['id']}/approve/", format="json")
 
     assert response.status_code == 403
+
+
+def test_support_can_list_pending_artist_applications_without_password_data():
+    client = APIClient()
+    created = client.post("/api/v1/auth/artist-applications/", artist_payload(), format="json")
+    client.force_authenticate(create_user("support@example.com", User.Role.SUPPORT))
+
+    response = client.get("/api/v1/admin/artist-applications/?status=pending")
+
+    assert response.status_code == 200
+    assert len(response.data) == 1
+    assert response.data[0]["id"] == created.data["id"]
+    assert response.data[0]["portfolio_url"] == "https://example.com/portfolio"
+    assert not {"password", "user"} & response.data[0].keys()
+
+
+def test_listener_cannot_list_artist_applications():
+    client = APIClient()
+    client.force_authenticate(create_user())
+
+    response = client.get("/api/v1/admin/artist-applications/")
+
+    assert response.status_code == 403
+
+
+def test_login_endpoint_is_scoped_and_throttled():
+    client = APIClient(REMOTE_ADDR="203.0.113.99")
+    payload = {"email": "missing@example.com", "password": PASSWORD}
+
+    allowed = [client.post("/api/v1/auth/login/", payload, format="json") for _ in range(20)]
+    throttled = client.post("/api/v1/auth/login/", payload, format="json")
+
+    assert all(response.status_code == 401 for response in allowed)
+    assert throttled.status_code == 429
+    assert throttled.data["error"]["code"] == "throttled"

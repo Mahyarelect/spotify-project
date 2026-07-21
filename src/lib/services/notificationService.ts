@@ -2,8 +2,8 @@ import type { Notification } from "@/types/notification";
 import {
   getNotifications as readNotifications,
   saveNotifications,
-  getUsers,
 } from "./storage";
+import { MOCK_USERS } from "@/lib/mockData/users";
 
 function createId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -122,8 +122,7 @@ export function notifyMonthlyFinancial(userId: string, month: string): void {
 }
 
 export function notifyNewTicket(_ticketId: string): void {
-  const users = getUsers();
-  const supportUsers = users.filter((u) => u.role === "support" || u.role === "admin");
+  const supportUsers = MOCK_USERS.filter((u) => u.role === "support" || u.role === "admin");
   for (const user of supportUsers) {
     if (user.preferences.ticketUpdates) {
       createNotification({
@@ -138,8 +137,7 @@ export function notifyNewTicket(_ticketId: string): void {
 }
 
 export function notifyArtistVerification(_applicationId: string, artistName: string): void {
-  const users = getUsers();
-  const supportUsers = users.filter((u) => u.role === "support" || u.role === "admin");
+  const supportUsers = MOCK_USERS.filter((u) => u.role === "support" || u.role === "admin");
   for (const user of supportUsers) {
     createNotification({
       userId: user.id,

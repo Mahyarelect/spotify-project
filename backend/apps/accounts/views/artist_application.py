@@ -1,15 +1,30 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
 from apps.common.permissions import IsSupportOrAdmin
 
 from ..serializers.artist_application import (
     ArtistApplicationRejectionSerializer,
+    ArtistApplicationAdminSerializer,
     ArtistApplicationReviewSerializer,
 )
 from ..services import approve_artist_application, reject_artist_application
+from ..models import ArtistApplication
+
+
+class ArtistApplicationListView(ListAPIView):
+    permission_classes = (IsSupportOrAdmin,)
+    serializer_class = ArtistApplicationAdminSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        queryset = ArtistApplication.objects.select_related("user").order_by("-submitted_at")
+        status_filter = self.request.query_params.get("status")
+        if status_filter in ArtistApplication.Status.values:
+            queryset = queryset.filter(status=status_filter)
+        return queryset
 
 
 class ArtistApplicationApproveView(GenericAPIView):

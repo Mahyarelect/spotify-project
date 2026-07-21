@@ -17,6 +17,7 @@ export function ArtistRegisterForm() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(artistRegisterSchema) });
 
@@ -32,6 +33,19 @@ export function ArtistRegisterForm() {
       await authService.registerArtist(data);
       setSubmitted(true);
     } catch (error) {
+      if (error instanceof ApiError) {
+        const fieldMap = {
+          email: "email",
+          password: "password",
+          password_confirm: "confirmPassword",
+          artist_name: "artistName",
+          portfolio_url: "portfolioUrl",
+        } as const;
+        for (const [field, messages] of Object.entries(error.fields ?? {})) {
+          const formField = fieldMap[field as keyof typeof fieldMap];
+          if (formField && messages[0]) setError(formField, { message: messages[0] });
+        }
+      }
       if (error instanceof ApiError && error.code === "email_exists") {
         setServerError(t.registerArtist.emailExists);
         return;

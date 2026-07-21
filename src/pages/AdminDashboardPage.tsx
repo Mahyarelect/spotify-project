@@ -59,6 +59,7 @@ export default function AdminDashboardPage() {
   );
   const [payments, setPayments] = useState<AuditPayment[]>([]);
   const [plans, setPlans] = useState<PlanLimits[]>([]);
+  const [adminError, setAdminError] = useState<string | null>(null);
   const [revenueStats, setRevenueStats] = useState({
     totalRevenue: 0,
     totalStreams: 0,
@@ -68,21 +69,43 @@ export default function AdminDashboardPage() {
   });
 
   useEffect(() => {
-    setApplications(getPendingApplications());
+    const controller = new AbortController();
     setTickets(getAllTickets());
     setPayments(getAuditPaymentsByMonth(getCurrentMonth()));
-    getPlans().then(setPlans);
     setRevenueStats(getRevenueStats());
+    Promise.all([
+      getPendingApplications(controller.signal),
+      getPlans(controller.signal),
+    ]).then(([nextApplications, nextPlans]) => {
+      setApplications(nextApplications);
+      setPlans(nextPlans);
+      setAdminError(null);
+    }).catch((caught) => {
+      if (!controller.signal.aborted) {
+        setAdminError(caught instanceof Error ? caught.message : "Unable to load admin data.");
+      }
+    });
+    return () => controller.abort();
   }, [refreshKey]);
 
-  function handleApprove(id: string) {
-    approveApplication(id);
-    triggerRefresh();
+  async function handleApprove(id: string) {
+    setAdminError(null);
+    try {
+      await approveApplication(id);
+      triggerRefresh();
+    } catch (caught) {
+      setAdminError(caught instanceof Error ? caught.message : "Unable to approve application.");
+    }
   }
 
-  function handleReject(id: string, reason: string) {
-    rejectApplication(id, reason);
-    triggerRefresh();
+  async function handleReject(id: string, reason: string) {
+    setAdminError(null);
+    try {
+      await rejectApplication(id, reason);
+      triggerRefresh();
+    } catch (caught) {
+      setAdminError(caught instanceof Error ? caught.message : "Unable to reject application.");
+    }
   }
 
   function handleSelectTicket(ticket: SupportTicket) {
@@ -157,6 +180,7 @@ export default function AdminDashboardPage() {
           />
 
           <div className="flex-1 space-y-6">
+            {adminError && <p role="alert" className="rounded-lg bg-red-950/50 p-3 text-sm text-red-300">{adminError}</p>}
             {activeSection === "verification" && (
               <section className="space-y-4">
                 <h2 className="text-lg font-bold">{t.admin.verificationHeading}</h2>
