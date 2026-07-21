@@ -71,7 +71,7 @@ def test_role_consistency_is_validated():
 
 def test_preference_defaults_match_frontend_contract():
     user = User.objects.create_user(**user_data())
-    preferences = UserPreference.objects.create(user=user)
+    preferences = user.preferences
 
     assert preferences.notify_new_releases is True
     assert preferences.notify_subscription_expiry is True

@@ -19,6 +19,7 @@ class UserFactory(DjangoModelFactory):
 class UserPreferenceFactory(DjangoModelFactory):
     class Meta:
         model = UserPreference
+        django_get_or_create = ("user",)
 
     user = factory.SubFactory(UserFactory)
 
