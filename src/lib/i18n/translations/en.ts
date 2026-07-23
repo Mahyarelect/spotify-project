@@ -13,6 +13,12 @@ export const en = {
     signOut: "Sign Out",
     openMenu: "Open navigation menu",
     closeMenu: "Close navigation menu",
+    primaryNavigation: "Primary navigation",
+    openProfileMenu: "Open profile menu",
+    menu: "Menu",
+    artistDashboard: "Artist Dashboard",
+    supportDashboard: "Support Dashboard",
+    adminDashboard: "Admin Dashboard",
   },
   layout: {
     appName: "Music App",
@@ -415,6 +421,9 @@ export const en = {
     pendingPayout: "Pending Payout",
     byTier: "Revenue by Subscription Tier",
     tierUsers: "{count} users · ${revenue}/mo",
+  },
+  supportDashboard: {
+    title: "Support Dashboard",
   },
   artistDashboard: {
     accessDenied: "Only verified artists can access this dashboard.",

@@ -168,7 +168,7 @@ export default function AdminDashboardPage() {
     >
       <PageShell>
         <PageHeader
-          title={t.admin.title}
+          title={user.role === "support" ? t.supportDashboard.title : t.admin.title}
           description={t.admin.signedInAs.replace("{displayName}", user.displayName).replace("{role}", user.role)}
         />
 

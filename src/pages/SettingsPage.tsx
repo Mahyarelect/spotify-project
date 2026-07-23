@@ -80,7 +80,12 @@ export default function SettingsPage() {
 
   async function handleDeleteAccount(currentPassword: string) {
     await userService.deleteAccount(currentPassword);
-    logout();
+    await logout();
+    navigate(ROUTES.LOGIN, { replace: true });
+  }
+
+  async function handleLogout() {
+    await logout();
     navigate(ROUTES.LOGIN, { replace: true });
   }
 
@@ -116,7 +121,16 @@ export default function SettingsPage() {
           </PageShell>
           <PageShell className="h-fit border-red-900/60">
             <h3 className="font-semibold text-lg mb-3">{t.settings.accountHeading}</h3>
-            <DeleteAccountDialog onDelete={handleDeleteAccount} />
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="min-h-11 rounded-lg border border-zinc-600 px-4 py-2 text-sm font-medium hover:bg-zinc-800"
+              >
+                {t.nav.signOut}
+              </button>
+              <DeleteAccountDialog onDelete={handleDeleteAccount} />
+            </div>
           </PageShell>
         </div>
       </div>

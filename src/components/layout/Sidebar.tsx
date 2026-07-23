@@ -1,11 +1,12 @@
-import { NavLink } from "react-router-dom";
-import { Home, ListMusic, Disc3, User, Settings } from "lucide-react";
-import { ROUTES } from "@/lib/constants/routes";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ROUTES } from "@/lib/constants/routes";
+import { getNavigationItems } from "./navItems";
 
 function navClass({ isActive }: { isActive: boolean }) {
   return [
-    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+    "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
     isActive
       ? "bg-green-500/10 text-green-400"
       : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200",
@@ -14,29 +15,40 @@ function navClass({ isActive }: { isActive: boolean }) {
 
 export function Sidebar() {
   const { t } = useTranslation();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const items = getNavigationItems(user, t);
 
-  const links = [
-    { to: ROUTES.HOME, label: t.nav.home, icon: Home, end: true },
-    { to: ROUTES.PLAYLISTS, label: t.nav.playlists, icon: ListMusic },
-    { to: ROUTES.ALBUMS, label: t.nav.albums, icon: Disc3 },
-    { to: ROUTES.PROFILE, label: t.nav.profile, icon: User },
-    { to: ROUTES.SETTINGS, label: t.nav.settings, icon: Settings },
-  ];
+  async function handleLogout() {
+    await logout();
+    navigate(ROUTES.LOGIN, { replace: true });
+  }
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-zinc-800 bg-zinc-950 md:block">
-      <nav className="flex flex-col gap-1 p-4">
-        {links.map((link) => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            end={link.end}
-            className={navClass}
-          >
-            <link.icon size={18} />
-            {link.label}
-          </NavLink>
-        ))}
+    <aside className="hidden w-60 shrink-0 bg-zinc-950 [border-inline-end:1px_solid_rgb(39_39_42)] md:block">
+      <nav aria-label={t.nav.primaryNavigation} className="flex h-full flex-col gap-1 p-4">
+        {items.map((item) => {
+          const Icon = item.icon;
+          if (item.kind === "action") {
+            return (
+              <button
+                key={item.action}
+                type="button"
+                onClick={() => void handleLogout()}
+                className="mt-auto flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-start text-sm font-medium text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200"
+              >
+                <Icon size={18} aria-hidden="true" />
+                {item.label}
+              </button>
+            );
+          }
+          return (
+            <NavLink key={item.to} to={item.to} end={item.end} className={navClass}>
+              <Icon size={18} aria-hidden="true" />
+              {item.label}
+            </NavLink>
+          );
+        })}
       </nav>
     </aside>
   );

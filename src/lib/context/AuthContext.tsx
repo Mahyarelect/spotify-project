@@ -17,7 +17,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<{ role: Role }>;
   registerListener: (data: authService.ListenerRegistrationInput) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -70,9 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(await authService.registerListener(data));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    setLoading(true);
+    const request = authService.logout();
     setUser(null);
-    void authService.logout();
+    try {
+      await request;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const refreshUser = async () => {

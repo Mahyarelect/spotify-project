@@ -14,6 +14,7 @@ export const ROUTES = {
   SUBSCRIPTION: "/subscription",
 
   ARTIST_DASHBOARD: "/artist-dashboard",
+  SUPPORT_DASHBOARD: "/support-dashboard",
   ADMIN_DASHBOARD: "/admin-dashboard",
   PLAYLISTS: "/playlists",
   ALBUMS: "/albums",
@@ -27,6 +28,10 @@ export const ROUTES = {
 export const ROLE_HOME_ROUTE: Record<Role, string> = {
   listener: ROUTES.HOME,
   artist: ROUTES.ARTIST_DASHBOARD,
-  support: ROUTES.ADMIN_DASHBOARD,
+  support: ROUTES.SUPPORT_DASHBOARD,
   admin: ROUTES.ADMIN_DASHBOARD,
 };
+
+export function getDashboardRoute(role: Role): string | null {
+  return role === "listener" ? null : ROLE_HOME_ROUTE[role];
+}

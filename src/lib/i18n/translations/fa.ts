@@ -15,6 +15,12 @@ export const fa: Translations = {
     signOut: "خروج",
     openMenu: "باز کردن منوی پیمایش",
     closeMenu: "بستن منوی پیمایش",
+    primaryNavigation: "پیمایش اصلی",
+    openProfileMenu: "باز کردن منوی پروفایل",
+    menu: "منو",
+    artistDashboard: "داشبورد هنرمند",
+    supportDashboard: "داشبورد پشتیبانی",
+    adminDashboard: "داشبورد مدیر",
   },
   layout: {
     appName: "اپلیکیشن موسیقی",
@@ -417,6 +423,9 @@ export const fa: Translations = {
     pendingPayout: "در انتظار پرداخت",
     byTier: "درآمد بر اساس پلن اشتراک",
     tierUsers: "{count} کاربر · ${revenue}/ماه",
+  },
+  supportDashboard: {
+    title: "داشبورد پشتیبانی",
   },
   artistDashboard: {
     accessDenied: "فقط هنرمندان تأیید شده به این داشبورد دسترسی دارند.",

@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoute";
 import { GuestOnlyRoute } from "@/components/routing/GuestOnlyRoute";
+import { RoleRoute } from "@/components/routing/RoleRoute";
 
 import HomePage from "@/pages/HomePage";
 import LoginPage from "@/pages/LoginPage";
@@ -49,8 +50,15 @@ export default function App() {
                 <Route path={ROUTES.ARTIST} element={<ArtistPage />} />
                 <Route path={ROUTES.PLAYER} element={<PlayerPage />} />
                 <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
-                <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPage />} />
-                <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPage />} />
+                <Route element={<RoleRoute allow={["artist"]} />}>
+                  <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPage />} />
+                </Route>
+                <Route element={<RoleRoute allow={["support"]} />}>
+                  <Route path={ROUTES.SUPPORT_DASHBOARD} element={<AdminDashboardPage />} />
+                </Route>
+                <Route element={<RoleRoute allow={["admin"]} />}>
+                  <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPage />} />
+                </Route>
               </Route>
             </Route>
 
