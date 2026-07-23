@@ -5,6 +5,7 @@ from apps.accounts.serializers.profile import CurrentSubscriptionSerializer, Rej
 
 from .models import SubscriptionOrder, SubscriptionPlan
 from .selectors import get_effective_entitlements
+from .services import project_order_expiry
 
 
 class PlanLimitsSerializer(serializers.Serializer):
@@ -73,6 +74,7 @@ class SubscriptionOrderSerializer(serializers.ModelSerializer):
     plan = serializers.CharField(source="plan.code")
     unit_price = serializers.DecimalField(source="unit_price_snapshot", max_digits=10, decimal_places=2)
     payment_url = serializers.SerializerMethodField()
+    projected_expires_at = serializers.SerializerMethodField()
 
     class Meta:
         model = SubscriptionOrder
@@ -85,6 +87,7 @@ class SubscriptionOrderSerializer(serializers.ModelSerializer):
             "total_amount",
             "currency",
             "payment_url",
+            "projected_expires_at",
             "created_at",
             "paid_at",
         )
@@ -92,6 +95,10 @@ class SubscriptionOrderSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.URLField(allow_null=True))
     def get_payment_url(self, order):
         return None
+
+    @extend_schema_field(serializers.DateTimeField())
+    def get_projected_expires_at(self, order):
+        return serializers.DateTimeField().to_representation(project_order_expiry(order))
 
 
 class PlanPriceUpdateSerializer(RejectUnknownFieldsMixin, serializers.Serializer):

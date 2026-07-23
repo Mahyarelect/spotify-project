@@ -60,6 +60,37 @@ def add_months_clamped(value: datetime, months: int) -> datetime:
     return value.replace(year=year, month=month, day=day)
 
 
+def calculate_subscription_expiry(
+    *,
+    subscription: UserSubscription,
+    target_plan: SubscriptionPlan,
+    months: int,
+    at: datetime | None = None,
+) -> tuple[bool, datetime]:
+    at = at or timezone.now()
+    renews_same_plan = (
+        subscription.plan_id == target_plan.id
+        and subscription.status == UserSubscription.Status.ACTIVE
+        and subscription.expires_at is not None
+        and subscription.expires_at > at
+    )
+    expiry_base = subscription.expires_at if renews_same_plan else at
+    return renews_same_plan, add_months_clamped(expiry_base, months)
+
+
+def project_order_expiry(order: SubscriptionOrder, at: datetime | None = None) -> datetime:
+    subscription = UserSubscription.objects.select_related("plan").get(user_id=order.user_id)
+    if order.status == SubscriptionOrder.Status.PAID and subscription.source_order_id == order.id:
+        return subscription.expires_at
+    _, expiry = calculate_subscription_expiry(
+        subscription=subscription,
+        target_plan=order.plan,
+        months=order.months,
+        at=at,
+    )
+    return expiry
+
+
 def create_subscription_order(*, user, plan_code: str, months: int, idempotency_key: str):
     if user.role != User.Role.LISTENER:
         raise DomainError("subscription_purchase_forbidden", "Only listener accounts can buy subscriptions.", status_code=403)
@@ -131,14 +162,12 @@ def activate_paid_order(order_id, provider_reference: str) -> SubscriptionOrder:
 
     now = timezone.now()
     subscription = UserSubscription.objects.select_for_update().select_related("plan").get(user=order.user)
-    renews_same_plan = (
-        subscription.plan_id == order.plan_id
-        and subscription.status == UserSubscription.Status.ACTIVE
-        and subscription.expires_at is not None
-        and subscription.expires_at > now
+    renews_same_plan, new_expiry = calculate_subscription_expiry(
+        subscription=subscription,
+        target_plan=order.plan,
+        months=order.months,
+        at=now,
     )
-    expiry_base = subscription.expires_at if renews_same_plan else now
-    new_expiry = add_months_clamped(expiry_base, order.months)
 
     order.status = SubscriptionOrder.Status.PAID
     order.provider_reference = provider_reference

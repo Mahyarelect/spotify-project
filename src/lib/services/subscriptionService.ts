@@ -27,6 +27,7 @@ interface OrderDto {
   total_amount: string;
   currency: string;
   payment_url: string | null;
+  projected_expires_at: string;
   created_at: string;
   paid_at: string | null;
 }
@@ -57,6 +58,7 @@ function mapOrder(dto: OrderDto): SubscriptionOrder {
     totalAmount: Number(dto.total_amount),
     currency: dto.currency,
     paymentUrl: dto.payment_url,
+    projectedExpiresAt: dto.projected_expires_at,
     createdAt: dto.created_at,
     paidAt: dto.paid_at,
   };
@@ -73,10 +75,17 @@ export async function getPlanByTier(tier: PlanTier): Promise<PlanLimits> {
   return plan;
 }
 
-export async function createOrder(tier: PlanTier, months: number): Promise<SubscriptionOrder> {
-  const idempotencyKey = typeof crypto !== "undefined" && "randomUUID" in crypto
+export function createSubscriptionAttemptKey(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+export async function createOrder(
+  tier: PlanTier,
+  months: number,
+  idempotencyKey = createSubscriptionAttemptKey(),
+): Promise<SubscriptionOrder> {
   return mapOrder(await apiRequest<OrderDto>("subscriptions/orders/", {
     method: "POST",
     body: JSON.stringify({ plan: tier, months, idempotency_key: idempotencyKey }),

@@ -73,7 +73,7 @@ class SubscriptionOrderDetailView(GenericAPIView):
 
     def get(self, request, order_id):
         order = get_object_or_404(
-            SubscriptionOrder.objects.select_related("plan"),
+            SubscriptionOrder.objects.select_related("plan", "user"),
             pk=order_id,
             user=request.user,
         )

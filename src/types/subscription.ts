@@ -1,5 +1,7 @@
 import type { PlanTier } from "./user";
 
+export type PurchaseMode = "upgrade" | "renew";
+
 export interface PlanLimits {
   tier: PlanTier;
   displayName?: string;
@@ -23,6 +25,7 @@ export interface SubscriptionOrder {
   totalAmount: number;
   currency: string;
   paymentUrl: string | null;
+  projectedExpiresAt: string;
   createdAt: string;
   paidAt: string | null;
 }

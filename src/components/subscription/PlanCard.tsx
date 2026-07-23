@@ -7,10 +7,12 @@ export function PlanCard({
   plan,
   isCurrent,
   onSelect,
+  actionLabel,
 }: {
   plan: PlanLimits;
   isCurrent: boolean;
   onSelect?: () => void;
+  actionLabel?: string;
 }) {
   const { t } = useTranslation();
   const tierColors = {
@@ -54,9 +56,9 @@ export function PlanCard({
           {t.subscription.viewStats}
         </li>
       </ul>
-      {!isCurrent && plan.tier !== "free" && onSelect && (
-        <button onClick={onSelect} className="w-full py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
-          {t.subscription.upgrade}
+      {plan.tier !== "free" && onSelect && actionLabel && (
+        <button onClick={onSelect} className="min-h-11 w-full rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700">
+          {actionLabel}
         </button>
       )}
     </div>

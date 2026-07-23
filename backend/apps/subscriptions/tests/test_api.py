@@ -108,6 +108,54 @@ def test_order_total_is_calculated_from_server_snapshot():
     assert clean.data["total_amount"] == "59.94"
 
 
+@freeze_time("2026-01-31 12:00:00", tz_offset=0)
+def test_order_projects_clamped_expiry_from_today_for_an_upgrade():
+    user = create_user()
+
+    response = client_for(user).post(
+        "/api/v1/subscriptions/orders/",
+        order_payload(months=1),
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.data["projected_expires_at"].startswith("2026-02-28T12:00:00")
+
+
+@freeze_time("2026-01-01 00:00:00", tz_offset=0)
+def test_same_plan_order_projects_expiry_from_existing_future_expiry():
+    user = create_user()
+    user.subscription.plan = SubscriptionPlan.objects.get(code="silver")
+    user.subscription.expires_at = timezone.now() + timedelta(days=15)
+    user.subscription.save()
+
+    response = client_for(user).post(
+        "/api/v1/subscriptions/orders/",
+        order_payload(months=1),
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.data["projected_expires_at"].startswith("2026-02-16T00:00:00")
+
+
+@freeze_time("2026-01-01 00:00:00", tz_offset=0)
+def test_different_plan_projection_does_not_extend_the_old_plan_expiry():
+    user = create_user()
+    user.subscription.plan = SubscriptionPlan.objects.get(code="silver")
+    user.subscription.expires_at = timezone.now() + timedelta(days=90)
+    user.subscription.save()
+
+    response = client_for(user).post(
+        "/api/v1/subscriptions/orders/",
+        order_payload(plan="gold", months=1),
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.data["projected_expires_at"].startswith("2026-02-01T00:00:00")
+
+
 def test_idempotency_key_returns_same_order_and_rejects_different_quote():
     user = create_user()
     client = client_for(user)
@@ -225,6 +273,7 @@ def test_development_mock_confirmation_is_owner_only_and_idempotent():
 
     assert first.status_code == second.status_code == 200
     assert first.data["status"] == "paid"
+    assert second.data["projected_expires_at"] == first.data["projected_expires_at"]
 
 
 @override_settings(DEBUG=False)

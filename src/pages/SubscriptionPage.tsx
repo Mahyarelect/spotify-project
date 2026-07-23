@@ -3,17 +3,18 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { PlanCard } from "@/components/subscription/PlanCard";
 import { PlanComparisonTable } from "@/components/subscription/PlanComparisonTable";
-import { UpgradeModal } from "@/components/subscription/UpgradeModal";
+import { SubscriptionPurchaseModal } from "@/components/subscription/SubscriptionPurchaseModal";
 import * as subscriptionService from "@/lib/services/subscriptionService";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageShell } from "@/components/layout/PageShell";
-import type { PlanLimits } from "@/types/subscription";
+import { getPurchaseMode } from "@/lib/subscriptions/purchaseMode";
+import type { PlanLimits, PurchaseMode } from "@/types/subscription";
 
 export default function SubscriptionPage() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const { user, refreshUser } = useAuth();
   const [plans, setPlans] = useState<PlanLimits[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState<PlanLimits | null>(null);
+  const [selection, setSelection] = useState<{ plan: PlanLimits; mode: PurchaseMode } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,32 +23,37 @@ export default function SubscriptionPage() {
     async function loadPlans() {
       try {
         setPlans(await subscriptionService.getPlans(controller.signal));
-      } catch (caught) {
+      } catch {
         if (!controller.signal.aborted) {
-          setError(caught instanceof Error ? caught.message : "Unable to load plans.");
+          setError(t.subscription.loadError);
         }
       }
     }
 
     void loadPlans();
     return () => controller.abort();
-  }, []);
+  }, [t.subscription.loadError]);
 
   if (!user) return null;
 
-  const handleCreateOrder = async (months: number) => {
-    if (!selectedPlan) throw new Error("Select a plan before creating an order.");
-    return subscriptionService.createOrder(selectedPlan.tier, months);
+  const handleCreateOrder = async (months: number, idempotencyKey: string) => {
+    if (!selection) throw new Error(t.subscription.selectPlanError);
+    return subscriptionService.createOrder(selection.plan.tier, months, idempotencyKey);
   };
 
   const handleConfirmOrder = async (orderId: string) => {
     await subscriptionService.confirmMockOrder(orderId);
     await refreshUser();
-    setSelectedPlan(null);
+    setSelection(null);
   };
 
   const renewal = user.subscription.expiresAt
-    ? ` · ${t.subscription.renews.replace("{date}", new Date(user.subscription.expiresAt).toLocaleDateString())}`
+    ? ` \u00b7 ${t.subscription.renews.replace(
+        "{date}",
+        new Intl.DateTimeFormat(lang === "fa" ? "fa-IR" : "en-US").format(
+          new Date(user.subscription.expiresAt),
+        ),
+      )}`
     : "";
 
   return (
@@ -64,18 +70,24 @@ export default function SubscriptionPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 mb-10">
-        {plans.map((plan) => (
-          <PlanCard
-            key={plan.tier}
-            plan={plan}
-            isCurrent={user.subscription.plan === plan.tier}
-            onSelect={
-              plan.tier !== "free" && plan.tier !== user.subscription.plan
-                ? () => setSelectedPlan(plan)
-                : undefined
-            }
-          />
-        ))}
+        {plans.map((plan) => {
+          const mode = getPurchaseMode(user.subscription.plan, plan.tier);
+          return (
+            <PlanCard
+              key={plan.tier}
+              plan={plan}
+              isCurrent={user.subscription.plan === plan.tier}
+              onSelect={mode ? () => setSelection({ plan, mode }) : undefined}
+              actionLabel={
+                mode === "renew"
+                  ? t.subscription.renew
+                  : mode === "upgrade"
+                    ? t.subscription.upgrade
+                    : undefined
+              }
+            />
+          );
+        })}
       </div>
 
       <PageShell>
@@ -83,11 +95,13 @@ export default function SubscriptionPage() {
         <PlanComparisonTable plans={plans} />
       </PageShell>
 
-      {selectedPlan && (
-        <UpgradeModal
-          plan={selectedPlan}
+      {selection && (
+        <SubscriptionPurchaseModal
+          plan={selection.plan}
+          currentSubscription={user.subscription}
+          mode={selection.mode}
           open
-          onClose={() => setSelectedPlan(null)}
+          onClose={() => setSelection(null)}
           onCreateOrder={handleCreateOrder}
           onConfirm={handleConfirmOrder}
         />

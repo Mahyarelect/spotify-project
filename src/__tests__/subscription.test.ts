@@ -32,6 +32,7 @@ const order = {
   total_amount: "29.97",
   currency: "USD",
   payment_url: null,
+  projected_expires_at: "2026-10-21T00:00:00Z",
   created_at: "2026-07-21T00:00:00Z",
   paid_at: null,
 };
@@ -58,10 +59,26 @@ describe("subscriptionService", () => {
     const created = await createOrder("silver", 3);
 
     expect(created.totalAmount).toBe(29.97);
+    expect(created.projectedExpiresAt).toBe("2026-10-21T00:00:00Z");
     const requestBody = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
     expect(requestBody).toEqual(expect.objectContaining({ plan: "silver", months: 3 }));
     expect(requestBody.idempotency_key).toEqual(expect.any(String));
     expect(requestBody).not.toHaveProperty("total_amount");
+  });
+
+  it("reuses a supplied key only for an exact retry attempt", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse(order, 201))
+      .mockResolvedValueOnce(jsonResponse(order, 200));
+
+    await createOrder("silver", 3, "stable-attempt-key");
+    await createOrder("silver", 3, "stable-attempt-key");
+
+    const bodies = fetchMock.mock.calls.map((call) => JSON.parse((call[1] as RequestInit).body as string));
+    expect(bodies.map((body) => body.idempotency_key)).toEqual([
+      "stable-attempt-key",
+      "stable-attempt-key",
+    ]);
   });
 
   it("confirms a development order through the backend", async () => {
