@@ -154,6 +154,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Authentication, profiles, preferences, and subscriptions API.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "ArtistApplicationStatusEnum": "apps.accounts.models.ArtistApplication.Status",
         "PlanTierEnum": "apps.subscriptions.models.SubscriptionPlan.Code",
