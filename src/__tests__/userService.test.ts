@@ -4,6 +4,7 @@ import {
   followUser,
   getCurrentUser,
   getUserByUsername,
+  searchUsers,
   unfollowUser,
   updateProfile,
 } from "@/lib/services/userService";
@@ -54,6 +55,28 @@ describe("userService", () => {
     expect(profile.isFollowing).toBe(true);
     expect(profile.followersCount).toBe(10);
     expect(profile).not.toHaveProperty("email");
+  });
+
+  it("encodes search terms and maps paginated safe search results", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [{
+        ...publicProfile,
+        plan_name: publicProfile.plan,
+      }],
+    }));
+
+    const page = await searchUsers("  art ist  ", 2);
+
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/v1/users/search/?q=art+ist&page=2");
+    expect(page.results[0]).toEqual(expect.objectContaining({
+      displayName: "Artist",
+      isFollowing: true,
+      plan: "gold",
+    }));
+    expect(page.results[0]).not.toHaveProperty("email");
   });
 
   it("uses idempotent username follow endpoints", async () => {

@@ -64,6 +64,26 @@ export interface PublicProfile {
   isFollowing: boolean;
 }
 
+export interface UserSearchResult {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  role: Role;
+  artistVerified: boolean;
+  plan: PlanTier;
+  followersCount: number;
+  followingCount: number;
+  isFollowing: boolean;
+}
+
+export interface UserSearchPage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: UserSearchResult[];
+}
+
 export interface ArtistApplication {
   id: string;
   email: string;

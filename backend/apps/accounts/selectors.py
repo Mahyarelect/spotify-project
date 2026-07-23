@@ -1,4 +1,19 @@
-from django.db.models import Count
+from django.db.models import (
+    Case,
+    CharField,
+    Count,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Q,
+    Value,
+    When,
+)
+from django.db.models.functions import Lower
+from django.utils import timezone
+
+from apps.subscriptions.models import SubscriptionPlan, UserSubscription
 
 from .models import User
 
@@ -28,3 +43,40 @@ def get_public_profile(username: str, viewer=None):
         and viewer.following.filter(pk=user.pk).exists()
     )
     return user
+
+
+def search_users(*, query: str, viewer):
+    following_through = User.following.through
+    return (
+        User.objects.filter(is_active=True)
+        .exclude(pk=viewer.pk)
+        .filter(Q(username__icontains=query) | Q(display_name__icontains=query))
+        .annotate(
+            followers_count_value=Count("followers", distinct=True),
+            following_count_value=Count("following", distinct=True),
+            is_following_value=Exists(
+                following_through.objects.filter(
+                    from_user_id=viewer.pk,
+                    to_user_id=OuterRef("pk"),
+                )
+            ),
+            plan_name_value=Case(
+                When(
+                    subscription__status=UserSubscription.Status.ACTIVE,
+                    subscription__expires_at__gt=timezone.now(),
+                    then=F("subscription__plan__code"),
+                ),
+                default=Value(SubscriptionPlan.Code.FREE),
+                output_field=CharField(),
+            ),
+            search_rank=Case(
+                When(username__iexact=query, then=Value(0)),
+                When(username__istartswith=query, then=Value(1)),
+                When(display_name__istartswith=query, then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField(),
+            ),
+            username_order=Lower("username"),
+        )
+        .order_by("search_rank", "username_order", "pk")
+    )

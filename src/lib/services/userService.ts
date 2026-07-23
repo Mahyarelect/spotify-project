@@ -5,8 +5,10 @@ import {
   mapUser,
   type PublicProfileDto,
   type UserDto,
+  mapUserSearchResult,
+  type UserSearchResultDto,
 } from "@/lib/api/dto";
-import type { Gender, PublicProfile, User } from "@/types/user";
+import type { Gender, PublicProfile, User, UserSearchPage } from "@/types/user";
 
 export async function getCurrentUser(): Promise<User | null> {
   if (!hasSessionTokens()) return null;
@@ -50,4 +52,22 @@ export async function unfollowUser(username: string): Promise<PublicProfile> {
   return mapPublicProfile(
     await apiRequest<PublicProfileDto>(`users/${encodeURIComponent(username)}/follow/`, { method: "DELETE" }),
   );
+}
+
+export async function searchUsers(
+  query: string,
+  page = 1,
+  signal?: AbortSignal,
+): Promise<UserSearchPage> {
+  const params = new URLSearchParams({ q: query.trim(), page: String(page) });
+  const response = await apiRequest<{
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: UserSearchResultDto[];
+  }>(`users/search/?${params.toString()}`, { signal });
+  return {
+    ...response,
+    results: response.results.map(mapUserSearchResult),
+  };
 }

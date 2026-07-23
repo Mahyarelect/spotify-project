@@ -16,6 +16,7 @@ import { PlaylistCard } from "@/components/home/PlaylistCard";
 import { AlbumCard } from "@/components/home/AlbumCard";
 import { SongRow } from "@/components/home/SongRow";
 import { EarlyAccessBanner } from "@/components/home/EarlyAccessBanner";
+import { UserSearch } from "@/components/users/UserSearch";
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -91,6 +92,8 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold tracking-tight">
         {t.home.welcome.replace("{displayName}", user.displayName)}
       </h1>
+
+      <UserSearch currentUserId={user.id} />
 
       {recentPlaylists.length > 0 && (
         <section className="space-y-4">

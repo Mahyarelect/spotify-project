@@ -188,3 +188,37 @@ class PublicProfileSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.ChoiceField(choices=SubscriptionPlan.Code.choices))
     def get_plan(self, user):
         return get_effective_entitlements(user).plan_code
+
+
+class UserSearchQuerySerializer(serializers.Serializer):
+    q = serializers.CharField(min_length=2, max_length=100, trim_whitespace=True)
+
+
+class UserSearchResultSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+    followers_count = serializers.IntegerField(source="followers_count_value", read_only=True)
+    following_count = serializers.IntegerField(source="following_count_value", read_only=True)
+    is_following = serializers.BooleanField(source="is_following_value", read_only=True)
+    plan_name = serializers.CharField(source="plan_name_value", read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "display_name",
+            "avatar_url",
+            "role",
+            "artist_verified",
+            "plan_name",
+            "followers_count",
+            "following_count",
+            "is_following",
+        )
+
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_avatar_url(self, user):
+        if not user.avatar:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(user.avatar.url) if request else user.avatar.url

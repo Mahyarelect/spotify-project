@@ -3,17 +3,21 @@ from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from ..models import User, UserPreference
-from ..selectors import get_current_user, get_public_profile
+from ..selectors import get_current_user, get_public_profile, search_users
 from ..serializers.profile import (
     AccountDeleteSerializer,
     CurrentUserSerializer,
     ProfileUpdateSerializer,
     PublicProfileSerializer,
+    UserSearchQuerySerializer,
+    UserSearchResultSerializer,
     UserPreferenceSerializer,
 )
 from ..services import delete_own_account, follow_user, set_avatar, unfollow_user, update_own_profile
@@ -63,6 +67,27 @@ class PublicProfileView(RetrieveAPIView):
             return get_public_profile(self.kwargs["username"], self.request.user)
         except User.DoesNotExist:
             return get_object_or_404(User, username=self.kwargs["username"])
+
+
+class UserSearchPagination(PageNumberPagination):
+    page_size = 10
+    max_page_size = 20
+
+
+class UserSearchView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserSearchResultSerializer
+    pagination_class = UserSearchPagination
+
+    def get_queryset(self):
+        query_serializer = UserSearchQuerySerializer(
+            data={"q": self.request.query_params.get("q", "")}
+        )
+        query_serializer.is_valid(raise_exception=True)
+        return search_users(
+            query=query_serializer.validated_data["q"],
+            viewer=self.request.user,
+        )
 
 
 class FollowView(GenericAPIView):

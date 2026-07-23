@@ -14,7 +14,13 @@ from .views.auth import (
     RefreshView,
     RegisterView,
 )
-from .views.profile import CurrentUserView, FollowView, PreferencesView, PublicProfileView
+from .views.profile import (
+    CurrentUserView,
+    FollowView,
+    PreferencesView,
+    PublicProfileView,
+    UserSearchView,
+)
 
 
 urlpatterns = [
@@ -27,6 +33,7 @@ urlpatterns = [
     path("auth/password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
     path("users/me/", CurrentUserView.as_view(), name="current-user"),
     path("users/me/preferences/", PreferencesView.as_view(), name="user-preferences"),
+    path("users/search/", UserSearchView.as_view(), name="user-search"),
     path("users/<str:username>/", PublicProfileView.as_view(), name="public-profile"),
     path("users/<str:username>/follow/", FollowView.as_view(), name="follow-user"),
     path(

@@ -4,6 +4,7 @@ import type {
   Role,
   User,
   UserPreferences,
+  UserSearchResult,
 } from "@/types/user";
 
 export interface UserPreferencesDto {
@@ -12,6 +13,34 @@ export interface UserPreferencesDto {
   ticket_updates: boolean;
   sound_enabled: boolean;
   language: "en" | "fa";
+}
+
+export interface UserSearchResultDto {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  role: Role;
+  artist_verified: boolean;
+  plan_name: "free" | "silver" | "gold";
+  followers_count: number;
+  following_count: number;
+  is_following: boolean;
+}
+
+export function mapUserSearchResult(dto: UserSearchResultDto): UserSearchResult {
+  return {
+    id: dto.id,
+    username: dto.username,
+    displayName: dto.display_name,
+    avatarUrl: dto.avatar_url,
+    role: dto.role,
+    artistVerified: dto.artist_verified,
+    plan: dto.plan_name,
+    followersCount: dto.followers_count,
+    followingCount: dto.following_count,
+    isFollowing: dto.is_following,
+  };
 }
 
 export interface CurrentSubscriptionDto {
