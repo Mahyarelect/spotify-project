@@ -71,6 +71,37 @@ describe("API-backed authentication forms", () => {
     await user.click(screen.getByRole("button", { name: "Create Account" }));
 
     expect(await screen.findByText("Backend email error.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Email")).toHaveAttribute("aria-describedby");
+  });
+
+  it("focuses and visibly marks the first invalid registration field", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>);
+
+    await user.click(screen.getByRole("button", { name: "Create Account" }));
+
+    const displayName = screen.getByLabelText("Display Name");
+    expect(displayName).toHaveFocus();
+    expect(displayName).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Please correct the highlighted fields.")).toBeInTheDocument();
+  });
+
+  it("keeps password values while showing a stable confirmation mismatch", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>);
+
+    const password = screen.getByLabelText("Password");
+    const confirmation = screen.getByLabelText("Confirm Password");
+    await user.type(password, "Password123!");
+    await user.type(confirmation, "Different123!");
+    await user.tab();
+
+    expect(await screen.findByText("Passwords do not match.")).toBeInTheDocument();
+    await user.clear(password);
+    await user.type(password, "AnotherPassword123!");
+    expect(confirmation).toHaveValue("Different123!");
+    expect(await screen.findByText("Passwords do not match.")).toBeInTheDocument();
   });
 
   it("shows the pending state after an artist application is accepted", async () => {

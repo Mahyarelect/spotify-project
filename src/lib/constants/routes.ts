@@ -6,6 +6,7 @@ export const ROUTES = {
   REGISTER: "/register",
   REGISTER_ARTIST: "/register-artist",
   FORGOT_PASSWORD: "/forgot-password",
+  RESET_PASSWORD: "/reset-password",
   PROFILE: "/profile",
   PROFILE_BY_USERNAME: "/profile/:username",
   EDIT_PROFILE: "/profile/edit",

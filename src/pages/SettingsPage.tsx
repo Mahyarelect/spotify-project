@@ -14,12 +14,11 @@ import { ROUTES } from "@/lib/constants/routes";
 import type { NotificationPrefs } from "@/types/user";
 
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [sound, setSound] = useState(true);
-  const [language, setLanguage] = useState<"en" | "fa">("en");
   const [saving, setSaving] = useState<"notifications" | "sound" | "language" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +30,6 @@ export default function SettingsPage() {
       ticketUpdates: user.preferences.ticketUpdates,
     });
     setSound(user.preferences.soundEnabled);
-    setLanguage(user.preferences.language);
   }, [user]);
 
   if (!user || !prefs) return null;
@@ -46,7 +44,7 @@ export default function SettingsPage() {
       await refreshUser();
     } catch (caught) {
       setPrefs(previous);
-      setError(caught instanceof Error ? caught.message : "Unable to save notification settings.");
+      setError(caught instanceof Error ? caught.message : t.settings.notificationSaveError);
     } finally {
       setSaving(null);
     }
@@ -62,23 +60,19 @@ export default function SettingsPage() {
       await refreshUser();
     } catch (caught) {
       setSound(previous);
-      setError(caught instanceof Error ? caught.message : "Unable to save sound settings.");
+      setError(caught instanceof Error ? caught.message : t.settings.soundSaveError);
     } finally {
       setSaving(null);
     }
   }
 
   async function handleLanguageChange(lang: "en" | "fa") {
-    const previous = language;
-    setLanguage(lang);
     setSaving("language");
     setError(null);
     try {
-      await settingsService.updateLanguage(lang);
-      await refreshUser();
+      await setLanguage(lang);
     } catch (caught) {
-      setLanguage(previous);
-      setError(caught instanceof Error ? caught.message : "Unable to save language settings.");
+      setError(caught instanceof Error ? caught.message : t.settings.languageSaveError);
     } finally {
       setSaving(null);
     }
@@ -98,15 +92,15 @@ export default function SettingsPage() {
           {error && <p role="alert" className="rounded-lg bg-red-950/50 p-3 text-sm text-red-300">{error}</p>}
           <PageShell>
             <NotificationSettings prefs={prefs} onChange={handleNotifChange} disabled={saving !== null} />
-            {saving === "notifications" && <p className="mt-2 text-xs text-zinc-400">Saving…</p>}
+            {saving === "notifications" && <p className="mt-2 text-xs text-zinc-400">{t.settings.saving}</p>}
           </PageShell>
           <PageShell>
             <SoundSettings enabled={sound} onChange={handleSoundChange} disabled={saving !== null} />
-            {saving === "sound" && <p className="mt-2 text-xs text-zinc-400">Saving…</p>}
+            {saving === "sound" && <p className="mt-2 text-xs text-zinc-400">{t.settings.saving}</p>}
           </PageShell>
           <PageShell>
             <LanguageSettings language={language} onChange={handleLanguageChange} disabled={saving !== null} />
-            {saving === "language" && <p className="mt-2 text-xs text-zinc-400">Saving…</p>}
+            {saving === "language" && <p className="mt-2 text-xs text-zinc-400">{t.settings.saving}</p>}
           </PageShell>
         </div>
         <div className="space-y-6">

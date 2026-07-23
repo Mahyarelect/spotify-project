@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export function DeleteAccountDialog({
@@ -30,7 +31,7 @@ export function DeleteAccountDialog({
     try {
       await onDelete(currentPassword);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to delete account.");
+      setError(caught instanceof Error ? caught.message : t.settings.deleteAccountFailed);
       setDeleting(false);
     }
   };
@@ -43,18 +44,14 @@ export function DeleteAccountDialog({
       <Modal open={open} onClose={close} title={t.settings.deleteAccountTitle}>
         <div className="space-y-4">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.settings.deleteAccountWarning}</p>
-          <div className="space-y-1">
-            <label className="block text-sm font-medium dark:text-zinc-300">Current password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-              autoComplete="current-password"
-              disabled={deleting}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-              required
-            />
-          </div>
+          <PasswordInput
+            label={t.settings.currentPassword}
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            autoComplete="current-password"
+            disabled={deleting}
+            required
+          />
           <div className="space-y-1">
             <label className="block text-sm font-medium dark:text-zinc-300">{t.settings.deleteAccountConfirmLabel}</label>
             <input
@@ -74,7 +71,7 @@ export function DeleteAccountDialog({
               onClick={handleDelete}
               disabled={deleting || confirmText !== "DELETE" || !currentPassword}
             >
-              {deleting ? "Deleting…" : t.settings.delete}
+              {deleting ? t.settings.deleting : t.settings.delete}
             </Button>
           </div>
         </div>

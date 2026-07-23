@@ -1,11 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@/lib/validation/authSchemas";
+import { createAuthSchemas } from "@/lib/validation/authSchemas";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ROLE_HOME_ROUTE } from "@/lib/constants/routes";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { ApiError } from "@/lib/api/apiError";
@@ -15,15 +16,19 @@ export function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
+  const [invalidSubmit, setInvalidSubmit] = useState(false);
+  const schema = useMemo(() => createAuthSchemas(t.validation).login, [t]);
 
   const {
     register,
     handleSubmit,
+    setFocus,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(loginSchema) });
+  } = useForm<{ email: string; password: string }>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: { email: string; password: string }) => {
     setServerError("");
+    setInvalidSubmit(false);
     try {
       const { role } = await login(data.email, data.password);
       navigate(ROLE_HOME_ROUTE[role as keyof typeof ROLE_HOME_ROUTE] ?? "/", { replace: true });
@@ -37,14 +42,26 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, (formErrors) => {
+        setInvalidSubmit(true);
+        setFocus(formErrors.email ? "email" : "password");
+      })}
+      className="space-y-4"
+    >
+      {invalidSubmit && Object.keys(errors).length > 0 && (
+        <p role="alert" className="rounded-lg bg-red-950/30 p-3 text-sm text-red-400">
+          {t.validation.formSummary}
+        </p>
+      )}
       {serverError && (
         <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
           {serverError}
         </div>
       )}
       <Input label={t.login.emailLabel} type="email" placeholder={t.login.emailPlaceholder} error={errors.email?.message} {...register("email")} />
-      <Input label={t.login.passwordLabel} type="password" placeholder={t.login.passwordPlaceholder} error={errors.password?.message} {...register("password")} />
+      <PasswordInput label={t.login.passwordLabel} placeholder={t.login.passwordPlaceholder} error={errors.password?.message} autoComplete="current-password" {...register("password")} />
       <div className="text-right">
         <Link to="/forgot-password" className="text-sm text-green-600 hover:underline">
           {t.login.forgotPassword}

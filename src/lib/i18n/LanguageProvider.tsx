@@ -1,16 +1,75 @@
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { updateLanguage } from "@/lib/services/settingsService";
 import { I18nProvider, type Lang } from "./useTranslation";
 
+export const LANGUAGE_STORAGE_KEY = "musicapp_language";
+
+function isLanguage(value: string | null): value is Lang {
+  return value === "en" || value === "fa";
+}
+
+function initialLanguage(): Lang {
+  if (typeof window === "undefined") return "en";
+  const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (isLanguage(saved)) return saved;
+  return window.navigator.language.toLowerCase().startsWith("fa") ? "fa" : "en";
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const lang: Lang = user?.preferences.language ?? "en";
+  const { user, refreshUser } = useAuth();
+  const [language, setLanguageState] = useState<Lang>(initialLanguage);
+  const guestChoiceRef = useRef(false);
+  const handledUserRef = useRef<string | null>(null);
 
   useEffect(() => {
     const html = document.documentElement;
-    html.setAttribute("lang", lang);
-    html.setAttribute("dir", lang === "fa" ? "rtl" : "ltr");
-  }, [lang]);
+    html.lang = language;
+    html.dir = language === "fa" ? "rtl" : "ltr";
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  }, [language]);
 
-  return <I18nProvider lang={lang}>{children}</I18nProvider>;
+  useEffect(() => {
+    if (!user) {
+      handledUserRef.current = null;
+      return;
+    }
+    if (handledUserRef.current === user.id) return;
+    handledUserRef.current = user.id;
+
+    if (guestChoiceRef.current) {
+      guestChoiceRef.current = false;
+      if (user.preferences.language !== language) {
+        void updateLanguage(language).then(refreshUser).catch(() => undefined);
+      }
+      return;
+    }
+
+    setLanguageState(user.preferences.language);
+  }, [language, refreshUser, user]);
+
+  const setLanguage = useCallback(
+    async (nextLanguage: Lang) => {
+      const previous = language;
+      setLanguageState(nextLanguage);
+      if (!user) {
+        guestChoiceRef.current = true;
+        return;
+      }
+      try {
+        await updateLanguage(nextLanguage);
+        await refreshUser();
+      } catch (error) {
+        setLanguageState(previous);
+        throw error;
+      }
+    },
+    [language, refreshUser, user],
+  );
+
+  return (
+    <I18nProvider language={language} setLanguage={setLanguage}>
+      {children}
+    </I18nProvider>
+  );
 }

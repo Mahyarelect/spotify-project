@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { forgotPasswordSchema } from "@/lib/validation/authSchemas";
+import { createAuthSchemas } from "@/lib/validation/authSchemas";
 import * as authService from "@/lib/services/authService";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -13,12 +13,13 @@ export function ForgotPasswordForm() {
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState("");
   const [serverError, setServerError] = useState("");
+  const schema = useMemo(() => createAuthSchemas(t.validation).forgotPassword, [t]);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(forgotPasswordSchema) });
+  } = useForm({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: { email: string }) => {
     setServerError("");
@@ -27,7 +28,7 @@ export function ForgotPasswordForm() {
       setMessage(res.message);
       setSubmitted(true);
     } catch {
-      setServerError("Unable to request a reset link. Please try again.");
+      setServerError(t.forgotPassword.requestFailed);
     }
   };
 
