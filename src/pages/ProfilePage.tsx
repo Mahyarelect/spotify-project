@@ -5,14 +5,17 @@ import { ProfileCard } from "@/components/profile/ProfileCard";
 import * as userService from "@/lib/services/userService";
 import { ROUTES } from "@/lib/constants/routes";
 import type { PublicProfile, User } from "@/types/user";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { username } = useParams();
   const [profileUser, setProfileUser] = useState<User | PublicProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [followPending, setFollowPending] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -28,7 +31,7 @@ export default function ProfilePage() {
         );
       } catch (caught) {
         if (!controller.signal.aborted) {
-          setError(caught instanceof Error ? caught.message : "Unable to load profile.");
+          setError(caught instanceof Error ? caught.message : t.profile.loadError);
           setProfileUser(null);
         }
       } finally {
@@ -37,13 +40,13 @@ export default function ProfilePage() {
     }
     void loadProfile();
     return () => controller.abort();
-  }, [username, user, loading]);
+  }, [username, user, loading, t.profile.loadError]);
 
   if (loading || profileLoading) {
-    return <p className="py-12 text-center text-sm text-zinc-400">Loading profile…</p>;
+    return <p className="py-12 text-center text-sm text-zinc-400">{t.profile.loading}</p>;
   }
   if (error) return <p role="alert" className="py-12 text-center text-sm text-red-400">{error}</p>;
-  if (!profileUser) return <p className="py-12 text-center text-sm text-zinc-400">Profile not found.</p>;
+  if (!profileUser) return <p className="py-12 text-center text-sm text-zinc-400">{t.profile.notFound}</p>;
 
   const viewerIsOwner = !username || user?.id === profileUser.id;
   const isFollowing = "isFollowing" in profileUser && profileUser.isFollowing;
@@ -51,20 +54,26 @@ export default function ProfilePage() {
   const handleFollow = async () => {
     if (!user || viewerIsOwner) return;
     setError(null);
+    setFollowPending(true);
     try {
       setProfileUser(await userService.followUser(profileUser.username));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to follow this user.");
+      setError(caught instanceof Error ? caught.message : t.profile.followError);
+    } finally {
+      setFollowPending(false);
     }
   };
 
   const handleUnfollow = async () => {
     if (!user || viewerIsOwner) return;
     setError(null);
+    setFollowPending(true);
     try {
       setProfileUser(await userService.unfollowUser(profileUser.username));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to unfollow this user.");
+      setError(caught instanceof Error ? caught.message : t.profile.unfollowError);
+    } finally {
+      setFollowPending(false);
     }
   };
 
@@ -76,7 +85,7 @@ export default function ProfilePage() {
       onFollow={handleFollow}
       onUnfollow={handleUnfollow}
       isFollowing={isFollowing}
-      streamsToday={"streamsToday" in profileUser ? (profileUser.streamsToday ?? 0) : 0}
+      followPending={followPending}
     />
   );
 }

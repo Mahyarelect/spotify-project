@@ -42,6 +42,17 @@ function renderProfile() {
   );
 }
 
+function renderOwnProfile() {
+  return render(
+    <MemoryRouter initialEntries={["/profile"]}>
+      <Routes>
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/subscription" element={<div>Subscription destination</div>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 beforeEach(() => {
   state.user = makeUser();
   service.getUserByUsername.mockReset();
@@ -57,9 +68,38 @@ it("loads a public profile and updates follow state from the API response", asyn
   renderProfile();
 
   expect(await screen.findByText("@artist")).toBeInTheDocument();
+  expect(screen.getByLabelText("Verified artist")).toBeInTheDocument();
+  expect(screen.queryByText("Account details")).not.toBeInTheDocument();
+  expect(screen.queryByText(state.user?.email ?? "")).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Follow" }));
   expect(await screen.findByRole("button", { name: "Unfollow" })).toBeInTheDocument();
   expect(screen.getByText("11")).toBeInTheDocument();
+});
+
+it("renders private account details only on the owner's profile", async () => {
+  if (!state.user) throw new Error("Missing test user");
+  state.user.streamsToday = null;
+
+  renderOwnProfile();
+
+  expect(await screen.findByText("Account details")).toBeInTheDocument();
+  expect(screen.getByText(state.user.email)).toBeInTheDocument();
+  expect(screen.getAllByText("Listener")).toHaveLength(2);
+  expect(screen.getByRole("link", { name: "Manage subscription" })).toHaveAttribute(
+    "href",
+    "/subscription",
+  );
+  expect(screen.getByText("Streams today").parentElement).toHaveTextContent("Not available");
+});
+
+it("renders a numeric daily stream aggregate when it is available", async () => {
+  if (!state.user) throw new Error("Missing test user");
+  state.user.streamsToday = 17;
+
+  renderOwnProfile();
+
+  expect(await screen.findByText("Streams today")).toBeInTheDocument();
+  expect(screen.getByText("Streams today").parentElement).toHaveTextContent("17");
 });
 
 it("shows a backend profile error instead of hanging", async () => {
