@@ -17,7 +17,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         ref={ref}
         dir={props.dir ?? "ltr"}
         type={visible ? "text" : "password"}
-        className={`pe-12 ${props.className ?? ""}`}
+        className={`pr-12 ${props.className ?? ""}`}
         endAdornment={
           <button
             type="button"
@@ -25,7 +25,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             aria-pressed={visible}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => setVisible((current) => !current)}
-            className="absolute end-1 top-1/2 flex min-h-10 min-w-10 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500 dark:hover:bg-zinc-700 dark:hover:text-white"
+            className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 focus:outline-none focus:ring-2 focus:ring-green-500 dark:hover:bg-zinc-700 dark:hover:text-white"
           >
             {visible ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
           </button>

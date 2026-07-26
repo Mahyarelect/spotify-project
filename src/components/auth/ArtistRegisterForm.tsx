@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { ApiError } from "@/lib/api/apiError";
 import type { z } from "zod";
+import { localizeAuthFieldError } from "@/lib/validation/authFieldErrors";
 
 type ArtistRegisterFormValues = z.input<ReturnType<typeof createAuthSchemas>["artistRegister"]>;
 
@@ -54,22 +55,35 @@ export function ArtistRegisterForm() {
           artist_name: "artistName",
           portfolio_url: "portfolioUrl",
         } as const;
-        for (const [field, messages] of Object.entries(error.fields ?? {})) {
+        const fieldOrder = ["email", "password", "password_confirm", "artist_name", "portfolio_url"];
+        let mappedCount = 0;
+        for (const field of fieldOrder) {
+          const messages = error.fields?.[field];
           const formField = fieldMap[field as keyof typeof fieldMap];
-          if (formField && messages[0]) {
-            setError(formField, { message: language === "fa" ? t.validation.invalidField : messages[0] });
+          if (formField && messages?.[0]) {
+            setError(
+              formField,
+              { message: localizeAuthFieldError(field, messages[0], language, t.validation) },
+              { shouldFocus: mappedCount === 0 },
+            );
+            mappedCount += 1;
           }
         }
+        if (error.code === "email_exists") {
+          setError("email", { message: t.registerArtist.emailExists }, { shouldFocus: true });
+          setInvalidSubmit(true);
+          return;
+        }
+        if (error.code === "artist_application_exists") {
+          setServerError(t.registerArtist.alreadyPending);
+          return;
+        }
+        if (mappedCount > 0) {
+          setInvalidSubmit(true);
+          return;
+        }
       }
-      if (error instanceof ApiError && error.code === "email_exists") {
-        setError("email", { message: t.registerArtist.emailExists }, { shouldFocus: true });
-        return;
-      }
-      if (error instanceof ApiError && error.code === "artist_application_exists") {
-        setServerError(t.registerArtist.alreadyPending);
-        return;
-      }
-      setServerError(error instanceof ApiError ? error.message : t.registerArtist.failed);
+      setServerError(error instanceof ApiError && language === "en" ? error.message : t.registerArtist.failed);
     }
   };
 

@@ -25,9 +25,14 @@ it("toggles each password independently without clearing or submitting", async (
   const toggles = screen.getAllByRole("button", { name: "Show password" });
 
   expect(password).toHaveAttribute("type", "password");
+  expect(password).toHaveAttribute("dir", "ltr");
+  expect(password).toHaveClass("pr-12");
+  expect(toggles[0]).toHaveClass("right-1", "min-h-11", "min-w-11");
+  password.focus();
   await user.click(toggles[0]);
   expect(password).toHaveAttribute("type", "text");
   expect(password).toHaveValue("secret-one");
+  expect(password).toHaveFocus();
   expect(confirmation).toHaveAttribute("type", "password");
   expect(onSubmit).not.toHaveBeenCalled();
 
@@ -38,7 +43,16 @@ it("toggles each password independently without clearing or submitting", async (
   expect(onSubmit).not.toHaveBeenCalled();
 });
 
-it("uses translated Persian accessibility labels", () => {
+it("keeps the control physically right and updates Persian accessibility labels", async () => {
+  const user = userEvent.setup();
   renderFields("fa");
-  expect(screen.getAllByRole("button", { name: "نمایش رمز عبور" })).toHaveLength(2);
+  const toggles = screen.getAllByRole("button", { name: "نمایش رمز عبور" });
+  expect(toggles).toHaveLength(2);
+  expect(toggles[0]).toHaveClass("right-1");
+  expect(screen.getByLabelText("Password")).toHaveClass("pr-12");
+
+  await user.click(toggles[0]);
+
+  expect(screen.getByRole("button", { name: "پنهان کردن رمز عبور" }))
+    .toHaveAttribute("aria-pressed", "true");
 });

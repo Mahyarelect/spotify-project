@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { ApiError } from "@/lib/api/apiError";
 import { ROUTES } from "@/lib/constants/routes";
 import { createAuthSchemas } from "@/lib/validation/authSchemas";
+import { localizeAuthFieldError } from "@/lib/validation/authFieldErrors";
 import { confirmPasswordReset } from "@/lib/services/authService";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -57,12 +58,17 @@ export function ResetPasswordForm({ uid, token }: { uid: string; token: string }
         const confirmationError = caught.fields?.password_confirm?.[0];
         if (passwordError) {
           setError("password", {
-            message: language === "fa" ? t.resetPassword.weakPassword : passwordError,
+            message: localizeAuthFieldError("password", passwordError, language, t.validation),
           }, { shouldFocus: true });
         }
         if (confirmationError) {
           setError("confirmPassword", {
-            message: language === "fa" ? t.validation.passwordMismatch : confirmationError,
+            message: localizeAuthFieldError(
+              "password_confirm",
+              confirmationError,
+              language,
+              t.validation,
+            ),
           });
         }
         if (passwordError || confirmationError) return;

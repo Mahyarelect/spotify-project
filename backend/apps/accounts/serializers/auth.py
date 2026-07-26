@@ -16,7 +16,7 @@ def validate_new_password(password: str, *, user=None) -> str:
     try:
         validate_password(password, user=user)
     except DjangoValidationError as error:
-        raise serializers.ValidationError(list(error.messages)) from error
+        raise serializers.ValidationError({"password": list(error.messages)}) from error
     return password
 
 

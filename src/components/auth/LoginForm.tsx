@@ -75,8 +75,9 @@ export function LoginForm() {
         <Link to="/register" className="text-green-600 hover:underline">{t.login.register}</Link>
       </p>
       <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-        {t.login.artistRegisterPrompt}{" "}
-        <Link to="/register-artist" className="text-green-600 hover:underline">{t.login.registerAsArtist}</Link>?
+        <span>{t.login.artistRegisterPrompt}</span>
+        <Link to="/register-artist" className="text-green-600 hover:underline">{t.login.registerAsArtist}</Link>
+        <span>{t.login.artistRegisterAfter}</span>
       </p>
     </form>
   );

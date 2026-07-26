@@ -12,6 +12,7 @@ import { ROUTES } from "@/lib/constants/routes";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { z } from "zod";
 import { ApiError } from "@/lib/api/apiError";
+import { localizeAuthFieldError } from "@/lib/validation/authFieldErrors";
 
 type RegisterFormValues = z.input<ReturnType<typeof createAuthSchemas>["register"]>;
 
@@ -68,18 +69,39 @@ export function RegisterForm() {
           gender: "gender",
           accept_policy: "acceptPolicy",
         };
-        for (const [field, messages] of Object.entries(error.fields ?? {})) {
+        const fieldOrder = [
+          "display_name",
+          "email",
+          "password",
+          "password_confirm",
+          "birth_date",
+          "gender",
+          "accept_policy",
+        ];
+        let mappedCount = 0;
+        for (const field of fieldOrder) {
+          const messages = error.fields?.[field];
           const formField = fieldMap[field];
-          if (formField && messages[0]) {
-            setError(formField, { message: language === "fa" ? t.validation.invalidField : messages[0] });
+          if (formField && messages?.[0]) {
+            setError(
+              formField,
+              { message: localizeAuthFieldError(field, messages[0], language, t.validation) },
+              { shouldFocus: mappedCount === 0 },
+            );
+            mappedCount += 1;
           }
         }
+        if (error.code === "email_exists") {
+          setError("email", { message: t.register.emailExists }, { shouldFocus: true });
+          setInvalidSubmit(true);
+          return;
+        }
+        if (mappedCount > 0) {
+          setInvalidSubmit(true);
+          return;
+        }
       }
-      if (error instanceof ApiError && error.code === "email_exists") {
-        setError("email", { message: t.register.emailExists }, { shouldFocus: true });
-        return;
-      }
-      setServerError(error instanceof ApiError ? error.message : t.register.failed);
+      setServerError(error instanceof ApiError && language === "en" ? error.message : t.register.failed);
     }
   };
 
@@ -155,12 +177,17 @@ export function RegisterForm() {
             className="min-h-5 min-w-5 rounded border-zinc-300"
             {...register("acceptPolicy")}
           />
-          <label htmlFor="acceptPolicy" className="text-sm text-zinc-600 dark:text-zinc-400">
-            {t.register.acceptPolicy}{" "}
-            <button type="button" onClick={() => setPolicyOpen(true)} className="text-green-600 hover:underline">
+          <span id="accept-policy-label" className="text-sm text-zinc-600 dark:text-zinc-400">
+            <label htmlFor="acceptPolicy">{t.register.privacyAgreementBefore}</label>
+            <button
+              type="button"
+              onClick={() => setPolicyOpen(true)}
+              className="rounded-sm text-green-600 hover:underline focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
               {t.register.privacyPolicy}
             </button>
-          </label>
+            <label htmlFor="acceptPolicy">{t.register.privacyAgreementAfter}</label>
+          </span>
           </div>
           <p id="accept-policy-error" className={`min-h-5 text-sm text-red-500 ${errors.acceptPolicy ? "" : "invisible"}`}>
             {errors.acceptPolicy?.message ?? "\u00a0"}

@@ -57,7 +57,11 @@ export function createAuthSchemas(messages: ValidationMessages) {
     }, messages.minimumAge.replace("{years}", String(MIN_AGE_YEARS)));
 
   const passwordPair = {
-    password: z.string().min(8, messages.passwordMin),
+    password: z
+      .string()
+      .min(1, messages.passwordRequired)
+      .min(8, messages.passwordMin)
+      .refine((value) => !/^\d+$/.test(value), messages.passwordNumericOnly),
     confirmPassword: z.string().min(1, messages.passwordConfirmationRequired),
   };
 

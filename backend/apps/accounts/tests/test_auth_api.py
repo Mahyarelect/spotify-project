@@ -95,6 +95,55 @@ def test_registration_validation(patch, field):
     assert field in response.data["error"]["fields"]
 
 
+@pytest.mark.parametrize(
+    ("endpoint", "payload_factory"),
+    [
+        ("/api/v1/auth/register/", registration_payload),
+        ("/api/v1/auth/artist-applications/", artist_payload),
+    ],
+)
+@pytest.mark.parametrize("password", ["password", "12345678"])
+def test_password_validator_errors_are_attached_to_password(endpoint, payload_factory, password):
+    response = APIClient().post(
+        endpoint,
+        payload_factory(password=password, password_confirm=password),
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "password" in response.data["error"]["fields"]
+    assert "non_field_errors" not in response.data["error"]["fields"]
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "payload"),
+    [
+        (
+            "/api/v1/auth/register/",
+            registration_payload(
+                email="matchingidentity@example.com",
+                password="matchingidentity",
+                password_confirm="matchingidentity",
+            ),
+        ),
+        (
+            "/api/v1/auth/artist-applications/",
+            artist_payload(
+                email="matchingidentity@example.com",
+                password="matchingidentity",
+                password_confirm="matchingidentity",
+            ),
+        ),
+    ],
+)
+def test_password_similarity_errors_are_attached_to_password(endpoint, payload):
+    response = APIClient().post(endpoint, payload, format="json")
+
+    assert response.status_code == 400
+    assert "password" in response.data["error"]["fields"]
+    assert any("too similar" in message.lower() for message in response.data["error"]["fields"]["password"])
+
+
 @pytest.mark.parametrize("role", list(User.Role.values))
 def test_active_roles_can_login(role):
     user = create_user(email=f"{role}@example.com", role=role)
@@ -173,6 +222,7 @@ def test_password_reset_request_does_not_enumerate_accounts(settings):
     assert known.status_code == missing.status_code == 202
     assert known.data == missing.data
     assert len(mail.outbox) == 1
+    assert mail.outbox[0].subject == "Reset your Spotify password"
     assert not re.search(r'"token"\s*:', str(known.data))
 
 

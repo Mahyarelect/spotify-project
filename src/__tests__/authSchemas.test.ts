@@ -35,6 +35,42 @@ describe("birthDateSchema", () => {
 });
 
 describe("registerSchema", () => {
+  it("uses the required message for an empty password", () => {
+    const result = registerSchema.safeParse({
+      displayName: "Test User",
+      email: "test@example.com",
+      password: "",
+      confirmPassword: "",
+      birthDate: "1995-03-15",
+      gender: "male",
+      acceptPolicy: true,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.find((issue) => issue.path.includes("password"))?.message)
+        .toBe("Password is required.");
+    }
+  });
+
+  it("rejects an entirely numeric password", () => {
+    const result = registerSchema.safeParse({
+      displayName: "Test User",
+      email: "test@example.com",
+      password: "12345678",
+      confirmPassword: "12345678",
+      birthDate: "1995-03-15",
+      gender: "male",
+      acceptPolicy: true,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.find((issue) => issue.path.includes("password"))?.message)
+        .toBe("Password cannot contain only numbers.");
+    }
+  });
+
   it("rejects password mismatch", () => {
     const result = registerSchema.safeParse({
       displayName: "Test User",
