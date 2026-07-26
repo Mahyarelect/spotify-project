@@ -220,7 +220,9 @@ export function TopNav() {
             aria-modal="true"
             aria-label={t.nav.primaryNavigation}
             dir={direction}
-            className="absolute inset-y-0 w-[min(88vw,22rem)] overflow-y-auto bg-zinc-950 p-4 text-zinc-100 shadow-2xl [inset-inline-start:0]"
+            className={`absolute inset-y-0 w-[min(88vw,22rem)] overflow-y-auto bg-zinc-950 p-4 text-zinc-100 shadow-2xl ${
+              direction === "rtl" ? "right-0" : "left-0"
+            }`}
           >
             <div className="mb-4 flex items-center justify-between">
               <strong>{t.nav.menu}</strong>
