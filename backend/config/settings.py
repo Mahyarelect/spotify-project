@@ -150,7 +150,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Music App API",
+    "TITLE": "Spotify API",
     "DESCRIPTION": "Authentication, profiles, preferences, and subscriptions API.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,

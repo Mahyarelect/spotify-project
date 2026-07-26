@@ -14,7 +14,7 @@ describe("httpClient", () => {
   });
 
   it("attaches the access token and parses JSON", async () => {
-    sessionStorage.setItem("musicapp_access_token", "access-token");
+    sessionStorage.setItem("spotify_access_token", "access-token");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ ok: true }));
 
     await expect(apiRequest<{ ok: boolean }>("health/")).resolves.toEqual({ ok: true });
@@ -29,8 +29,8 @@ describe("httpClient", () => {
   });
 
   it("performs one shared refresh for concurrent 401 responses and retries once", async () => {
-    sessionStorage.setItem("musicapp_access_token", "expired-access");
-    sessionStorage.setItem("musicapp_refresh_token", "refresh-token");
+    sessionStorage.setItem("spotify_access_token", "expired-access");
+    sessionStorage.setItem("spotify_refresh_token", "refresh-token");
     let refreshCalls = 0;
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
       const url = String(input);
@@ -52,7 +52,7 @@ describe("httpClient", () => {
     expect(results).toHaveLength(2);
     expect(refreshCalls).toBe(1);
     expect(fetchMock).toHaveBeenCalledTimes(5);
-    expect(sessionStorage.getItem("musicapp_access_token")).toBe("fresh-access");
+    expect(sessionStorage.getItem("spotify_access_token")).toBe("fresh-access");
   });
 
   it("throws structured backend errors", async () => {

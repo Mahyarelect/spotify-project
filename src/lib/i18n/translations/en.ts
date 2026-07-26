@@ -21,7 +21,7 @@ export const en = {
     adminDashboard: "Admin Dashboard",
   },
   layout: {
-    appName: "Music App",
+    appName: "Spotify",
   },
   language: {
     label: "Language",
@@ -55,7 +55,7 @@ export const en = {
   },
   home: {
     loading: "Loading...",
-    title: "Music App",
+    title: "Spotify",
     tagline: "Stream your favorite music anywhere.",
     signIn: "Sign In",
     register: "Register",

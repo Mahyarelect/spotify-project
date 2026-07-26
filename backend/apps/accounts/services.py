@@ -186,7 +186,7 @@ def send_password_reset(*, user: User, frontend_origin: str) -> None:
     token = default_token_generator.make_token(user)
     reset_url = f"{frontend_origin.rstrip('/')}/reset-password?uid={uid}&token={token}"
     send_mail(
-        "Reset your Music App password",
+        "Reset your Spotify password",
         f"Use this link to reset your password: {reset_url}",
         None,
         [user.email],

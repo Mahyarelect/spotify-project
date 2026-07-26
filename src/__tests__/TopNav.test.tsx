@@ -27,7 +27,7 @@ describe("TopNav", () => {
 
   it("shows the app logo", async () => {
     renderNav();
-    expect(await screen.findByText("Music App")).toBeInTheDocument();
+    expect(await screen.findByText("Spotify")).toBeInTheDocument();
   });
 
   it("shows user display name when logged in", async () => {

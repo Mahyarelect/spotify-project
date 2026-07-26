@@ -50,6 +50,17 @@ describe("LanguageProvider", () => {
     expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe("fa");
   });
 
+  it("migrates a saved legacy language choice", async () => {
+    const legacyKey = ["music", "app_language"].join("");
+    localStorage.setItem(legacyKey, "fa");
+
+    render(<LanguageProvider><Probe /></LanguageProvider>);
+
+    expect(await screen.findByText("fa")).toBeInTheDocument();
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe("fa");
+    expect(localStorage.getItem(legacyKey)).toBeNull();
+  });
+
   it("adopts the backend preference when the guest made no current-session choice", async () => {
     authState.user = makeUser("gold");
     authState.user.preferences.language = "fa";

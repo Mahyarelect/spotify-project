@@ -7,7 +7,7 @@ import {
 } from "./tokenStore";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(/\/$/, "");
-export const AUTH_EXPIRED_EVENT = "musicapp:auth-expired";
+export const AUTH_EXPIRED_EVENT = "spotify:auth-expired";
 
 interface ApiRequestOptions extends RequestInit {
   skipAuth?: boolean;

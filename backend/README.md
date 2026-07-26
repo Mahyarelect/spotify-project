@@ -1,4 +1,4 @@
-# Music App backend
+# Spotify backend
 
 Django REST Framework API backed exclusively by PostgreSQL. It owns authentication, profiles, preferences, follows, artist applications, subscription plans, entitlements, and server-priced orders.
 

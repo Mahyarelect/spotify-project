@@ -89,7 +89,7 @@ export function jsonResponse(body: unknown, status = 200): Response {
 }
 
 export function authenticate(role: Role = "listener"): void {
-  sessionStorage.setItem("musicapp_access_token", "access-token");
-  sessionStorage.setItem("musicapp_refresh_token", "refresh-token");
+  sessionStorage.setItem("spotify_access_token", "access-token");
+  sessionStorage.setItem("spotify_refresh_token", "refresh-token");
   vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(makeUserDto(role)));
 }

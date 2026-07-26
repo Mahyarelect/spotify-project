@@ -21,8 +21,8 @@ it("logs in through the API and stores JWTs in sessionStorage", async () => {
 
   expect(result.role).toBe("listener");
   expect(result.user).not.toHaveProperty("passwordHash");
-  expect(sessionStorage.getItem("musicapp_access_token")).toBe("access");
-  expect(sessionStorage.getItem("musicapp_refresh_token")).toBe("refresh");
+  expect(sessionStorage.getItem("spotify_access_token")).toBe("access");
+  expect(sessionStorage.getItem("spotify_refresh_token")).toBe("refresh");
   expect(fetchMock).toHaveBeenCalledWith(
     "/api/v1/auth/login/",
     expect.objectContaining({
@@ -83,12 +83,12 @@ it("surfaces the backend generic login error", async () => {
 });
 
 it("clears tokens even when the logout request fails", async () => {
-  sessionStorage.setItem("musicapp_access_token", "access");
-  sessionStorage.setItem("musicapp_refresh_token", "refresh");
+  sessionStorage.setItem("spotify_access_token", "access");
+  sessionStorage.setItem("spotify_refresh_token", "refresh");
   vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
 
   await logout();
 
-  expect(sessionStorage.getItem("musicapp_access_token")).toBeNull();
-  expect(sessionStorage.getItem("musicapp_refresh_token")).toBeNull();
+  expect(sessionStorage.getItem("spotify_access_token")).toBeNull();
+  expect(sessionStorage.getItem("spotify_refresh_token")).toBeNull();
 });

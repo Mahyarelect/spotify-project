@@ -5,23 +5,49 @@ import type { SupportTicket } from "@/types/ticket";
 import type { AuditPayment } from "@/types/audit";
 
 export const STORAGE_KEYS = {
-  songs: "musicapp_songs",
-  albums: "musicapp_albums",
-  playlists: "musicapp_playlists",
-  recentlyPlayed: "musicapp_recentlyPlayed",
-  streamCounts: "musicapp_streamCounts",
-  playerPrefs: "musicapp_playerPrefs",
-  notifications: "musicapp_notifications",
-  tickets: "musicapp_tickets",
-  auditPayments: "musicapp_auditPayments",
+  songs: "spotify_songs",
+  albums: "spotify_albums",
+  playlists: "spotify_playlists",
+  recentlyPlayed: "spotify_recentlyPlayed",
+  streamCounts: "spotify_streamCounts",
+  playerPrefs: "spotify_playerPrefs",
+  notifications: "spotify_notifications",
+  tickets: "spotify_tickets",
+  auditPayments: "spotify_auditPayments",
+} as const;
+
+const LEGACY_STORAGE_PREFIX = ["music", "app_"].join("");
+const LEGACY_STORAGE_KEYS = {
+  songs: `${LEGACY_STORAGE_PREFIX}songs`,
+  albums: `${LEGACY_STORAGE_PREFIX}albums`,
+  playlists: `${LEGACY_STORAGE_PREFIX}playlists`,
+  recentlyPlayed: `${LEGACY_STORAGE_PREFIX}recentlyPlayed`,
+  streamCounts: `${LEGACY_STORAGE_PREFIX}streamCounts`,
+  playerPrefs: `${LEGACY_STORAGE_PREFIX}playerPrefs`,
+  notifications: `${LEGACY_STORAGE_PREFIX}notifications`,
+  tickets: `${LEGACY_STORAGE_PREFIX}tickets`,
+  auditPayments: `${LEGACY_STORAGE_PREFIX}auditPayments`,
 } as const;
 
 function canUseLocalStorage(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
+function migrateLegacyStorageKey(key: string): void {
+  if (!canUseLocalStorage()) return;
+  const entry = Object.entries(STORAGE_KEYS).find(([, currentKey]) => currentKey === key);
+  if (!entry) return;
+  const legacyKey = LEGACY_STORAGE_KEYS[entry[0] as keyof typeof LEGACY_STORAGE_KEYS];
+  const legacyValue = window.localStorage.getItem(legacyKey);
+  if (window.localStorage.getItem(key) === null && legacyValue !== null) {
+    window.localStorage.setItem(key, legacyValue);
+  }
+  window.localStorage.removeItem(legacyKey);
+}
+
 export function readJson<T>(key: string, fallback: T): T {
   if (!canUseLocalStorage()) return fallback;
+  migrateLegacyStorageKey(key);
   const raw = window.localStorage.getItem(key);
   if (!raw) return fallback;
 
@@ -35,11 +61,13 @@ export function readJson<T>(key: string, fallback: T): T {
 
 export function writeJson<T>(key: string, value: T): void {
   if (!canUseLocalStorage()) return;
+  migrateLegacyStorageKey(key);
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
 export function hasStorageKey(key: string): boolean {
   if (!canUseLocalStorage()) return false;
+  migrateLegacyStorageKey(key);
   return window.localStorage.getItem(key) !== null;
 }
 

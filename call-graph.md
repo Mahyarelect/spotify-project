@@ -1,4 +1,4 @@
-# Call Graph — music-app
+# Call Graph — Spotify
 
 Generated from static analysis of `src/` using `madge`.
 

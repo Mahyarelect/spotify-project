@@ -13,7 +13,7 @@ class UserAdmin(DjangoUserAdmin):
     readonly_fields = ("date_joined", "last_login", "updated_at")
     fieldsets = DjangoUserAdmin.fieldsets + (
         (
-            "Music app",
+            "Spotify",
             {
                 "fields": (
                     "display_name",
@@ -29,7 +29,7 @@ class UserAdmin(DjangoUserAdmin):
         ),
     )
     add_fieldsets = DjangoUserAdmin.add_fieldsets + (
-        ("Music app", {"fields": ("email", "display_name", "role", "birth_date", "gender")}),
+        ("Spotify", {"fields": ("email", "display_name", "role", "birth_date", "gender")}),
     )
 
 

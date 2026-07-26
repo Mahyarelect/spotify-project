@@ -1,6 +1,6 @@
-# Music App
+# Spotify
 
-A React 19 music application with a Django REST Framework backend for authentication, profiles, preferences, artist review, and subscriptions. PostgreSQL is the source of truth for users, JWT sessions, plan prices, entitlements, and orders. The remaining Phase 1 music/player demo data stays browser-local until its owning modules are migrated.
+A React 19 streaming application with a Django REST Framework backend for authentication, profiles, preferences, artist review, and subscriptions. PostgreSQL is the source of truth for users, JWT sessions, plan prices, entitlements, and orders. The remaining Phase 1 music/player demo data stays browser-local until its owning modules are migrated.
 
 ## Prerequisites
 

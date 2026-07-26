@@ -3,7 +3,8 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { updateLanguage } from "@/lib/services/settingsService";
 import { I18nProvider, type Lang } from "./useTranslation";
 
-export const LANGUAGE_STORAGE_KEY = "musicapp_language";
+export const LANGUAGE_STORAGE_KEY = "spotify_language";
+const LEGACY_LANGUAGE_STORAGE_KEY = ["music", "app_language"].join("");
 
 function isLanguage(value: string | null): value is Lang {
   return value === "en" || value === "fa";
@@ -11,7 +12,13 @@ function isLanguage(value: string | null): value is Lang {
 
 function initialLanguage(): Lang {
   if (typeof window === "undefined") return "en";
-  const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  const current = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  const legacy = window.localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY);
+  const saved = current ?? legacy;
+  if (current === null && isLanguage(legacy)) {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, legacy);
+  }
+  window.localStorage.removeItem(LEGACY_LANGUAGE_STORAGE_KEY);
   if (isLanguage(saved)) return saved;
   return window.navigator.language.toLowerCase().startsWith("fa") ? "fa" : "en";
 }

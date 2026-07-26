@@ -37,7 +37,7 @@ describe("userService", () => {
   });
 
   it("maps the private /me response without exposing password data", async () => {
-    sessionStorage.setItem("musicapp_access_token", "access");
+    sessionStorage.setItem("spotify_access_token", "access");
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(makeUserDto()));
 
     const user = await getCurrentUser();

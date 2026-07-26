@@ -18,7 +18,7 @@ describe("AuthContext bootstrap", () => {
   });
 
   it("loads the current user from a session JWT", async () => {
-    sessionStorage.setItem("musicapp_access_token", "access");
+    sessionStorage.setItem("spotify_access_token", "access");
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(makeUserDto("admin")));
 
     render(<AuthProvider><AuthState /></AuthProvider>);
@@ -27,7 +27,7 @@ describe("AuthContext bootstrap", () => {
   });
 
   it("always finishes loading and clears tokens when refresh fails", async () => {
-    sessionStorage.setItem("musicapp_refresh_token", "expired-refresh");
+    sessionStorage.setItem("spotify_refresh_token", "expired-refresh");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       jsonResponse({ error: { code: "token_not_valid", message: "Token is invalid." } }, 401),
     );
@@ -36,6 +36,6 @@ describe("AuthContext bootstrap", () => {
 
     expect(await screen.findByText("guest")).toBeInTheDocument();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(sessionStorage.getItem("musicapp_refresh_token")).toBeNull();
+    expect(sessionStorage.getItem("spotify_refresh_token")).toBeNull();
   });
 });

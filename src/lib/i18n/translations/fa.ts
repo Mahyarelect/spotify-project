@@ -23,7 +23,7 @@ export const fa: Translations = {
     adminDashboard: "داشبورد مدیر",
   },
   layout: {
-    appName: "اپلیکیشن موسیقی",
+    appName: "Spotify",
   },
   language: {
     label: "زبان",
@@ -57,7 +57,7 @@ export const fa: Translations = {
   },
   home: {
     loading: "در حال بارگذاری...",
-    title: "اپلیکیشن موسیقی",
+    title: "Spotify",
     tagline: "موسیقی مورد علاقه خود را هر جا پخش کنید.",
     signIn: "ورود",
     register: "ثبت‌نام",
