@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -27,6 +27,9 @@ export default function ArtistPage() {
   const [artist, setArtist] = useState<User | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [followPending, setFollowPending] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
+  const followPendingRef = useRef(false);
 
   useEffect(() => {
     if (!decoded) {
@@ -66,20 +69,48 @@ export default function ArtistPage() {
     : false;
 
   const handleFollow = useCallback(async () => {
-    if (!currentUser || !artist) return;
-    const profile = await followUser(artist.username);
-    setArtist((prev) => prev ? { ...prev, followersCount: profile.followersCount } : prev);
-    setIsFollowing(profile.isFollowing);
-    await refreshUser();
-  }, [currentUser, artist, refreshUser]);
+    if (!currentUser || !artist || followPendingRef.current) return;
+    followPendingRef.current = true;
+    setFollowPending(true);
+    setFollowError(null);
+    try {
+      const profile = await followUser(artist.username);
+      setArtist((prev) => prev ? { ...prev, followersCount: profile.followersCount } : prev);
+      setIsFollowing(profile.isFollowing);
+      try {
+        await refreshUser();
+      } catch {
+        setFollowError(t.profile.followSyncError);
+      }
+    } catch (caught) {
+      setFollowError(caught instanceof Error ? caught.message : t.profile.followError);
+    } finally {
+      followPendingRef.current = false;
+      setFollowPending(false);
+    }
+  }, [currentUser, artist, refreshUser, t.profile.followError, t.profile.followSyncError]);
 
   const handleUnfollow = useCallback(async () => {
-    if (!currentUser || !artist) return;
-    const profile = await unfollowUser(artist.username);
-    setArtist((prev) => prev ? { ...prev, followersCount: profile.followersCount } : prev);
-    setIsFollowing(profile.isFollowing);
-    await refreshUser();
-  }, [currentUser, artist, refreshUser]);
+    if (!currentUser || !artist || followPendingRef.current) return;
+    followPendingRef.current = true;
+    setFollowPending(true);
+    setFollowError(null);
+    try {
+      const profile = await unfollowUser(artist.username);
+      setArtist((prev) => prev ? { ...prev, followersCount: profile.followersCount } : prev);
+      setIsFollowing(profile.isFollowing);
+      try {
+        await refreshUser();
+      } catch {
+        setFollowError(t.profile.followSyncError);
+      }
+    } catch (caught) {
+      setFollowError(caught instanceof Error ? caught.message : t.profile.unfollowError);
+    } finally {
+      followPendingRef.current = false;
+      setFollowPending(false);
+    }
+  }, [currentUser, artist, refreshUser, t.profile.followSyncError, t.profile.unfollowError]);
 
   if (loading) {
     return <p className="p-8 text-center text-zinc-400">{t.artist.loading}</p>;
@@ -110,6 +141,12 @@ export default function ArtistPage() {
         {t.artist.backToAlbums}
       </Link>
 
+      {followError && (
+        <p role="alert" className="rounded-lg bg-red-950/30 p-3 text-sm text-red-400">
+          {followError}
+        </p>
+      )}
+
       <ArtistHeader
         artist={artist}
         isVerified={verified}
@@ -117,6 +154,7 @@ export default function ArtistPage() {
         isOwnProfile={!!isOwnProfile}
         onFollow={handleFollow}
         onUnfollow={handleUnfollow}
+        followPending={followPending}
       />
 
       {canViewStats && (

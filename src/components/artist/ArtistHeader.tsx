@@ -10,6 +10,7 @@ interface ArtistHeaderProps {
   isOwnProfile: boolean;
   onFollow: () => void;
   onUnfollow: () => void;
+  followPending?: boolean;
 }
 
 export function ArtistHeader({
@@ -19,6 +20,7 @@ export function ArtistHeader({
   isOwnProfile,
   onFollow,
   onUnfollow,
+  followPending = false,
 }: ArtistHeaderProps) {
   const { t } = useTranslation();
 
@@ -70,13 +72,14 @@ export function ArtistHeader({
         {!isOwnProfile && (
           <button
             onClick={isFollowing ? onUnfollow : onFollow}
-            className={`rounded-lg px-5 py-2 text-sm font-medium transition ${
+            disabled={followPending}
+            className={`min-h-11 rounded-lg px-5 py-2 text-sm font-medium transition disabled:cursor-wait disabled:opacity-60 ${
               isFollowing
                 ? "bg-zinc-700 text-zinc-200 hover:bg-zinc-600"
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
-            {isFollowing ? t.profile.unfollow : t.profile.follow}
+            {followPending ? t.userSearch.updating : isFollowing ? t.profile.unfollow : t.profile.follow}
           </button>
         )}
       </div>

@@ -7,11 +7,13 @@ export function UserSearchResultCard({
   result,
   currentUserId,
   pending,
+  disabled,
   onToggleFollow,
 }: {
   result: UserSearchResult;
   currentUserId: string;
   pending: boolean;
+  disabled: boolean;
   onToggleFollow: (result: UserSearchResult) => void;
 }) {
   const { t } = useTranslation();
@@ -58,7 +60,7 @@ export function UserSearchResultCard({
         {result.id !== currentUserId && (
           <button
             type="button"
-            disabled={pending}
+            disabled={disabled}
             onClick={() => onToggleFollow(result)}
             className="min-h-11 flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-wait disabled:opacity-60 sm:flex-none"
           >

@@ -4,17 +4,20 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import * as userService from "@/lib/services/userService";
 import type { UserSearchResult } from "@/types/user";
 import { UserSearchResultCard } from "./UserSearchResultCard";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const DEBOUNCE_MS = 300;
 
 export function UserSearch({ currentUserId }: { currentUserId: string }) {
   const { t } = useTranslation();
+  const { refreshUser } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const requestSequence = useRef(0);
+  const followPendingRef = useRef(false);
   const trimmedQuery = query.trim();
 
   useEffect(() => {
@@ -50,6 +53,8 @@ export function UserSearch({ currentUserId }: { currentUserId: string }) {
   }, [t.userSearch.error, trimmedQuery]);
 
   async function toggleFollow(result: UserSearchResult) {
+    if (followPendingRef.current) return;
+    followPendingRef.current = true;
     setPendingId(result.id);
     setError(null);
     try {
@@ -66,9 +71,15 @@ export function UserSearch({ currentUserId }: { currentUserId: string }) {
             }
           : item
       )));
+      try {
+        await refreshUser();
+      } catch {
+        setError(t.profile.followSyncError);
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t.userSearch.followError);
     } finally {
+      followPendingRef.current = false;
       setPendingId(null);
     }
   }
@@ -113,6 +124,7 @@ export function UserSearch({ currentUserId }: { currentUserId: string }) {
               result={result}
               currentUserId={currentUserId}
               pending={pendingId === result.id}
+              disabled={pendingId !== null}
               onToggleFollow={(item) => void toggleFollow(item)}
             />
           ))}

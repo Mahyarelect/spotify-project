@@ -10,8 +10,12 @@ const service = vi.hoisted(() => ({
   followUser: vi.fn(),
   unfollowUser: vi.fn(),
 }));
+const auth = vi.hoisted(() => ({ refreshUser: vi.fn() }));
 
 vi.mock("@/lib/services/userService", () => service);
+vi.mock("@/lib/hooks/useAuth", () => ({
+  useAuth: () => auth,
+}));
 
 const artist: UserSearchResult = {
   id: "22222222-2222-4222-8222-222222222222",
@@ -45,6 +49,7 @@ beforeEach(() => {
   service.searchUsers.mockReset();
   service.followUser.mockReset();
   service.unfollowUser.mockReset();
+  auth.refreshUser.mockReset().mockResolvedValue(undefined);
 });
 
 describe("UserSearch", () => {
@@ -139,5 +144,47 @@ describe("UserSearch", () => {
     resolveFollow?.(followedProfile);
     expect(await screen.findByRole("button", { name: "Unfollow" })).toBeInTheDocument();
     expect(screen.getByText(/11 Followers/)).toBeInTheDocument();
+    expect(auth.refreshUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends only one mutation for a follow double-click", async () => {
+    service.searchUsers.mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [artist],
+    });
+    service.followUser.mockImplementation(() => new Promise(() => undefined));
+    const user = userEvent.setup();
+    renderSearch();
+
+    await user.type(screen.getByRole("searchbox"), "ar");
+    const follow = await screen.findByRole("button", { name: "Follow" });
+    await user.dblClick(follow);
+
+    expect(service.followUser).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Updating..." })).toBeDisabled();
+  });
+
+  it("keeps the server follow result when viewer-count refresh fails", async () => {
+    service.searchUsers.mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [artist],
+    });
+    service.followUser.mockResolvedValue(followedProfile);
+    auth.refreshUser.mockRejectedValue(new Error("Refresh failed"));
+    const user = userEvent.setup();
+    renderSearch();
+
+    await user.type(screen.getByRole("searchbox"), "ar");
+    await user.click(await screen.findByRole("button", { name: "Follow" }));
+
+    expect(await screen.findByRole("button", { name: "Unfollow" })).toBeInTheDocument();
+    expect(screen.getByText(/11 Followers/)).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Follow status updated, but your profile count could not be refreshed.",
+    );
   });
 });

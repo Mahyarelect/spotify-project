@@ -260,6 +260,7 @@ export const fa: Translations = {
     loadError: "بارگذاری پروفایل انجام نشد.",
     followError: "دنبال کردن این کاربر انجام نشد.",
     unfollowError: "لغو دنبال کردن این کاربر انجام نشد.",
+    followSyncError: "وضعیت دنبال‌کردن تغییر کرد، اما شمارنده پروفایل شما به‌روزرسانی نشد.",
     followers: "دنبال‌کنندگان",
     following: "دنبال شده‌ها",
     streamsToday: "پخش‌های امروز",

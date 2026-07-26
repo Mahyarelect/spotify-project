@@ -81,9 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     setUser(await userService.getCurrentUser());
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, registerListener, logout, refreshUser }}>

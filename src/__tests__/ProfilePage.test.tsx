@@ -1,12 +1,15 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import ProfilePage from "@/pages/ProfilePage";
 import { makeUser } from "./apiFixtures";
 import type { PublicProfile } from "@/types/user";
 
-const state = vi.hoisted(() => ({ user: null as ReturnType<typeof makeUser> | null }));
+const state = vi.hoisted(() => ({
+  user: null as ReturnType<typeof makeUser> | null,
+  refreshUser: vi.fn(),
+}));
 const service = vi.hoisted(() => ({
   getUserByUsername: vi.fn(),
   followUser: vi.fn(),
@@ -15,7 +18,7 @@ const service = vi.hoisted(() => ({
 
 vi.mock("@/lib/services/userService", () => service);
 vi.mock("@/lib/hooks/useAuth", () => ({
-  useAuth: () => ({ user: state.user, loading: false }),
+  useAuth: () => ({ user: state.user, loading: false, refreshUser: state.refreshUser }),
 }));
 
 const profile: PublicProfile = {
@@ -53,8 +56,21 @@ function renderOwnProfile() {
   );
 }
 
+function renderProfileJourney() {
+  return render(
+    <MemoryRouter initialEntries={["/profile/artist"]}>
+      <Link to="/profile">Own profile</Link>
+      <Routes>
+        <Route path="/profile/:username" element={<ProfilePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 beforeEach(() => {
   state.user = makeUser();
+  state.refreshUser.mockReset().mockResolvedValue(undefined);
   service.getUserByUsername.mockReset();
   service.followUser.mockReset();
   service.unfollowUser.mockReset();
@@ -74,6 +90,67 @@ it("loads a public profile and updates follow state from the API response", asyn
   await user.click(screen.getByRole("button", { name: "Follow" }));
   expect(await screen.findByRole("button", { name: "Unfollow" })).toBeInTheDocument();
   expect(screen.getByText("11")).toBeInTheDocument();
+  expect(state.refreshUser).toHaveBeenCalledTimes(1);
+});
+
+it("shows the refreshed own following count after SPA navigation", async () => {
+  service.getUserByUsername.mockResolvedValue(profile);
+  service.followUser.mockResolvedValue({ ...profile, followersCount: 11, isFollowing: true });
+  state.refreshUser.mockImplementation(async () => {
+    if (state.user) state.user = { ...state.user, followingCount: 4 };
+  });
+  const user = userEvent.setup();
+  renderProfileJourney();
+
+  await user.click(await screen.findByRole("button", { name: "Follow" }));
+  await screen.findByRole("button", { name: "Unfollow" });
+  await user.click(screen.getByRole("link", { name: "Own profile" }));
+
+  expect(await screen.findByText("Account details")).toBeInTheDocument();
+  expect(screen.getByText("Following").parentElement).toHaveTextContent("4");
+});
+
+it("keeps the successful target update visible if viewer refresh fails", async () => {
+  service.getUserByUsername.mockResolvedValue(profile);
+  service.followUser.mockResolvedValue({ ...profile, followersCount: 11, isFollowing: true });
+  state.refreshUser.mockRejectedValue(new Error("Refresh failed"));
+  const user = userEvent.setup();
+  renderProfile();
+
+  await user.click(await screen.findByRole("button", { name: "Follow" }));
+
+  expect(await screen.findByRole("button", { name: "Unfollow" })).toBeInTheDocument();
+  expect(screen.getByText("11")).toBeInTheDocument();
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Follow status updated, but your profile count could not be refreshed.",
+  );
+});
+
+it("refreshes the viewer after unfollow and applies the server count", async () => {
+  service.getUserByUsername.mockResolvedValue({ ...profile, followersCount: 11, isFollowing: true });
+  service.unfollowUser.mockResolvedValue({ ...profile, followersCount: 10, isFollowing: false });
+  const user = userEvent.setup();
+  renderProfile();
+
+  await user.click(await screen.findByRole("button", { name: "Unfollow" }));
+
+  expect(await screen.findByRole("button", { name: "Follow" })).toBeInTheDocument();
+  expect(screen.getByText("10")).toBeInTheDocument();
+  expect(state.refreshUser).toHaveBeenCalledTimes(1);
+});
+
+it("leaves follow state unchanged when the mutation fails", async () => {
+  service.getUserByUsername.mockResolvedValue(profile);
+  service.followUser.mockRejectedValue(new Error("Follow unavailable"));
+  const user = userEvent.setup();
+  renderProfile();
+
+  await user.click(await screen.findByRole("button", { name: "Follow" }));
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Follow unavailable");
+  expect(screen.getByRole("button", { name: "Follow" })).toBeInTheDocument();
+  expect(screen.getByText("10")).toBeInTheDocument();
+  expect(state.refreshUser).not.toHaveBeenCalled();
 });
 
 it("renders private account details only on the owner's profile", async () => {

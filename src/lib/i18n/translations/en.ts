@@ -258,6 +258,7 @@ export const en = {
     loadError: "Unable to load profile.",
     followError: "Unable to follow this user.",
     unfollowError: "Unable to unfollow this user.",
+    followSyncError: "Follow status updated, but your profile count could not be refreshed.",
     followers: "Followers",
     following: "Following",
     streamsToday: "Streams today",
