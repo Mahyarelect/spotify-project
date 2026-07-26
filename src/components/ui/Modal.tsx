@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useId, useRef } from "react";
+import { type ReactNode, type RefObject, useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -7,16 +7,29 @@ export function Modal({
   onClose,
   title,
   children,
+  initialFocusRef,
+  closeDisabled = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  initialFocusRef?: RefObject<HTMLElement | null>;
+  closeDisabled?: boolean;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  const closeDisabledRef = useRef(closeDisabled);
+  const initialFocusRefRef = useRef(initialFocusRef);
   const titleId = useId();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    closeDisabledRef.current = closeDisabled;
+    initialFocusRefRef.current = initialFocusRef;
+  }, [closeDisabled, initialFocusRef, onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -28,11 +41,18 @@ export function Modal({
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
       ) ?? [],
     );
-    focusable()[0]?.focus();
+    const dialog = dialogRef.current;
+    const preferredFocus = initialFocusRefRef.current?.current
+      ?? dialog?.querySelector<HTMLElement>("[data-autofocus]")
+      ?? dialog?.querySelector<HTMLElement>(
+        'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]):not([data-modal-close]), a[href]',
+      )
+      ?? dialog;
+    preferredFocus?.focus();
 
     const handler = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        if (!closeDisabledRef.current) onCloseRef.current();
         return;
       }
       if (event.key !== "Tab") return;
@@ -54,7 +74,7 @@ export function Modal({
       document.body.style.overflow = previousOverflow;
       previousFocus?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -63,7 +83,7 @@ export function Modal({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4"
       onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
+        if (e.target === overlayRef.current && !closeDisabled) onClose();
       }}
     >
       <div
@@ -71,6 +91,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
         className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-4 shadow-xl dark:bg-zinc-900 sm:p-6"
       >
         <div className="flex items-center justify-between mb-4">
@@ -78,8 +99,10 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
+            disabled={closeDisabled}
+            data-modal-close
             aria-label={t.common.close}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-green-500 dark:hover:bg-zinc-800"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-zinc-800"
           >
             <X size={20} aria-hidden="true" className="dark:text-zinc-300" />
           </button>
