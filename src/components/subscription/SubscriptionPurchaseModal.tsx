@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CurrentSubscription } from "@/types/user";
 import type { PlanLimits, PurchaseMode, SubscriptionOrder } from "@/types/subscription";
 import { Modal } from "@/components/ui/Modal";
@@ -34,11 +34,21 @@ export function SubscriptionPurchaseModal({
   onConfirm: (orderId: string) => Promise<void>;
 }) {
   const billingMonths = plan.allowedBillingMonths ?? [];
-  const [months, setMonths] = useState(billingMonths[0] ?? 1);
+  const billingMonthsKey = billingMonths.join(",");
+  const defaultMonths = billingMonths[0] ?? 1;
+  const resetKey = [
+    plan.tier,
+    mode,
+    billingMonthsKey,
+    currentSubscription.plan,
+    currentSubscription.expiresAt ?? "",
+  ].join(":");
+  const [months, setMonths] = useState(defaultMonths);
   const [order, setOrder] = useState<SubscriptionOrder | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const attemptKey = useRef(createSubscriptionAttemptKey());
+  const lastResetKey = useRef<string | null>(null);
   const { t, lang } = useTranslation();
   const locale = lang === "fa" ? "fa-IR" : "en-US";
   const planName = t.profile.plans[plan.tier];
@@ -47,7 +57,21 @@ export function SubscriptionPurchaseModal({
     ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value))
     : t.subscription.noExpiration;
 
+  useEffect(() => {
+    if (!open) {
+      lastResetKey.current = null;
+      return;
+    }
+    if (busy || lastResetKey.current === resetKey) return;
+    setMonths(defaultMonths);
+    setOrder(null);
+    setError(null);
+    attemptKey.current = createSubscriptionAttemptKey();
+    lastResetKey.current = resetKey;
+  }, [busy, defaultMonths, open, resetKey]);
+
   const chooseMonths = (nextMonths: number) => {
+    if (busy || nextMonths === months) return;
     setMonths(nextMonths);
     setOrder(null);
     setError(null);
@@ -82,7 +106,7 @@ export function SubscriptionPurchaseModal({
     .replace("{tier}", planName);
 
   return (
-    <Modal open={open} onClose={busy ? () => undefined : onClose} title={title}>
+    <Modal open={open} onClose={onClose} title={title} closeDisabled={busy}>
       <div className="space-y-4">
         <dl className="grid grid-cols-2 gap-3 rounded-lg bg-zinc-100 p-3 text-sm dark:bg-zinc-800/70">
           <Detail label={t.subscription.currentPlanLabel} value={currentPlanName} />
@@ -101,10 +125,10 @@ export function SubscriptionPurchaseModal({
               <button
                 key={month}
                 type="button"
-                disabled={busy || Boolean(order)}
+                disabled={busy}
                 aria-pressed={months === month}
                 onClick={() => chooseMonths(month)}
-                className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                   months === month
                     ? "bg-green-600 text-white"
                     : "bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
@@ -114,6 +138,11 @@ export function SubscriptionPurchaseModal({
               </button>
             ))}
           </div>
+          {order && (
+            <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+              {t.subscription.quoteResetNotice}
+            </p>
+          )}
         </fieldset>
 
         {order && (
