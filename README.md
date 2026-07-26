@@ -24,6 +24,16 @@ On macOS/Linux, activate the virtual environment or use `../.venv/bin/python`, a
 
 The API runs at `http://127.0.0.1:8000`. In development, Swagger UI is at [http://127.0.0.1:8000/api/docs/](http://127.0.0.1:8000/api/docs/) and the health endpoint is `GET /api/v1/health/`.
 
+Notable Phase 2 contracts include:
+
+- `GET /api/v1/users/search/?q=<query>&page=<number>` for paginated,
+  privacy-safe account discovery and follow state
+- `PATCH /api/v1/users/me/` for JSON profile updates or multipart avatar upload
+- `POST /api/v1/subscriptions/orders/` for server-priced upgrades and renewals;
+  order responses include the server-calculated `projected_expires_at`
+- `POST /api/v1/auth/password-reset/confirm/`, used by the frontend
+  `/reset-password` route
+
 ## Frontend setup
 
 ```bash
@@ -76,6 +86,8 @@ Backend tests intentionally require PostgreSQL; SQLite is unsupported. The front
 - Each user owns one preference record and one current entitlement, may create many subscription orders, and may follow other users. Artist applications belong to a user and record their reviewer; subscription orders snapshot their selected plan's price and currency before activation.
 - State-changing workflows live in backend services so artist review and payment confirmation stay transactional and idempotent. Serializers validate and shape data, selectors resolve effective entitlements, and permission classes enforce roles and plan features at the API boundary.
 - UUID identifiers, separate public/private DTOs, server-generated usernames, PostgreSQL constraints, and server-side price calculations were chosen to keep client input outside authorization and billing decisions.
+- Subscription transitions are server-authoritative: Free may upgrade to Silver or Gold, Silver may renew or upgrade to Gold, and Gold may renew. Renewal extends an active entitlement while an upgrade starts the selected plan from confirmation time.
+- English and Persian layouts share role-aware desktop/mobile navigation, accessible modal focus management, and localized authentication, profile, search, and subscription flows.
 - Codex assisted with the Phase 2 implementation and documentation. Its output was validated with the clean-database workflow and automated checks listed above; production deployment still requires the normal security and code-review process.
 
 ## Production notes
