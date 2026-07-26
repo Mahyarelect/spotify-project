@@ -37,10 +37,10 @@ export function SupportTicketsTable({
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800">
+    <div className="overflow-x-auto rounded-xl border border-zinc-800">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
+          <tr className="border-b border-zinc-800 text-start text-xs text-zinc-500">
             <th className="px-4 py-3">{t.admin.subject}</th>
             <th className="hidden px-4 py-3 sm:table-cell">{t.admin.user}</th>
             <th className="hidden px-4 py-3 md:table-cell">{t.admin.priority}</th>

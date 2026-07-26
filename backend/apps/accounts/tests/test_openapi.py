@@ -11,4 +11,5 @@ def test_profile_patch_schema_uses_optional_binary_avatar_multipart_request():
     avatar = request_schema["properties"]["avatar"]
     assert avatar["type"] == "string"
     assert avatar["format"] == "binary"
+    assert set(request_schema["properties"]) == {"avatar"}
     assert not request_schema.get("required")

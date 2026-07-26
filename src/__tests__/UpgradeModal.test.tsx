@@ -2,6 +2,7 @@ import { expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SubscriptionPurchaseModal } from "@/components/subscription/SubscriptionPurchaseModal";
+import { I18nProvider } from "@/lib/i18n/useTranslation";
 import type { PlanLimits, SubscriptionOrder } from "@/types/subscription";
 
 const plan: PlanLimits = {
@@ -72,4 +73,37 @@ it("shows the server-calculated quote before confirming an order", async () => {
 
   await user.click(screen.getByRole("button", { name: "Confirm purchase" }));
   expect(onConfirm).toHaveBeenCalledWith(order.orderId);
+});
+
+it("renders renewal controls in Persian", () => {
+  render(
+    <I18nProvider language="fa" setLanguage={async () => undefined}>
+      <SubscriptionPurchaseModal
+        plan={plan}
+        currentSubscription={{
+          plan: "silver",
+          status: "active",
+          startsAt: "2026-01-01T00:00:00Z",
+          expiresAt: "2026-07-21T00:00:00Z",
+          limits: {
+            dailyStreamLimit: null,
+            maxPlaylists: 100,
+            profileImageAllowed: true,
+            downloadAllowed: true,
+            earlyAccessAllowed: false,
+            statisticsAllowed: false,
+          },
+        }}
+        mode="renew"
+        open
+        onClose={() => undefined}
+        onCreateOrder={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    </I18nProvider>,
+  );
+
+  expect(screen.getByRole("dialog", { name: "تمدید نقره‌ای" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "بررسی قیمت سرور" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "بستن" })).toBeInTheDocument();
 });

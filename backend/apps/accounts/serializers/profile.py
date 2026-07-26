@@ -64,6 +64,10 @@ class ProfileUpdateSerializer(RejectUnknownFieldsMixin, serializers.Serializer):
         return value
 
 
+class AvatarUploadRequestSerializer(serializers.Serializer):
+    avatar = serializers.ImageField(required=False)
+
+
 class AccountDeleteSerializer(serializers.Serializer):
     current_password = serializers.CharField(write_only=True, trim_whitespace=False)
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { en } from "@/lib/i18n/translations/en";
@@ -63,12 +63,15 @@ describe("role-aware navigation", () => {
 
     await user.click(screen.getByRole("button", { name: "Open navigation menu" }));
     const drawer = screen.getByRole("dialog", { name: "Primary navigation" });
+    expect(within(drawer).getByRole("button", { name: "Close navigation menu" })).toHaveFocus();
     expect(drawer).toHaveTextContent("Support Dashboard");
     expect(drawer).toHaveTextContent("Sign Out");
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Open navigation menu" }));
+    const openMenu = screen.getByRole("button", { name: "Open navigation menu" });
+    expect(openMenu).toHaveFocus();
+    await user.click(openMenu);
     await user.click(screen.getByRole("button", { name: "Sign Out" }));
     await waitFor(() => expect(state.logout).toHaveBeenCalled());
     expect(await screen.findByText("Login destination")).toBeInTheDocument();

@@ -52,12 +52,12 @@ export function AuditPaymentsTable({
         <div className="rounded-xl border border-zinc-800">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
+              <tr className="border-b border-zinc-800 text-start text-xs text-zinc-500">
                 <th className="px-4 py-3">{t.admin.artist}</th>
                 <th className="hidden px-4 py-3 sm:table-cell">{t.admin.streams}</th>
                 <th className="px-4 py-3">{t.admin.amount}</th>
                 <th className="px-4 py-3">{t.admin.auditStatus}</th>
-                <th className="px-4 py-3 text-right">{t.admin.actions}</th>
+                <th className="px-4 py-3 text-end">{t.admin.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -86,7 +86,7 @@ export function AuditPaymentsTable({
                         {t.admin[cfg.key as keyof typeof t.admin]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-end">
                       {payment.status === "pending" && (
                         <div className="flex justify-end gap-1">
                           <button

@@ -24,11 +24,13 @@ export function PlanCard({
   return (
     <div className={`rounded-xl border-2 p-6 space-y-4 bg-white dark:bg-zinc-900 ${tierColors[plan.tier]} ${isCurrent ? "ring-2 ring-green-500" : ""}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold capitalize dark:text-white">{plan.tier}</h3>
+        <h3 className="text-lg font-bold dark:text-white">{t.profile.plans[plan.tier]}</h3>
         {isCurrent && <span className="px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">{t.subscription.current}</span>}
       </div>
       <div className="text-3xl font-bold dark:text-white">
-        {plan.priceMonthly === 0 ? t.subscription.free : `${formatCurrency(plan.priceMonthly, plan.currency)}/mo`}
+        {plan.priceMonthly === 0
+          ? t.subscription.free
+          : `${formatCurrency(plan.priceMonthly, plan.currency)}${t.subscription.perMonth}`}
       </div>
       <ul className="space-y-2 text-sm dark:text-zinc-300">
         <li className="flex items-center gap-2">

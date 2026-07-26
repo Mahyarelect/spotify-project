@@ -4,7 +4,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCurrency } from "@/lib/utils/currency";
 
 export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const locale = lang === "fa" ? "fa-IR" : "en-US";
 
   const boolFeatures = [
     { label: t.subscription.profileImage, key: "profileImageAllowed" as keyof PlanLimits },
@@ -14,8 +15,8 @@ export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
   ];
 
   const numFeatures = [
-    { label: t.subscription.streamsPerDay.replace("{limit}", ""), key: "dailyStreamLimit" as keyof PlanLimits, format: (v: PlanLimits["dailyStreamLimit"]) => (v !== null ? String(v) : "∞") },
-    { label: t.subscription.unlimitedPlaylists.replace("Unlimited ", ""), key: "maxPlaylists" as keyof PlanLimits, format: (v: PlanLimits["maxPlaylists"]) => (v !== null ? String(v) : "∞") },
+    { label: t.subscription.streamsFeature, key: "dailyStreamLimit" as keyof PlanLimits, format: (v: PlanLimits["dailyStreamLimit"]) => (v !== null ? String(v) : "\u221e") },
+    { label: t.subscription.playlistsFeature, key: "maxPlaylists" as keyof PlanLimits, format: (v: PlanLimits["maxPlaylists"]) => (v !== null ? String(v) : "\u221e") },
   ];
 
   return (
@@ -23,9 +24,9 @@ export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
       <table className="w-full text-sm dark:text-zinc-300">
         <thead>
           <tr className="border-b dark:border-zinc-700">
-            <th className="text-left py-3 px-4 dark:text-white">{t.subscription.feature}</th>
+            <th className="px-4 py-3 text-start dark:text-white">{t.subscription.feature}</th>
             {plans.map((p) => (
-              <th key={p.tier} className="text-center py-3 px-4 capitalize dark:text-white">{p.tier}</th>
+              <th key={p.tier} className="px-4 py-3 text-center dark:text-white">{t.profile.plans[p.tier]}</th>
             ))}
           </tr>
         </thead>
@@ -54,7 +55,9 @@ export function PlanComparisonTable({ plans }: { plans: PlanLimits[] }) {
             <td className="py-3 px-4 dark:text-white">{t.subscription.price}</td>
             {plans.map((p) => (
               <td key={p.tier} className="text-center py-3 px-4">
-                {p.priceMonthly === 0 ? t.subscription.free : `${formatCurrency(p.priceMonthly, p.currency)}/mo`}
+                {p.priceMonthly === 0
+                  ? t.subscription.free
+                  : `${formatCurrency(p.priceMonthly, p.currency, locale)}${t.subscription.perMonth}`}
               </td>
             ))}
           </tr>

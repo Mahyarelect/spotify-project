@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, ChevronDown, Menu, User, X } from "lucide-react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -51,6 +52,7 @@ export function TopNav() {
   useEffect(() => {
     if (!mobileOpen) return;
     const previousOverflow = document.body.style.overflow;
+    const menuButton = menuButtonRef.current;
     document.body.style.overflow = "hidden";
     const focusable = () => Array.from(
       drawerRef.current?.querySelectorAll<HTMLElement>(
@@ -82,7 +84,7 @@ export function TopNav() {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
-      menuButtonRef.current?.focus();
+      menuButton?.focus();
     };
   }, [mobileOpen]);
 
@@ -204,9 +206,9 @@ export function TopNav() {
         </div>
       </div>
 
-      {mobileOpen && (
+      {mobileOpen && createPortal(
         <div
-          className="fixed inset-0 top-16 z-50 bg-black/60 md:hidden"
+          className="fixed inset-0 z-50 bg-black/60 md:hidden"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setMobileOpen(false);
           }}
@@ -218,7 +220,7 @@ export function TopNav() {
             aria-modal="true"
             aria-label={t.nav.primaryNavigation}
             dir={direction}
-            className="absolute inset-y-0 w-[min(88vw,22rem)] overflow-y-auto bg-zinc-950 p-4 shadow-2xl [inset-inline-start:0]"
+            className="absolute inset-y-0 w-[min(88vw,22rem)] overflow-y-auto bg-zinc-950 p-4 text-zinc-100 shadow-2xl [inset-inline-start:0]"
           >
             <div className="mb-4 flex items-center justify-between">
               <strong>{t.nav.menu}</strong>
@@ -233,7 +235,8 @@ export function TopNav() {
             </div>
             <div className="flex flex-col gap-1">{items.map(renderItem)}</div>
           </nav>
-        </div>
+        </div>,
+        document.body,
       )}
     </header>
   );

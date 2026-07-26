@@ -38,7 +38,7 @@ export function AdminSidebar({ active, onChange, isSuperAdmin }: AdminSidebarPro
   ];
 
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b border-zinc-800 pb-px lg:flex-col lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
+    <nav className="flex gap-1 overflow-x-auto border-b border-zinc-800 pb-px lg:flex-col lg:border-b-0 lg:border-e lg:pb-0 lg:pe-4">
       {ITEMS.map((item) => {
         if (item.adminOnly && !isSuperAdmin) return null;
         const Icon = item.icon;

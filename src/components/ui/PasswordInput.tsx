@@ -15,6 +15,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       <Input
         {...props}
         ref={ref}
+        dir={props.dir ?? "ltr"}
         type={visible ? "text" : "password"}
         className={`pe-12 ${props.className ?? ""}`}
         endAdornment={

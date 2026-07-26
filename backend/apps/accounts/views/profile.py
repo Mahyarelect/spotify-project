@@ -13,6 +13,7 @@ from ..models import User, UserPreference
 from ..selectors import get_current_user, get_public_profile, search_users
 from ..serializers.profile import (
     AccountDeleteSerializer,
+    AvatarUploadRequestSerializer,
     CurrentUserSerializer,
     ProfileUpdateSerializer,
     PublicProfileSerializer,
@@ -32,7 +33,14 @@ class CurrentUserView(GenericAPIView):
         user = get_current_user(request.user.id)
         return Response(self.get_serializer(user).data)
 
-    @extend_schema(request=ProfileUpdateSerializer, responses={200: CurrentUserSerializer})
+    @extend_schema(
+        request={
+            "application/json": ProfileUpdateSerializer,
+            "application/x-www-form-urlencoded": ProfileUpdateSerializer,
+            "multipart/form-data": AvatarUploadRequestSerializer,
+        },
+        responses={200: CurrentUserSerializer},
+    )
     @transaction.atomic
     def patch(self, request):
         serializer = ProfileUpdateSerializer(data=request.data, partial=True)

@@ -83,7 +83,7 @@ export function SubscriptionPurchaseModal({
 
   return (
     <Modal open={open} onClose={busy ? () => undefined : onClose} title={title}>
-      <div className="max-h-[75vh] space-y-4 overflow-y-auto pe-1">
+      <div className="space-y-4">
         <dl className="grid grid-cols-2 gap-3 rounded-lg bg-zinc-100 p-3 text-sm dark:bg-zinc-800/70">
           <Detail label={t.subscription.currentPlanLabel} value={currentPlanName} />
           <Detail label={t.subscription.currentExpiration} value={formatDate(currentSubscription.expiresAt)} />

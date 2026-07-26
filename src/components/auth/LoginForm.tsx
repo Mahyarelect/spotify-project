@@ -62,7 +62,7 @@ export function LoginForm() {
       )}
       <Input label={t.login.emailLabel} type="email" placeholder={t.login.emailPlaceholder} error={errors.email?.message} {...register("email")} />
       <PasswordInput label={t.login.passwordLabel} placeholder={t.login.passwordPlaceholder} error={errors.password?.message} autoComplete="current-password" {...register("password")} />
-      <div className="text-right">
+      <div className="text-end">
         <Link to="/forgot-password" className="text-sm text-green-600 hover:underline">
           {t.login.forgotPassword}
         </Link>

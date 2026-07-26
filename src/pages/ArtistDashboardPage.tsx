@@ -184,11 +184,11 @@ export default function ArtistDashboardPage() {
           actions={
             <div className="flex gap-2">
               <Button variant="secondary" onClick={openNewAlbum}>
-                <Disc3 size={16} className="mr-1 inline" />
+                <Disc3 size={16} className="me-1 inline" />
                 {t.artistDashboard.newAlbum}
               </Button>
               <Button onClick={openNewSingle}>
-                <Music size={16} className="mr-1 inline" />
+                <Music size={16} className="me-1 inline" />
                 {t.artistDashboard.newSingle}
               </Button>
             </div>

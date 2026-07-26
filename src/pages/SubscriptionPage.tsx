@@ -60,7 +60,10 @@ export default function SubscriptionPage() {
     <>
       <PageHeader
         title={t.subscription.title}
-        description={`${t.subscription.currentPlan.replace("{planTier}", user.subscription.plan)}${renewal}`}
+        description={`${t.subscription.currentPlan.replace(
+          "{planTier}",
+          t.profile.plans[user.subscription.plan],
+        )}${renewal}`}
       />
 
       {error && (
