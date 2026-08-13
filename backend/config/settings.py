@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "apps.common",
     "apps.accounts",
     "apps.subscriptions",
+    "apps.music",
 ]
 
 MIDDLEWARE = [
