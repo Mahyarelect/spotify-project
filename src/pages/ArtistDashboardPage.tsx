@@ -41,12 +41,22 @@ export default function ArtistDashboardPage() {
 
   useEffect(() => {
     if (!user) return;
-    const works = getWorksByArtist(user.displayName);
-    setSongs(works.songs);
-    setAlbums(works.albums);
-    setTotalStreams(works.songs.reduce((sum, s) => sum + s.playCount, 0));
-    setListenerCount(getArtistListenerCount(user.displayName));
-    setRevenue(getArtistRevenue(user.displayName));
+    let cancelled = false;
+
+    async function load() {
+      const works = await getWorksByArtist(user!.displayName);
+      const listeners = await getArtistListenerCount(user!.displayName);
+      const rev = await getArtistRevenue(user!.displayName);
+      if (cancelled) return;
+      setSongs(works.songs);
+      setAlbums(works.albums);
+      setTotalStreams(works.songs.reduce((sum, s) => sum + s.playCount, 0));
+      setListenerCount(listeners);
+      setRevenue(rev);
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, [user, refreshKey]);
 
   const [showForm, setShowForm] = useState(false);
@@ -82,76 +92,57 @@ export default function ArtistDashboardPage() {
     setShowForm(true);
   }
 
-  function handleDeleteSong(songId: string) {
+  async function handleDeleteSong(songId: string) {
     if (!window.confirm(t.artistDashboard.deleteSongConfirm)) return;
-    deleteSong(songId);
+    await deleteSong(songId);
     triggerRefresh();
   }
 
-  function handleDeleteAlbum(albumId: string) {
+  async function handleDeleteAlbum(albumId: string) {
     if (!window.confirm(t.artistDashboard.deleteAlbumConfirm)) return;
-    deleteAlbum(albumId);
+    await deleteAlbum(albumId);
     triggerRefresh();
   }
 
-  function handleFormSubmit(data: WorkFormData) {
+  async function handleFormSubmit(data: WorkFormData) {
     if (!user) return;
 
     if (formType === "single") {
       if (editingSong) {
-        updateSong(editingSong.id, {
+        await updateSong(editingSong.id, {
           title: data.title,
           genre: data.genre || undefined,
-          releaseYear: data.releaseYear
-            ? parseInt(data.releaseYear)
-            : undefined,
-          collaborators: data.collaborators
-            ? data.collaborators.split(",").map((c) => c.trim())
-            : undefined,
           lyrics: data.lyrics || undefined,
-          durationSec: data.durationSec,
-          coverColor: data.coverColor,
         });
       } else {
-        const album = createAlbum({
+        const album = await createAlbum({
           title: data.title,
-          artistName: user.displayName,
           coverColor: data.coverColor || "#1a1a2e",
           releaseDate: new Date().toISOString().split("T")[0],
           isEarlyAccess: false,
           genre: data.genre || undefined,
         });
 
-        createSong({
+        await createSong({
           title: data.title,
-          artistName: user.displayName,
-          artistId: user.id,
           albumId: album.id,
           durationSec: data.durationSec || 210,
           coverColor: data.coverColor || "#1a1a2e",
           lyrics: data.lyrics || undefined,
           genre: data.genre || undefined,
-          releaseYear: data.releaseYear
-            ? parseInt(data.releaseYear)
-            : undefined,
-          collaborators: data.collaborators
-            ? data.collaborators.split(",").map((c) => c.trim())
-            : undefined,
+          releaseYear: data.releaseYear ? parseInt(data.releaseYear) : undefined,
         });
       }
     } else {
       if (editingAlbum) {
-        updateAlbum(editingAlbum.id, {
+        await updateAlbum(editingAlbum.id, {
           title: data.title,
-          coverColor: data.coverColor || "#1a1a2e",
-          releaseDate: data.releaseDate,
-          isEarlyAccess: data.isEarlyAccess,
           genre: data.genre || undefined,
+          isEarlyAccess: data.isEarlyAccess,
         });
       } else {
-        createAlbum({
+        await createAlbum({
           title: data.title,
-          artistName: user.displayName,
           coverColor: data.coverColor || "#1a1a2e",
           releaseDate: data.releaseDate,
           isEarlyAccess: data.isEarlyAccess,

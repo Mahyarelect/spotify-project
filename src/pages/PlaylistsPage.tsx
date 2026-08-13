@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { getAllSongs } from "@/lib/services/musicService";
@@ -8,46 +8,49 @@ import { Button } from "@/components/ui/Button";
 import { PlaylistCardExpandable } from "@/components/playlists/PlaylistCardExpandable";
 import { CreatePlaylistModal } from "@/components/playlists/CreatePlaylistModal";
 import { EmptyPlaylistState } from "@/components/playlists/EmptyPlaylistState";
-import type { Playlist } from "@/types/music";
+import type { Song, Playlist } from "@/types/music";
 
 export default function PlaylistsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const songs = useMemo(() => getAllSongs(), []);
 
-  const [playlists, setPlaylists] = useState<Playlist[]>(() =>
-    user ? playlistService.getUserPlaylists(user.id) : []
-  );
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [showCreate, setShowCreate] = useState(false);
 
-  const refresh = useCallback(() => {
-    if (!user) return;
-    setPlaylists(playlistService.getUserPlaylists(user.id));
-  }, [user]);
+  const refresh = useCallback(async () => {
+    const [s, p] = await Promise.all([getAllSongs(), playlistService.getUserPlaylists()]);
+    setSongs(s);
+    setPlaylists(p);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   if (!user) return null;
 
   const limit = user.subscription.limits.maxPlaylists;
   const limitReached = limit !== null && playlists.length >= limit;
 
-  const handleCreate = (title: string, description?: string) => {
-    playlistService.createPlaylist(user.id, title, description);
+  const handleCreate = async (title: string, description?: string) => {
+    await playlistService.createPlaylist(title, description);
     refresh();
     setShowCreate(false);
   };
 
-  const handleRename = (playlistId: string, newTitle: string) => {
-    playlistService.renamePlaylist(playlistId, newTitle);
+  const handleRename = async (playlistId: string, newTitle: string) => {
+    await playlistService.renamePlaylist(playlistId, newTitle);
     refresh();
   };
 
-  const handleDelete = (playlistId: string) => {
-    playlistService.deletePlaylist(playlistId);
+  const handleDelete = async (playlistId: string) => {
+    await playlistService.deletePlaylist(playlistId);
     refresh();
   };
 
-  const handleRemoveSong = (playlistId: string, songId: string) => {
-    playlistService.removeSongFromPlaylist(playlistId, songId);
+  const handleRemoveSong = async (playlistId: string, songId: string) => {
+    await playlistService.removeSongFromPlaylist(playlistId, songId);
     refresh();
   };
 

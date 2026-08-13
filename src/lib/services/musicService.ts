@@ -1,38 +1,167 @@
-import type { Song, Album, Playlist, RecentlyPlayed } from "@/types/music";
-import {
-  getSongs as readSongs,
-  getAlbums as readAlbums,
-  getPlaylists as readPlaylists,
-  getRecentlyPlayed as readRecentlyPlayed,
-} from "./storage";
+import type { Song, Album, Playlist } from "@/types/music";
+import { apiRequest } from "@/lib/api/httpClient";
 
-export function getAllSongs(): Song[] {
-  return readSongs();
+interface SongResponse {
+  id: string;
+  title: string;
+  artist: string;
+  artist_name: string;
+  album: string | null;
+  album_title: string | null;
+  duration_sec: number;
+  cover_color: string;
+  cover_image: string | null;
+  audio_file: string | null;
+  has_audio: boolean;
+  play_count: number;
+  lyrics: string;
+  genre: string;
+  release_year: number | null;
+  track_number: number | null;
 }
 
-export function getAllAlbums(): Album[] {
-  return readAlbums();
+interface AlbumResponse {
+  id: string;
+  title: string;
+  artist: string;
+  artist_name: string;
+  cover_color: string;
+  cover_image: string | null;
+  release_date: string;
+  is_early_access: boolean;
+  genre: string;
+  song_count: number;
 }
 
-export function getAllPlaylists(): Playlist[] {
-  return readPlaylists();
+interface PlaylistResponse {
+  id: string;
+  title: string;
+  cover_color: string;
+  created_by: string;
+  created_by_name: string;
+  description: string;
+  song_count: number;
+  songs: Array<{
+    song: string;
+    song_title: string;
+    song_artist: string;
+    song_duration: number;
+    position: number;
+  }>;
 }
 
-export function getRecentlyPlayed(userId: string): RecentlyPlayed[] {
-  return readRecentlyPlayed(userId);
+function mapSong(raw: SongResponse): Song {
+  return {
+    id: raw.id,
+    title: raw.title,
+    artistName: raw.artist_name,
+    artistId: raw.artist,
+    albumId: raw.album ?? "",
+    durationSec: raw.duration_sec,
+    coverColor: raw.cover_color,
+    coverImage: raw.cover_image ?? undefined,
+    audioFile: raw.audio_file ?? undefined,
+    hasAudio: raw.has_audio,
+    playCount: raw.play_count,
+    lyrics: raw.lyrics || undefined,
+    genre: raw.genre || undefined,
+    releaseYear: raw.release_year ?? undefined,
+  };
 }
 
-export function getSongById(songId: string): Song | undefined {
-  return readSongs().find((s) => s.id === songId);
+function mapAlbum(raw: AlbumResponse): Album {
+  return {
+    id: raw.id,
+    title: raw.title,
+    artistName: raw.artist_name,
+    coverColor: raw.cover_color,
+    coverImage: raw.cover_image ?? undefined,
+    releaseDate: raw.release_date,
+    songIds: [],
+    isEarlyAccess: raw.is_early_access,
+    genre: raw.genre || undefined,
+  };
 }
 
-export function getAlbumById(albumId: string): Album | undefined {
-  return readAlbums().find((a) => a.id === albumId);
+function mapPlaylist(raw: PlaylistResponse): Playlist {
+  return {
+    id: raw.id,
+    title: raw.title,
+    coverColor: raw.cover_color,
+    songIds: raw.songs.map((s) => s.song),
+    createdBy: raw.created_by,
+    description: raw.description || undefined,
+  };
 }
 
-export function getAlbumSongs(albumId: string): Song[] {
-  const album = readAlbums().find((a) => a.id === albumId);
-  if (!album) return [];
-  const songs = readSongs();
-  return songs.filter((s) => album.songIds.includes(s.id));
+export async function getAllSongs(): Promise<Song[]> {
+  const data = await apiRequest<SongResponse[]>("music/songs/", { skipAuth: true });
+  return data.map(mapSong);
+}
+
+export async function getAllAlbums(): Promise<Album[]> {
+  const data = await apiRequest<AlbumResponse[]>("music/albums/", { skipAuth: true });
+  return data.map(mapAlbum);
+}
+
+export async function getAllPlaylists(): Promise<Playlist[]> {
+  const data = await apiRequest<PlaylistResponse[]>("music/playlists/", { skipAuth: true });
+  return data.map(mapPlaylist);
+}
+
+export async function getSongById(songId: string): Promise<Song | undefined> {
+  try {
+    const data = await apiRequest<SongResponse>(`music/songs/${songId}/`, { skipAuth: true });
+    return mapSong(data);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getAlbumById(albumId: string): Promise<Album | undefined> {
+  try {
+    const data = await apiRequest<AlbumResponse>(`music/albums/${albumId}/`, { skipAuth: true });
+    return mapAlbum(data);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getAlbumSongs(albumId: string): Promise<Song[]> {
+  try {
+    const album = await apiRequest<AlbumResponse & { songs: SongResponse[] }>(
+      `music/albums/${albumId}/`,
+      { skipAuth: true }
+    );
+    return (album.songs ?? []).map(mapSong);
+  } catch {
+    return [];
+  }
+}
+
+export async function getPlaylistById(playlistId: string): Promise<Playlist | undefined> {
+  try {
+    const data = await apiRequest<PlaylistResponse>(`music/playlists/${playlistId}/`, { skipAuth: true });
+    return mapPlaylist(data);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function searchMusic(query: string): Promise<{
+  songs: Song[];
+  albums: Album[];
+  playlists: Playlist[];
+}> {
+  const data = await apiRequest<{
+    songs: SongResponse[];
+    albums: AlbumResponse[];
+    playlists: PlaylistResponse[];
+  }>(`music/search/?q=${encodeURIComponent(query)}`, { skipAuth: true });
+
+  return {
+    songs: data.songs.map(mapSong),
+    albums: data.albums.map(mapAlbum),
+    playlists: data.playlists.map(mapPlaylist),
+  };
 }

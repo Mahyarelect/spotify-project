@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllSongs, getAllAlbums } from "@/lib/services/musicService";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -8,36 +8,44 @@ import { SearchBar } from "@/components/albums/SearchBar";
 import { FilterSortBar, type SortOption } from "@/components/albums/FilterSortBar";
 import { AlbumCardArchive } from "@/components/albums/AlbumCardArchive";
 import { SingleCard } from "@/components/albums/SingleCard";
-import type { Playlist } from "@/types/music";
+import type { Song, Album, Playlist } from "@/types/music";
 
 export default function AlbumsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const allSongs = useMemo(() => getAllSongs(), []);
-  const allAlbums = useMemo(() => getAllAlbums(), []);
 
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+  const [allAlbums, setAllAlbums] = useState<Album[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("playCount-desc");
-  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>(() =>
-    user ? playlistService.getUserPlaylists(user.id) : []
-  );
 
-  const refreshPlaylists = useCallback(() => {
-    if (!user) return;
-    setUserPlaylists(playlistService.getUserPlaylists(user.id));
-  }, [user]);
+  useEffect(() => {
+    Promise.all([getAllSongs(), getAllAlbums(), playlistService.getUserPlaylists()]).then(
+      ([s, a, p]) => {
+        setAllSongs(s);
+        setAllAlbums(a);
+        setUserPlaylists(p);
+      }
+    );
+  }, []);
+
+  const refreshPlaylists = useCallback(async () => {
+    const p = await playlistService.getUserPlaylists();
+    setUserPlaylists(p);
+  }, []);
 
   const handleAddToPlaylist = useCallback(
-    (playlistId: string, songId: string) => {
-      playlistService.addSongToPlaylist(playlistId, songId);
+    async (playlistId: string, songId: string) => {
+      await playlistService.addSongToPlaylist(playlistId, songId);
       refreshPlaylists();
     },
     [refreshPlaylists]
   );
 
   const handleRemoveFromPlaylist = useCallback(
-    (playlistId: string, songId: string) => {
-      playlistService.removeSongFromPlaylist(playlistId, songId);
+    async (playlistId: string, songId: string) => {
+      await playlistService.removeSongFromPlaylist(playlistId, songId);
       refreshPlaylists();
     },
     [refreshPlaylists]

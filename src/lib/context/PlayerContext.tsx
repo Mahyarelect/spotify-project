@@ -31,7 +31,7 @@ interface PlayerState {
 }
 
 interface PlayerContextType extends PlayerState {
-  playSong: (song: Song, queue?: Song[]) => void;
+  playSong: (song: Song, queue?: Song[]) => Promise<void>;
   togglePlay: () => void;
   next: () => void;
   previous: () => void;
@@ -76,7 +76,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -96,76 +95,49 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, [state.volume]);
 
-  // Real audio playback engine
+  // Audio playback engine — real audio only
   useEffect(() => {
     const song = state.currentSong;
-    if (!song) return;
+    if (!song || !song.audioFile) return;
 
-    const hasAudio = song.hasAudio && song.audioFile;
-
-    if (hasAudio) {
-      // Real audio playback
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-        audioRef.current.volume = state.volume / 100;
-      }
-      const audio = audioRef.current;
-
-      // Load new source if needed
-      const src = song.audioFile!.startsWith("http")
-        ? song.audioFile!
-        : `${window.location.origin}${song.audioFile}`;
-      if (audio.src !== src) {
-        audio.src = src;
-        audio.load();
-      }
-
-      if (state.isPlaying) {
-        audio.play().catch(() => {});
-      } else {
-        audio.pause();
-      }
-
-      const onTimeUpdate = () => {
-        setState((prev) => {
-          if (!prev.isPlaying) return prev;
-          return { ...prev, progress: Math.floor(audio.currentTime) };
-        });
-      };
-
-      const onEnded = () => {
-        handleSongEnd();
-      };
-
-      audio.addEventListener("timeupdate", onTimeUpdate);
-      audio.addEventListener("ended", onEnded);
-
-      return () => {
-        audio.removeEventListener("timeupdate", onTimeUpdate);
-        audio.removeEventListener("ended", onEnded);
-      };
-    } else {
-      // Fake playback for songs without audio file
-      if (state.isPlaying) {
-        intervalRef.current = setInterval(() => {
-          setState((prev) => {
-            const nextProgress = prev.progress + 1;
-            if (nextProgress >= prev.currentSong!.durationSec) {
-              handleSongEnd();
-              return prev;
-            }
-            return { ...prev, progress: nextProgress };
-          });
-        }, 1000);
-      }
-
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-      };
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.volume = state.volume / 100;
     }
+    const audio = audioRef.current;
+
+    const src = song.audioFile.startsWith("http")
+      ? song.audioFile
+      : `${window.location.origin}${song.audioFile}`;
+    if (audio.src !== src) {
+      audio.src = src;
+      audio.load();
+    }
+
+    if (state.isPlaying) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+
+    const onTimeUpdate = () => {
+      setState((prev) => {
+        if (!prev.isPlaying) return prev;
+        return { ...prev, progress: Math.floor(audio.currentTime) };
+      });
+    };
+
+    const onEnded = () => {
+      handleSongEnd();
+    };
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("ended", onEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("ended", onEnded);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.isPlaying, state.currentSong?.id]);
 
@@ -209,18 +181,27 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }
 
   const playSong = useCallback(
-    (song: Song, queue?: Song[]) => {
-      // Stream enforcement
-      if (user) {
-        if (!canStream(user.id, user.subscription.limits.dailyStreamLimit)) {
-          setState((prev) => ({
-            ...prev,
-            streamError: `Daily stream limit reached (${user.subscription.limits.dailyStreamLimit}/day). Upgrade your plan for more streams.`,
-          }));
-          return;
-        }
-        recordStream(user.id);
+    async (song: Song, queue?: Song[]) => {
+      if (!song.audioFile) {
+        setState((prev) => ({
+          ...prev,
+          streamError: "This song has no audio file available.",
+        }));
+        return;
       }
+
+      // Stream enforcement
+      const allowed = await canStream();
+      if (!allowed) {
+        setState((prev) => ({
+          ...prev,
+          streamError: "Daily stream limit reached. Upgrade your plan for more streams.",
+        }));
+        return;
+      }
+
+      // Record stream (fire and forget)
+      recordStream(song.id).catch(() => {});
 
       const newQueue = queue ?? [song];
       const idx = newQueue.findIndex((s) => s.id === song.id);
@@ -235,7 +216,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         streamError: null,
       }));
     },
-    [user]
+    []
   );
 
   const togglePlay = useCallback(() => {
@@ -265,17 +246,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Record stream for new song
-      if (user) {
-        if (!canStream(user.id, user.subscription.limits.dailyStreamLimit)) {
-          return {
-            ...prev,
-            streamError: `Daily stream limit reached (${user.subscription.limits.dailyStreamLimit}/day). Upgrade your plan for more streams.`,
-            isPlaying: false,
-          };
-        }
-        recordStream(user.id);
-      }
+      // Record stream (fire and forget)
+      recordStream(prev.queue[nextIndex].id).catch(() => {});
 
       return {
         ...prev,
@@ -285,7 +257,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         streamError: null,
       };
     });
-  }, [user]);
+  }, []);
 
   const previous = useCallback(() => {
     setState((prev) => {

@@ -1,15 +1,8 @@
-import { MOCK_SONGS, MOCK_ALBUMS, MOCK_PLAYLISTS } from "@/lib/mockData/music";
-import type { Song, Album, Playlist, RecentlyPlayed } from "@/types/music";
 import type { Notification } from "@/types/notification";
 import type { SupportTicket } from "@/types/ticket";
 import type { AuditPayment } from "@/types/audit";
 
 export const STORAGE_KEYS = {
-  songs: "spotify_songs",
-  albums: "spotify_albums",
-  playlists: "spotify_playlists",
-  recentlyPlayed: "spotify_recentlyPlayed",
-  streamCounts: "spotify_streamCounts",
   playerPrefs: "spotify_playerPrefs",
   notifications: "spotify_notifications",
   tickets: "spotify_tickets",
@@ -18,11 +11,6 @@ export const STORAGE_KEYS = {
 
 const LEGACY_STORAGE_PREFIX = ["music", "app_"].join("");
 const LEGACY_STORAGE_KEYS = {
-  songs: `${LEGACY_STORAGE_PREFIX}songs`,
-  albums: `${LEGACY_STORAGE_PREFIX}albums`,
-  playlists: `${LEGACY_STORAGE_PREFIX}playlists`,
-  recentlyPlayed: `${LEGACY_STORAGE_PREFIX}recentlyPlayed`,
-  streamCounts: `${LEGACY_STORAGE_PREFIX}streamCounts`,
   playerPrefs: `${LEGACY_STORAGE_PREFIX}playerPrefs`,
   notifications: `${LEGACY_STORAGE_PREFIX}notifications`,
   tickets: `${LEGACY_STORAGE_PREFIX}tickets`,
@@ -69,84 +57,6 @@ export function hasStorageKey(key: string): boolean {
   if (!canUseLocalStorage()) return false;
   migrateLegacyStorageKey(key);
   return window.localStorage.getItem(key) !== null;
-}
-
-function deepClone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
-// ── Music: Songs ──
-
-export function getSongs(): Song[] {
-  if (!hasStorageKey(STORAGE_KEYS.songs)) {
-    const seeded = deepClone(MOCK_SONGS);
-    writeJson(STORAGE_KEYS.songs, seeded);
-    return seeded;
-  }
-  return readJson<Song[]>(STORAGE_KEYS.songs, []);
-}
-
-export function saveSongs(songs: Song[]): void {
-  writeJson(STORAGE_KEYS.songs, songs);
-}
-
-// ── Music: Albums ──
-
-export function getAlbums(): Album[] {
-  if (!hasStorageKey(STORAGE_KEYS.albums)) {
-    const seeded = deepClone(MOCK_ALBUMS);
-    writeJson(STORAGE_KEYS.albums, seeded);
-    return seeded;
-  }
-  return readJson<Album[]>(STORAGE_KEYS.albums, []);
-}
-
-export function saveAlbums(albums: Album[]): void {
-  writeJson(STORAGE_KEYS.albums, albums);
-}
-
-// ── Music: Playlists ──
-
-export function getPlaylists(): Playlist[] {
-  if (!hasStorageKey(STORAGE_KEYS.playlists)) {
-    const seeded = deepClone(MOCK_PLAYLISTS);
-    writeJson(STORAGE_KEYS.playlists, seeded);
-    return seeded;
-  }
-  return readJson<Playlist[]>(STORAGE_KEYS.playlists, []);
-}
-
-export function savePlaylists(playlists: Playlist[]): void {
-  writeJson(STORAGE_KEYS.playlists, playlists);
-}
-
-// ── Music: Recently Played ──
-
-export function getRecentlyPlayed(userId: string): RecentlyPlayed[] {
-  const all = readJson<Record<string, RecentlyPlayed[]>>(STORAGE_KEYS.recentlyPlayed, {});
-  return all[userId] ?? [];
-}
-
-export function addRecentlyPlayed(userId: string, entry: RecentlyPlayed): void {
-  const all = readJson<Record<string, RecentlyPlayed[]>>(STORAGE_KEYS.recentlyPlayed, {});
-  const existing = all[userId] ?? [];
-  const filtered = existing.filter((e) => e.playlistId !== entry.playlistId);
-  all[userId] = [entry, ...filtered].slice(0, 10);
-  writeJson(STORAGE_KEYS.recentlyPlayed, all);
-}
-
-// ── Stream Counts ──
-
-export function getStreamCount(userId: string, date: string): number {
-  const all = readJson<Record<string, Record<string, number>>>(STORAGE_KEYS.streamCounts, {});
-  return all[userId]?.[date] ?? 0;
-}
-
-export function incrementStreamCount(userId: string, date: string): void {
-  const all = readJson<Record<string, Record<string, number>>>(STORAGE_KEYS.streamCounts, {});
-  if (!all[userId]) all[userId] = {};
-  all[userId][date] = (all[userId][date] ?? 0) + 1;
-  writeJson(STORAGE_KEYS.streamCounts, all);
 }
 
 // ── Player Preferences ──
