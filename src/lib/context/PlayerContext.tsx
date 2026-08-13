@@ -28,10 +28,11 @@ interface PlayerState {
   repeatMode: RepeatMode;
   isExpanded: boolean;
   streamError: string | null;
+  sourcePlaylistId: string | null;
 }
 
 interface PlayerContextType extends PlayerState {
-  playSong: (song: Song, queue?: Song[]) => Promise<void>;
+  playSong: (song: Song, queue?: Song[], sourcePlaylistId?: string) => Promise<void>;
   togglePlay: () => void;
   next: () => void;
   previous: () => void;
@@ -82,6 +83,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     repeatMode: prefs.repeatMode,
     isExpanded: false,
     streamError: null,
+    sourcePlaylistId: null,
   });
 
   const stateRef = useRef(state);
@@ -206,7 +208,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }
 
   const playSong = useCallback(
-    async (song: Song, queue?: Song[]) => {
+    async (song: Song, queue?: Song[], sourcePlaylistId?: string) => {
       if (!song.audioFile) {
         setState((prev) => ({
           ...prev,
@@ -237,6 +239,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         isPlaying: true,
         progress: 0,
         streamError: null,
+        sourcePlaylistId: sourcePlaylistId ?? null,
       }));
     },
     []

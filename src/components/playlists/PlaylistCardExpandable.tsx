@@ -39,11 +39,11 @@ export function PlaylistCardExpandable({
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(playlist.title);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
+  const { currentSong, isPlaying, playSong, togglePlay, sourcePlaylistId } = usePlayer();
 
   const playlistSongs = songs.filter((s) => playlist.songIds.includes(s.id));
   const isPlaylistPlaying =
-    currentSong && playlistSongs.some((s) => s.id === currentSong.id) && isPlaying;
+    currentSong && playlistSongs.some((s) => s.id === currentSong.id) && isPlaying && sourcePlaylistId === playlist.id;
 
   const handleSaveRename = () => {
     if (editTitle.trim()) {
@@ -57,7 +57,7 @@ export function PlaylistCardExpandable({
     if (isPlaylistPlaying) {
       togglePlay();
     } else if (playlistSongs.length > 0) {
-      playSong(playlistSongs[0], playlistSongs);
+      playSong(playlistSongs[0], playlistSongs, playlist.id);
     }
   };
 
@@ -218,7 +218,7 @@ export function PlaylistCardExpandable({
                       if (isActive) {
                         togglePlay();
                       } else {
-                        playSong(song, playlistSongs);
+                        playSong(song, playlistSongs, playlist.id);
                       }
                     }}
                     className="flex w-6 items-center justify-center sm:w-8"

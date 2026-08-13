@@ -15,6 +15,7 @@ export function PlayerBar() {
   const {
     currentSong,
     isPlaying,
+    isExpanded,
     progress,
     volume,
     shuffle,
@@ -33,8 +34,8 @@ export function PlayerBar() {
 
   const [showQueue, setShowQueue] = useState(false);
 
-  if (!currentSong) {
-    if (streamError) {
+  if (!currentSong || isExpanded) {
+    if (streamError && !isExpanded) {
       return (
         <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center gap-3 border-t border-red-900/50 bg-red-950 px-4 py-3 text-sm text-red-200">
           <AlertCircle size={16} className="shrink-0" />
