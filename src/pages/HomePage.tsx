@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Link } from "react-router-dom";
@@ -17,48 +17,40 @@ import { AlbumCard } from "@/components/home/AlbumCard";
 import { SongRow } from "@/components/home/SongRow";
 import { EarlyAccessBanner } from "@/components/home/EarlyAccessBanner";
 import { UserSearch } from "@/components/users/UserSearch";
+import type { Song, Album, Playlist } from "@/types/music";
 
 export default function HomePage() {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
 
-  const songs = useMemo(() => getAllSongs(), []);
-  const albums = useMemo(() => getAllAlbums(), []);
-  const playlists = useMemo(() => getAllPlaylists(), []);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [recentEntries, setRecentEntries] = useState<
+    { songId: string; listenedAt: string }[]
+  >([]);
 
-  const recentEntries = useMemo(
-    () => (user ? getRecentlyPlayed(user.id) : []),
-    [user]
-  );
+  useEffect(() => {
+    getAllSongs().then(setSongs);
+    getAllAlbums().then(setAlbums);
+    getAllPlaylists().then(setPlaylists);
+    getRecentlyPlayed().then(setRecentEntries);
+  }, []);
 
-  const recentPlaylists = useMemo(() => {
-    const playlistMap = new Map(playlists.map((p) => [p.id, p]));
-    return recentEntries
-      .map((e) => playlistMap.get(e.playlistId))
-      .filter(Boolean);
-  }, [recentEntries, playlists]);
+  const recentPlaylists = recentEntries
+    .map((e) => playlists.find((p) => p.id === e.songId))
+    .filter(Boolean);
 
-  const newAlbums = useMemo(
-    () =>
-      [...albums]
-        .filter((a) => !a.isEarlyAccess)
-        .sort(
-          (a, b) =>
-            new Date(b.releaseDate).getTime() -
-            new Date(a.releaseDate).getTime()
-        ),
-    [albums]
-  );
+  const newAlbums = [...albums]
+    .filter((a) => !a.isEarlyAccess)
+    .sort(
+      (a, b) =>
+        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+    );
 
-  const popularSongs = useMemo(
-    () => [...songs].sort((a, b) => b.playCount - a.playCount),
-    [songs]
-  );
+  const popularSongs = [...songs].sort((a, b) => b.playCount - a.playCount);
 
-  const earlyAccessAlbums = useMemo(
-    () => albums.filter((a) => a.isEarlyAccess),
-    [albums]
-  );
+  const earlyAccessAlbums = albums.filter((a) => a.isEarlyAccess);
 
   if (loading) {
     return <p className="text-center text-zinc-400">{t.home.loading}</p>;

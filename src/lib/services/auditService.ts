@@ -1,5 +1,6 @@
 import type { AuditPayment } from "@/types/audit";
-import { getAuditPayments, saveAuditPayments, getSongs } from "./storage";
+import { getAuditPayments, saveAuditPayments } from "./storage";
+import { getAllSongs } from "./musicService";
 import { MOCK_USERS } from "@/lib/mockData/users";
 
 function createId(prefix: string): string {
@@ -19,9 +20,9 @@ export function getAuditPaymentsByMonth(month: string): AuditPayment[] {
   return getAuditPayments().filter((p) => p.month === month);
 }
 
-export function generateMonthlyAudit(month: string): AuditPayment[] {
+export async function generateMonthlyAudit(month: string): Promise<AuditPayment[]> {
   const users = MOCK_USERS.filter((u) => u.role === "artist");
-  const songs = getSongs();
+  const songs = await getAllSongs();
   const existing = getAuditPayments();
   const existingIds = new Set(existing.filter((p) => p.month === month).map((p) => p.artistId));
 
@@ -70,15 +71,15 @@ export function markPaymentDisputed(paymentId: string): AuditPayment {
   return payments[idx];
 }
 
-export function getRevenueStats(): {
+export async function getRevenueStats(): Promise<{
   totalRevenue: number;
   totalStreams: number;
   paidAmount: number;
   pendingAmount: number;
   byTier: { tier: string; count: number; revenue: number }[];
-} {
+}> {
   const users = MOCK_USERS;
-  const songs = getSongs();
+  const songs = await getAllSongs();
   const payments = getAuditPayments();
 
   const totalStreams = songs.reduce((sum, s) => sum + s.playCount, 0);

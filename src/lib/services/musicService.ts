@@ -165,3 +165,25 @@ export async function searchMusic(query: string): Promise<{
     playlists: data.playlists.map(mapPlaylist),
   };
 }
+
+interface RecentlyPlayedResponse {
+  id: string;
+  song: string;
+  song_title: string;
+  artist_name: string;
+  duration_sec: number;
+  cover_color: string;
+  cover_image: string | null;
+  played_at: string;
+}
+
+export async function getRecentlyPlayed(): Promise<
+  { songId: string; listenedAt: string }[]
+> {
+  try {
+    const data = await apiRequest<RecentlyPlayedResponse[]>("music/recently-played/");
+    return data.map((r) => ({ songId: r.song, listenedAt: r.played_at }));
+  } catch {
+    return [];
+  }
+}

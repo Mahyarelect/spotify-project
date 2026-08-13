@@ -5,7 +5,7 @@ import {
   Mic2,
   ListMusic,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -42,11 +42,17 @@ export function PlayerOverlay() {
 
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"lyrics" | "queue">("lyrics");
+  const [streamCount, setStreamCount] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      getTodayStreamCount().then(setStreamCount);
+    }
+  }, [user]);
 
   if (!isExpanded || !currentSong) return null;
 
   const canViewStats = user?.subscription.limits.statisticsAllowed ?? false;
-  const streamCount = user ? getTodayStreamCount(user.id) : 0;
   const nextSong =
     queue.length > 0 && currentIndex + 1 < queue.length
       ? queue[currentIndex + 1]

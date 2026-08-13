@@ -25,3 +25,8 @@ export async function recordStream(songId: string): Promise<void> {
 export async function getStreamStatus(): Promise<StreamStatus> {
   return apiRequest<StreamStatus>("music/streams/status/");
 }
+
+export async function getTodayStreamCount(): Promise<number> {
+  const status = await getStreamStatus();
+  return status.streams_today;
+}

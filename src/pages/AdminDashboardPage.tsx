@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
     const controller = new AbortController();
     setTickets(getAllTickets());
     setPayments(getAuditPaymentsByMonth(getCurrentMonth()));
-    setRevenueStats(getRevenueStats());
+    getRevenueStats().then(setRevenueStats);
     Promise.all([
       getPendingApplications(controller.signal),
       getPlans(controller.signal),
@@ -131,8 +131,8 @@ export default function AdminDashboardPage() {
     triggerRefresh();
   }
 
-  function handleGenerateAudit() {
-    generateMonthlyAudit(getCurrentMonth());
+  async function handleGenerateAudit() {
+    await generateMonthlyAudit(getCurrentMonth());
     triggerRefresh();
   }
 
