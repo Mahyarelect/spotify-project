@@ -102,7 +102,7 @@ export function PlayerBar() {
                 {currentSong.title}
               </p>
               <Link
-                to={`/artist/${encodeURIComponent(currentSong.artistName)}`}
+                to={`/artist/${encodeURIComponent(currentSong.artistUsername ?? currentSong.artistName)}`}
                 className="block truncate text-xs text-zinc-400 hover:text-green-400 hover:underline"
               >
                 {currentSong.artistName}

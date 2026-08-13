@@ -1,18 +1,28 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Music } from "lucide-react";
-import { useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllSongs } from "@/lib/services/musicService";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import type { Song } from "@/types/music";
 
 export default function PlayerPage() {
   const { t } = useTranslation();
   const { songId } = useParams();
   const navigate = useNavigate();
-  const songs = useMemo(() => getAllSongs(), []);
-  const song = songs.find((s) => s.id === songId);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const { currentSong, playSong, expand } = usePlayer();
+
+  useEffect(() => {
+    getAllSongs().then((s) => {
+      setSongs(s);
+      setLoaded(true);
+    });
+  }, []);
+
+  const song = songs.find((s) => s.id === songId);
 
   useEffect(() => {
     if (song) {
@@ -22,7 +32,11 @@ export default function PlayerPage() {
       expand();
       navigate(ROUTES.HOME, { replace: true });
     }
-  }, [songId, song, currentSong, playSong, expand, songs, navigate]);
+  }, [song?.id, currentSong, playSong, expand, songs, navigate]);
+
+  if (!loaded) {
+    return <p className="p-8 text-center text-zinc-400">{t.player.loading}</p>;
+  }
 
   if (!song) {
     return (

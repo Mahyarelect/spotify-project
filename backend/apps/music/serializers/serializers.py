@@ -7,6 +7,7 @@ from ..models import Album, Playlist, PlaylistSong, RecentlyPlayed, Song, Stream
 
 class AlbumSerializer(serializers.ModelSerializer):
     artist_name = serializers.CharField(source="artist.display_name", read_only=True)
+    artist_username = serializers.CharField(source="artist.username", read_only=True)
     song_count = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -16,6 +17,7 @@ class AlbumSerializer(serializers.ModelSerializer):
             "title",
             "artist",
             "artist_name",
+            "artist_username",
             "cover_color",
             "cover_image",
             "release_date",
@@ -25,7 +27,7 @@ class AlbumSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "artist", "artist_name", "song_count", "created_at", "updated_at")
+        read_only_fields = ("id", "artist", "artist_name", "artist_username", "song_count", "created_at", "updated_at")
 
 
 class AlbumCreateUpdateSerializer(RejectUnknownFieldsMixin, serializers.ModelSerializer):
@@ -36,6 +38,7 @@ class AlbumCreateUpdateSerializer(RejectUnknownFieldsMixin, serializers.ModelSer
 
 class SongSerializer(serializers.ModelSerializer):
     artist_name = serializers.CharField(source="artist.display_name", read_only=True)
+    artist_username = serializers.CharField(source="artist.username", read_only=True)
     album_title = serializers.CharField(source="album.title", read_only=True, default=None)
     has_audio = serializers.SerializerMethodField()
 
@@ -46,6 +49,7 @@ class SongSerializer(serializers.ModelSerializer):
             "title",
             "artist",
             "artist_name",
+            "artist_username",
             "album",
             "album_title",
             "duration_sec",
@@ -65,6 +69,7 @@ class SongSerializer(serializers.ModelSerializer):
             "id",
             "artist",
             "artist_name",
+            "artist_username",
             "audio_file",
             "has_audio",
             "play_count",
@@ -106,6 +111,7 @@ class PlaylistSongSerializer(serializers.ModelSerializer):
 
 class PlaylistSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source="created_by.display_name", read_only=True)
+    created_by_username = serializers.CharField(source="created_by.username", read_only=True)
     song_count = serializers.IntegerField(read_only=True)
     songs = PlaylistSongSerializer(source="playlist_songs", many=True, read_only=True)
 
@@ -117,13 +123,14 @@ class PlaylistSerializer(serializers.ModelSerializer):
             "cover_color",
             "created_by",
             "created_by_name",
+            "created_by_username",
             "description",
             "song_count",
             "songs",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "created_by", "created_by_name", "song_count", "songs", "created_at", "updated_at")
+        read_only_fields = ("id", "created_by", "created_by_name", "created_by_username", "song_count", "songs", "created_at", "updated_at")
 
 
 class PlaylistCreateUpdateSerializer(RejectUnknownFieldsMixin, serializers.ModelSerializer):

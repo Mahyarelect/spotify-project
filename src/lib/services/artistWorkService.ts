@@ -7,6 +7,7 @@ interface SongResponse {
   title: string;
   artist: string;
   artist_name: string;
+  artist_username: string;
   album: string | null;
   album_title: string | null;
   duration_sec: number;
@@ -26,6 +27,7 @@ interface AlbumResponse {
   title: string;
   artist: string;
   artist_name: string;
+  artist_username: string;
   cover_color: string;
   cover_image: string | null;
   release_date: string;
@@ -39,6 +41,7 @@ function mapSong(raw: SongResponse): Song {
     id: raw.id,
     title: raw.title,
     artistName: raw.artist_name,
+    artistUsername: raw.artist_username,
     artistId: raw.artist,
     albumId: raw.album ?? "",
     durationSec: raw.duration_sec,
@@ -58,6 +61,7 @@ function mapAlbum(raw: AlbumResponse): Album {
     id: raw.id,
     title: raw.title,
     artistName: raw.artist_name,
+    artistUsername: raw.artist_username,
     coverColor: raw.cover_color,
     coverImage: raw.cover_image ?? undefined,
     releaseDate: raw.release_date,

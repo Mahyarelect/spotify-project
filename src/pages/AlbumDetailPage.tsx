@@ -1,10 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Disc3, Play, Pause, Shuffle } from "lucide-react";
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllAlbums, getAllSongs } from "@/lib/services/musicService";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import type { Song, Album } from "@/types/music";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -15,15 +16,28 @@ function formatDuration(seconds: number): string {
 export default function AlbumDetailPage() {
   const { t } = useTranslation();
   const { albumId } = useParams();
-  const albums = useMemo(() => getAllAlbums(), []);
-  const songs = useMemo(() => getAllSongs(), []);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const { currentSong, isPlaying, playSong, togglePlay, toggleShuffle } = usePlayer();
+
+  useEffect(() => {
+    Promise.all([getAllAlbums(), getAllSongs()]).then(([a, s]) => {
+      setAlbums(a);
+      setSongs(s);
+      setLoaded(true);
+    });
+  }, []);
 
   const album = albums.find((a) => a.id === albumId);
   const albumSongs = useMemo(
     () => (album ? songs.filter((s) => album.songIds.includes(s.id)) : []),
     [album, songs]
   );
+
+  if (!loaded) {
+    return <p className="p-8 text-center text-zinc-400">{t.albumDetail.loading}</p>;
+  }
 
   if (!album) {
     return (
@@ -77,7 +91,7 @@ export default function AlbumDetailPage() {
           <h1 className="text-3xl font-bold tracking-tight">{album.title}</h1>
           <p className="text-zinc-400">
             <Link
-              to={`/artist/${encodeURIComponent(album.artistName)}`}
+              to={`/artist/${encodeURIComponent(album.artistUsername ?? album.artistName)}`}
               className="hover:text-green-400 hover:underline"
             >
               {album.artistName}
@@ -159,7 +173,7 @@ export default function AlbumDetailPage() {
                   {song.title}
                 </p>
                 <Link
-                  to={`/artist/${encodeURIComponent(song.artistName)}`}
+                   to={`/artist/${encodeURIComponent(song.artistUsername ?? song.artistName)}`}
                   className="block truncate text-xs text-zinc-400 hover:text-green-400 hover:underline"
                 >
                   {song.artistName}

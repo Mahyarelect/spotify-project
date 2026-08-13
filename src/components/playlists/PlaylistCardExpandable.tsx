@@ -258,7 +258,7 @@ export function PlaylistCardExpandable({
                       {song.title}
                     </p>
                     <Link
-                      to={`/artist/${encodeURIComponent(song.artistName)}`}
+                      to={`/artist/${encodeURIComponent(song.artistUsername ?? song.artistName)}`}
                       onClick={(e) => e.stopPropagation()}
                       className="block truncate text-xs text-zinc-400 hover:text-green-400 hover:underline"
                     >

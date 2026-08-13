@@ -104,7 +104,7 @@ export function PlayerOverlay() {
             </h2>
             <div className="mt-1 flex items-center justify-center gap-2 text-sm text-zinc-400 lg:justify-start">
               <Link
-                to={`/artist/${encodeURIComponent(currentSong.artistName)}`}
+                to={`/artist/${encodeURIComponent(currentSong.artistUsername ?? currentSong.artistName)}`}
                 onClick={collapse}
                 className="transition hover:text-green-400 hover:underline"
               >

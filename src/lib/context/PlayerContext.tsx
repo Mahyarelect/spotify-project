@@ -78,6 +78,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const songIdRef = useRef<string | null>(null);
 
   // Persist volume, shuffle, repeatMode
   useEffect(() => {
@@ -95,7 +96,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, [state.volume]);
 
-  // Audio playback engine — real audio only
+  // Handle song changes — load new audio source
   useEffect(() => {
     const song = state.currentSong;
     if (!song || !song.audioFile) return;
@@ -109,16 +110,36 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const src = song.audioFile.startsWith("http")
       ? song.audioFile
       : `${window.location.origin}${song.audioFile}`;
-    if (audio.src !== src) {
+
+    // Only change source if the song actually changed
+    if (songIdRef.current !== song.id) {
+      songIdRef.current = song.id;
       audio.src = src;
       audio.load();
+      if (state.isPlaying) {
+        audio.play().catch(() => {});
+      }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentSong?.id]);
+
+  // Handle play/pause toggling
+  useEffect(() => {
+    const song = state.currentSong;
+    if (!song || !song.audioFile || !audioRef.current) return;
 
     if (state.isPlaying) {
-      audio.play().catch(() => {});
+      audioRef.current.play().catch(() => {});
     } else {
-      audio.pause();
+      audioRef.current.pause();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.isPlaying]);
+
+  // Time update and ended listeners
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
     const onTimeUpdate = () => {
       setState((prev) => {
@@ -128,7 +149,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     };
 
     const onEnded = () => {
-      handleSongEnd();
+      advanceToNext();
     };
 
     audio.addEventListener("timeupdate", onTimeUpdate);
@@ -139,9 +160,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("ended", onEnded);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.isPlaying, state.currentSong?.id]);
+  }, []);
 
-  function handleSongEnd() {
+  function advanceToNext() {
     setState((prev) => {
       if (prev.repeatMode === "one") {
         if (audioRef.current) {
@@ -171,11 +192,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Record stream (fire and forget)
+      recordStream(prev.queue[nextIndex].id).catch(() => {});
+
       return {
         ...prev,
         currentSong: prev.queue[nextIndex],
         currentIndex: nextIndex,
         progress: 0,
+        isPlaying: true,
       };
     });
   }
@@ -254,6 +279,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         currentSong: prev.queue[nextIndex],
         currentIndex: nextIndex,
         progress: 0,
+        isPlaying: true,
         streamError: null,
       };
     });
@@ -285,6 +311,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         currentSong: prev.queue[prevIndex],
         currentIndex: prevIndex,
         progress: 0,
+        isPlaying: true,
       };
     });
   }, []);
@@ -387,6 +414,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
+    songIdRef.current = null;
     setState((prev) => ({
       ...prev,
       currentSong: null,

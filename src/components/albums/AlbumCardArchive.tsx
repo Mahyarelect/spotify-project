@@ -23,7 +23,7 @@ export function AlbumCardArchive({ album }: { album: Album }) {
       </h3>
       <p className="text-xs text-zinc-400">
         <Link
-          to={`/artist/${encodeURIComponent(album.artistName)}`}
+           to={`/artist/${encodeURIComponent(album.artistUsername ?? album.artistName)}`}
           className="hover:text-green-400 hover:underline"
         >
           {album.artistName}

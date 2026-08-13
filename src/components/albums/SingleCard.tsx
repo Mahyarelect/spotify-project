@@ -75,7 +75,7 @@ export function SingleCard({
         </button>
         <p className="truncate text-xs text-zinc-400">
           <Link
-            to={`/artist/${encodeURIComponent(song.artistName)}`}
+            to={`/artist/${encodeURIComponent(song.artistUsername ?? song.artistName)}`}
             className="hover:text-green-400 hover:underline"
           >
             {song.artistName}

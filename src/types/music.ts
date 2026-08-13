@@ -2,6 +2,7 @@ export interface Song {
   id: string;
   title: string;
   artistName: string;
+  artistUsername?: string;
   artistId?: string;
   albumId: string;
   durationSec: number;
@@ -20,6 +21,7 @@ export interface Album {
   id: string;
   title: string;
   artistName: string;
+  artistUsername?: string;
   coverColor: string;
   coverImage?: string;
   releaseDate: string;

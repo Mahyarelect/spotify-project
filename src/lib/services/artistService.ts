@@ -58,11 +58,12 @@ interface ArtistProfileResponse {
   total_streams: number;
 }
 
-function mapSong(raw: ArtistProfileResponse["songs"][0]): Song {
+function mapSong(raw: ArtistProfileResponse["songs"][0], artistUsername?: string): Song {
   return {
     id: raw.id,
     title: raw.title,
     artistName: raw.artist_name,
+    artistUsername,
     artistId: raw.artist,
     albumId: raw.album ?? "",
     durationSec: raw.duration_sec,
@@ -77,11 +78,12 @@ function mapSong(raw: ArtistProfileResponse["songs"][0]): Song {
   };
 }
 
-function mapAlbum(raw: ArtistProfileResponse["albums"][0]): Album {
+function mapAlbum(raw: ArtistProfileResponse["albums"][0], artistUsername?: string): Album {
   return {
     id: raw.id,
     title: raw.title,
     artistName: raw.artist_name,
+    artistUsername,
     coverColor: raw.cover_color,
     coverImage: raw.cover_image ?? undefined,
     releaseDate: raw.release_date,
@@ -142,9 +144,9 @@ export async function getArtistProfile(username: string): Promise<{
 
     return {
       user,
-      songs: data.songs.map(mapSong),
-      albums: data.albums.map(mapAlbum),
-      singles: data.singles.map(mapAlbum),
+      songs: data.songs.map((s) => mapSong(s, data.username)),
+      albums: data.albums.map((a) => mapAlbum(a, data.username)),
+      singles: data.singles.map((a) => mapAlbum(a, data.username)),
       totalStreams: data.total_streams,
       isFollowing: data.is_following,
     };
