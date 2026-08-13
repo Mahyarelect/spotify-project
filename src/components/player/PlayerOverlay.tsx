@@ -59,15 +59,15 @@ export function PlayerOverlay() {
       : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950">
+    <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-zinc-950">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+      <div className="flex items-center justify-between px-4 py-4 sm:px-6">
         <button
           onClick={collapse}
-          className="rounded-full p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800/80 text-zinc-300 transition hover:bg-zinc-700 hover:text-white"
           aria-label={t.player.minimize}
         >
-          <ChevronDown size={24} />
+          <ChevronDown size={22} />
         </button>
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
           {t.player.nowPlaying}
@@ -78,9 +78,9 @@ export function PlayerOverlay() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row lg:gap-8 lg:px-12 lg:py-4">
         {/* Left column: cover + controls + metadata */}
-        <div className="flex flex-col items-center gap-6 px-6 py-4 lg:flex-1 lg:justify-center lg:gap-8">
+        <div className="flex flex-col items-center gap-5 px-6 py-2 lg:flex-1 lg:justify-center lg:gap-6">
           {/* Cover art */}
-          <div className="w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[380px]">
+          <div className="w-full max-w-[260px] sm:max-w-[300px] lg:max-w-[360px]">
             <div
               className="flex aspect-square w-full items-center justify-center rounded-2xl shadow-2xl shadow-black/50"
               style={{ backgroundColor: currentSong.coverColor }}
@@ -92,14 +92,14 @@ export function PlayerOverlay() {
                   className="h-full w-full rounded-2xl object-cover"
                 />
               ) : (
-                <Music size={80} className="text-white/40" />
+                <Music size={72} className="text-white/40" />
               )}
             </div>
           </div>
 
           {/* Metadata */}
-          <div className="w-full max-w-[380px] text-center lg:text-left">
-            <h2 className="text-xl font-bold text-white sm:text-2xl">
+          <div className="w-full max-w-[360px] text-center lg:text-left">
+            <h2 className="text-lg font-bold text-white sm:text-xl">
               {currentSong.title}
             </h2>
             <div className="mt-1 flex items-center justify-center gap-2 text-sm text-zinc-400 lg:justify-start">
@@ -124,14 +124,14 @@ export function PlayerOverlay() {
               )}
             </div>
             {canViewStats && (
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-zinc-500">
                 {t.player.streamsToday.replace("{count}", String(streamCount))}
               </p>
             )}
           </div>
 
           {/* Progress bar */}
-          <div className="w-full max-w-[380px]">
+          <div className="w-full max-w-[360px]">
             <ProgressBar
               current={progress}
               total={currentSong.durationSec}
@@ -140,7 +140,7 @@ export function PlayerOverlay() {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-5 sm:gap-6">
+          <div className="flex items-center gap-4 sm:gap-5">
             <ShuffleButton active={shuffle} onToggle={toggleShuffle} />
             <SkipButton direction="back" onClick={previous} size={22} />
             <PlayPauseButton isPlaying={isPlaying} onClick={togglePlay} size="lg" />
