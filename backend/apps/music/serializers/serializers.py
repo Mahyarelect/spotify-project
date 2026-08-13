@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.accounts.serializers.profile import RejectUnknownFieldsMixin
 
-from ..models import Album, Playlist, PlaylistSong, Song, Stream
+from ..models import Album, Playlist, PlaylistSong, RecentlyPlayed, Song, Stream
 
 
 class AlbumSerializer(serializers.ModelSerializer):
@@ -152,3 +152,45 @@ class StreamSerializer(serializers.ModelSerializer):
         model = Stream
         fields = ("id", "song", "song_title", "streamed_at")
         read_only_fields = ("id", "song", "song_title", "streamed_at")
+
+
+class RecentlyPlayedSerializer(serializers.ModelSerializer):
+    song_title = serializers.CharField(source="song.title", read_only=True)
+    artist_name = serializers.CharField(source="song.artist.display_name", read_only=True)
+    duration_sec = serializers.IntegerField(source="song.duration_sec", read_only=True)
+    cover_color = serializers.CharField(source="song.cover_color", read_only=True)
+    cover_image = serializers.ImageField(source="song.cover_image", read_only=True)
+
+    class Meta:
+        model = RecentlyPlayed
+        fields = (
+            "id",
+            "song",
+            "song_title",
+            "artist_name",
+            "duration_sec",
+            "cover_color",
+            "cover_image",
+            "played_at",
+        )
+        read_only_fields = fields
+
+
+class RecentlyPlayedCreateSerializer(RejectUnknownFieldsMixin, serializers.Serializer):
+    song_id = serializers.UUIDField()
+
+
+class SearchResultSerializer(serializers.Serializer):
+    songs = SongSerializer(many=True)
+    albums = AlbumSerializer(many=True)
+    playlists = PlaylistSerializer(many=True)
+
+
+class StreamStatusSerializer(serializers.Serializer):
+    streams_today = serializers.IntegerField()
+    daily_limit = serializers.IntegerField(allow_null=True)
+    can_stream = serializers.BooleanField()
+
+
+class TopSongSerializer(SongSerializer):
+    rank = serializers.IntegerField(read_only=True)

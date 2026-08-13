@@ -1,8 +1,9 @@
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 from apps.subscriptions.permissions import HasPlanFeature
 from apps.subscriptions.selectors import get_effective_entitlements
 
-from .models import Album, Playlist, PlaylistSong, Song, Stream
+from .models import Album, Playlist, PlaylistSong, RecentlyPlayed, Song, Stream
 from .serializers.serializers import (
     AlbumCreateUpdateSerializer,
     AlbumSerializer,
@@ -18,10 +19,15 @@ from .serializers.serializers import (
     PlaylistCreateUpdateSerializer,
     PlaylistRemoveSongSerializer,
     PlaylistSerializer,
+    RecentlyPlayedCreateSerializer,
+    RecentlyPlayedSerializer,
+    SearchResultSerializer,
     SongCreateUpdateSerializer,
     SongSerializer,
     StreamCreateSerializer,
     StreamSerializer,
+    StreamStatusSerializer,
+    TopSongSerializer,
 )
 
 
@@ -282,4 +288,98 @@ class SongDownloadView(GenericAPIView):
             as_attachment=True,
             filename=f"{song.title}.mp3",
             content_type="audio/mpeg",
+        )
+
+
+class SearchView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = SearchResultSerializer
+
+    def get(self, request):
+        q = request.query_params.get("q", "").strip()
+        if not q:
+            return Response(
+                {"detail": "Query parameter 'q' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        songs = Song.objects.filter(
+            Q(title__icontains=q) | Q(artist__display_name__icontains=q) | Q(genre__icontains=q)
+        ).select_related("artist", "album")[:20]
+
+        albums = Album.objects.filter(
+            Q(title__icontains=q) | Q(artist__display_name__icontains=q) | Q(genre__icontains=q)
+        ).select_related("artist").annotate(song_count=Count("songs"))[:20]
+
+        playlists = Playlist.objects.filter(
+            Q(title__icontains=q) | Q(description__icontains=q)
+        ).select_related("created_by").annotate(song_count=Count("songs"))[:20]
+
+        return Response(
+            {
+                "songs": SongSerializer(songs, many=True).data,
+                "albums": AlbumSerializer(albums, many=True).data,
+                "playlists": PlaylistSerializer(playlists, many=True).data,
+            }
+        )
+
+
+class RecentlyPlayedListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RecentlyPlayedSerializer
+
+    def get_queryset(self):
+        return RecentlyPlayed.objects.filter(user=self.request.user).select_related(
+            "song__artist", "song"
+        )[:50]
+
+
+class RecentlyPlayedCreateView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RecentlyPlayedCreateSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        song_id = serializer.validated_data["song_id"]
+        song = get_object_or_404(Song, pk=song_id)
+
+        RecentlyPlayed.objects.create(user=request.user, song=song)
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class TopSongsView(ListAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = SongSerializer
+
+    def get_queryset(self):
+        limit = int(self.request.query_params.get("limit", 50))
+        limit = min(limit, 100)
+        return (
+            Song.objects.select_related("artist", "album")
+            .filter(play_count__gt=0)
+            .order_by("-play_count")[:limit]
+        )
+
+
+class StreamStatusView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = StreamStatusSerializer
+
+    def get(self, request):
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        streams_today = Stream.objects.filter(user=request.user, streamed_at__gte=today_start).count()
+
+        entitlement = get_effective_entitlements(request.user)
+        daily_limit = entitlement.daily_stream_limit
+
+        can_stream = daily_limit is None or streams_today < daily_limit
+
+        return Response(
+            {
+                "streams_today": streams_today,
+                "daily_limit": daily_limit,
+                "can_stream": can_stream,
+            }
         )
