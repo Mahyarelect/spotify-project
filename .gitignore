@@ -35,3 +35,5 @@ backend/openapi.yaml
 *.sln
 *.sw?
 opencode.json
+music-app@0.0.0
+tsc
