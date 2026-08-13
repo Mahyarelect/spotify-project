@@ -31,7 +31,7 @@ export default function AlbumDetailPage() {
 
   const album = albums.find((a) => a.id === albumId);
   const albumSongs = useMemo(
-    () => (album ? songs.filter((s) => album.songIds.includes(s.id)) : []),
+    () => (album ? songs.filter((s) => s.albumId === album.id) : []),
     [album, songs]
   );
 

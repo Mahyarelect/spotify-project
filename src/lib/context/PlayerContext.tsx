@@ -142,10 +142,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (!audio) return;
 
     const onTimeUpdate = () => {
-      setState((prev) => {
-        if (!prev.isPlaying) return prev;
-        return { ...prev, progress: Math.floor(audio.currentTime) };
-      });
+      setState((prev) => ({
+        ...prev,
+        progress: Math.floor(audio.currentTime),
+      }));
     };
 
     const onEnded = () => {

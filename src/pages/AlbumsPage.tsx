@@ -80,14 +80,12 @@ export default function AlbumsPage() {
       );
     } else {
       sorted.sort((a, b) => {
-        const aPlays = a.songIds.reduce(
-          (sum, id) => sum + (allSongs.find((s) => s.id === id)?.playCount ?? 0),
-          0
-        );
-        const bPlays = b.songIds.reduce(
-          (sum, id) => sum + (allSongs.find((s) => s.id === id)?.playCount ?? 0),
-          0
-        );
+        const aPlays = allSongs
+          .filter((s) => s.albumId === a.id)
+          .reduce((sum, s) => sum + s.playCount, 0);
+        const bPlays = allSongs
+          .filter((s) => s.albumId === b.id)
+          .reduce((sum, s) => sum + s.playCount, 0);
         return sort === "playCount-desc" ? bPlays - aPlays : aPlays - bPlays;
       });
     }

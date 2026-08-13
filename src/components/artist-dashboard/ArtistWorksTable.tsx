@@ -193,7 +193,7 @@ export function ArtistWorksTable({
                       {album.genre || "—"}
                     </td>
                     <td className="hidden px-4 py-3 text-zinc-400 md:table-cell">
-                      {album.songIds.length}
+                      {songs.filter((s) => s.albumId === album.id).length}
                     </td>
                     <td className="hidden px-4 py-3 text-zinc-400 lg:table-cell">
                       {new Date(album.releaseDate).toLocaleDateString()}

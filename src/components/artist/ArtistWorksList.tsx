@@ -32,9 +32,7 @@ export function ArtistWorksList({
           <h2 className="text-xl font-bold">{t.artist.albums}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {albums.map((album) => {
-              const albumSongs = allSongs.filter((s) =>
-                album.songIds.includes(s.id)
-              );
+              const albumSongs = allSongs.filter((s) => s.albumId === album.id);
               return (
                 <Link
                   key={album.id}
@@ -51,7 +49,7 @@ export function ArtistWorksList({
                     {album.title}
                   </h3>
                   <p className="text-sm text-zinc-400">
-                    {album.songIds.length} {t.common.songs} ·{" "}
+                    {albumSongs.length} {t.common.songs} ·{" "}
                     {new Date(album.releaseDate).getFullYear()}
                   </p>
                   <button
