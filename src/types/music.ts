@@ -7,6 +7,8 @@ export interface Song {
   durationSec: number;
   coverColor: string;
   coverImage?: string;
+  audioFile?: string;
+  hasAudio?: boolean;
   playCount: number;
   lyrics?: string;
   genre?: string;

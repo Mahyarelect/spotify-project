@@ -1,19 +1,13 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ROUTES } from "@/lib/constants/routes";
-import {
-  getArtistByDisplayName,
-  getArtistAlbums,
-  getArtistSingles,
-  getArtistTotalStreams,
-  isArtistVerified,
-  getArtistSongs,
-} from "@/lib/services/artistService";
+import { getArtistProfile } from "@/lib/services/artistService";
 import { followUser, unfollowUser } from "@/lib/services/userService";
 import type { User } from "@/types/user";
+import type { Song, Album } from "@/types/music";
 import { ArtistHeader } from "@/components/artist/ArtistHeader";
 import { ArtistWorksList } from "@/components/artist/ArtistWorksList";
 import { ArtistStatsPanel } from "@/components/artist/ArtistStatsPanel";
@@ -25,6 +19,10 @@ export default function ArtistPage() {
   const { user: currentUser, refreshUser } = useAuth();
 
   const [artist, setArtist] = useState<User | null>(null);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [singles, setSingles] = useState<Album[]>([]);
+  const [totalStreams, setTotalStreams] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [followPending, setFollowPending] = useState(false);
@@ -36,31 +34,30 @@ export default function ArtistPage() {
       setLoading(false);
       return;
     }
-    const found = getArtistByDisplayName(decoded);
-    setArtist(found);
-    setLoading(false);
-  }, [decoded]);
 
-  const albums = useMemo(
-    () => (artist ? getArtistAlbums(artist.displayName) : []),
-    [artist]
-  );
-  const singlesData = useMemo(
-    () => (artist ? getArtistSingles(artist.displayName) : []),
-    [artist]
-  );
-  const allSongs = useMemo(
-    () => (artist ? getArtistSongs(artist.displayName) : []),
-    [artist]
-  );
-  const totalStreams = useMemo(
-    () => (artist ? getArtistTotalStreams(artist.displayName) : 0),
-    [artist]
-  );
-  const verified = useMemo(
-    () => (artist ? isArtistVerified(artist) : false),
-    [artist]
-  );
+    let cancelled = false;
+
+    async function loadArtist() {
+      setLoading(true);
+      const profile = await getArtistProfile(decoded);
+      if (cancelled) return;
+
+      if (profile) {
+        setArtist(profile.user);
+        setSongs(profile.songs);
+        setAlbums(profile.albums);
+        setSingles(profile.singles);
+        setTotalStreams(profile.totalStreams);
+        setIsFollowing(profile.isFollowing);
+      } else {
+        setArtist(null);
+      }
+      setLoading(false);
+    }
+
+    loadArtist();
+    return () => { cancelled = true; };
+  }, [decoded]);
 
   const isOwnProfile = currentUser?.id === artist?.id;
 
@@ -149,7 +146,7 @@ export default function ArtistPage() {
 
       <ArtistHeader
         artist={artist}
-        isVerified={verified}
+        isVerified={artist.artistVerified}
         isFollowing={isFollowing}
         isOwnProfile={!!isOwnProfile}
         onFollow={handleFollow}
@@ -161,15 +158,15 @@ export default function ArtistPage() {
         <ArtistStatsPanel
           totalStreams={totalStreams}
           followerCount={artist.followersCount}
-          songCount={allSongs.length}
+          songCount={songs.length}
           albumCount={albums.length}
         />
       )}
 
       <ArtistWorksList
         albums={albums}
-        singles={singlesData.map((s) => s.song)}
-        allSongs={allSongs}
+        singles={singles}
+        allSongs={songs}
       />
     </div>
   );

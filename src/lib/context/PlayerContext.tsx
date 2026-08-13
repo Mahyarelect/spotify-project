@@ -75,6 +75,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     streamError: null,
   });
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -88,57 +89,124 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     });
   }, [state.volume, state.shuffle, state.repeatMode]);
 
-  // Fake playback engine
+  // Sync volume to audio element
   useEffect(() => {
-    if (state.isPlaying && state.currentSong) {
-      intervalRef.current = setInterval(() => {
-        setState((prev) => {
-          const nextProgress = prev.progress + 1;
-          if (nextProgress >= prev.currentSong!.durationSec) {
-            // Song ended — handle repeat mode
-            if (prev.repeatMode === "one") {
-              return { ...prev, progress: 0 };
-            }
-            // Auto-advance
-            const queueLen = prev.queue.length;
-            if (queueLen === 0) {
-              return { ...prev, progress: 0, isPlaying: false };
-            }
-
-            let nextIndex: number;
-            if (prev.shuffle) {
-              nextIndex = pickRandomIndex(prev.currentIndex, queueLen);
-            } else {
-              nextIndex = prev.currentIndex + 1;
-            }
-
-            if (nextIndex >= queueLen) {
-              if (prev.repeatMode === "all") {
-                nextIndex = 0;
-              } else {
-                return { ...prev, progress: prev.currentSong!.durationSec, isPlaying: false };
-              }
-            }
-
-            return {
-              ...prev,
-              currentSong: prev.queue[nextIndex],
-              currentIndex: nextIndex,
-              progress: 0,
-            };
-          }
-          return { ...prev, progress: nextProgress };
-        });
-      }, 1000);
+    if (audioRef.current) {
+      audioRef.current.volume = state.volume / 100;
     }
+  }, [state.volume]);
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+  // Real audio playback engine
+  useEffect(() => {
+    const song = state.currentSong;
+    if (!song) return;
+
+    const hasAudio = song.hasAudio && song.audioFile;
+
+    if (hasAudio) {
+      // Real audio playback
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+        audioRef.current.volume = state.volume / 100;
       }
-    };
-  }, [state.isPlaying, state.currentSong]);
+      const audio = audioRef.current;
+
+      // Load new source if needed
+      const src = song.audioFile!.startsWith("http")
+        ? song.audioFile!
+        : `${window.location.origin}${song.audioFile}`;
+      if (audio.src !== src) {
+        audio.src = src;
+        audio.load();
+      }
+
+      if (state.isPlaying) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
+
+      const onTimeUpdate = () => {
+        setState((prev) => {
+          if (!prev.isPlaying) return prev;
+          return { ...prev, progress: Math.floor(audio.currentTime) };
+        });
+      };
+
+      const onEnded = () => {
+        handleSongEnd();
+      };
+
+      audio.addEventListener("timeupdate", onTimeUpdate);
+      audio.addEventListener("ended", onEnded);
+
+      return () => {
+        audio.removeEventListener("timeupdate", onTimeUpdate);
+        audio.removeEventListener("ended", onEnded);
+      };
+    } else {
+      // Fake playback for songs without audio file
+      if (state.isPlaying) {
+        intervalRef.current = setInterval(() => {
+          setState((prev) => {
+            const nextProgress = prev.progress + 1;
+            if (nextProgress >= prev.currentSong!.durationSec) {
+              handleSongEnd();
+              return prev;
+            }
+            return { ...prev, progress: nextProgress };
+          });
+        }, 1000);
+      }
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.isPlaying, state.currentSong?.id]);
+
+  function handleSongEnd() {
+    setState((prev) => {
+      if (prev.repeatMode === "one") {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(() => {});
+        }
+        return { ...prev, progress: 0 };
+      }
+
+      const queueLen = prev.queue.length;
+      if (queueLen === 0) {
+        return { ...prev, progress: 0, isPlaying: false };
+      }
+
+      let nextIndex: number;
+      if (prev.shuffle) {
+        nextIndex = pickRandomIndex(prev.currentIndex, queueLen);
+      } else {
+        nextIndex = prev.currentIndex + 1;
+      }
+
+      if (nextIndex >= queueLen) {
+        if (prev.repeatMode === "all") {
+          nextIndex = 0;
+        } else {
+          return { ...prev, progress: prev.currentSong!.durationSec, isPlaying: false };
+        }
+      }
+
+      return {
+        ...prev,
+        currentSong: prev.queue[nextIndex],
+        currentIndex: nextIndex,
+        progress: 0,
+      };
+    });
+  }
 
   const playSong = useCallback(
     (song: Song, queue?: Song[]) => {
@@ -225,6 +293,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       // If more than 3 seconds in, restart current song
       if (prev.progress > 3) {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+        }
         return { ...prev, progress: 0 };
       }
 
@@ -247,9 +318,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const seek = useCallback((time: number) => {
+    const clamped = Math.max(0, Math.min(time, stateRef.current.currentSong?.durationSec ?? 0));
+    if (audioRef.current) {
+      audioRef.current.currentTime = clamped;
+    }
     setState((prev) => ({
       ...prev,
-      progress: Math.max(0, Math.min(time, prev.currentSong?.durationSec ?? 0)),
+      progress: clamped,
     }));
   }, []);
 
@@ -286,7 +361,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (index < prev.currentIndex) {
         newIndex--;
       } else if (index === prev.currentIndex) {
-        // Removed current song — play next or stop
         if (newQueue.length === 0) {
           return {
             ...prev,
@@ -337,6 +411,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const stop = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setState((prev) => ({
       ...prev,
       currentSong: null,

@@ -8,6 +8,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.accounts.models import User
 from apps.subscriptions.permissions import HasPlanFeature
 from apps.subscriptions.selectors import get_effective_entitlements
 
@@ -381,5 +382,51 @@ class StreamStatusView(GenericAPIView):
                 "streams_today": streams_today,
                 "daily_limit": daily_limit,
                 "can_stream": can_stream,
+            }
+        )
+
+
+class ArtistProfileView(GenericAPIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request, username):
+        artist = get_object_or_404(
+            User.objects.filter(role=User.Role.ARTIST, is_active=True),
+            username=username,
+        )
+
+        songs = Song.objects.filter(artist=artist).select_related("album")
+        albums = (
+            Album.objects.filter(artist=artist)
+            .annotate(song_count=Count("songs"))
+            .filter(song_count__gt=1)
+            .select_related("artist")
+        )
+        singles = (
+            Album.objects.filter(artist=artist)
+            .annotate(song_count=Count("songs"))
+            .filter(song_count=1)
+            .select_related("artist")
+        )
+        total_streams = songs.aggregate(total=Count("play_count"))["total"] or 0
+
+        return Response(
+            {
+                "id": str(artist.pk),
+                "username": artist.username,
+                "display_name": artist.display_name,
+                "avatar_url": artist.avatar.url if artist.avatar else None,
+                "bio": artist.bio,
+                "role": artist.role,
+                "artist_verified": artist.artist_verified,
+                "followers_count": artist.followers.count(),
+                "is_following": (
+                    request.user.is_authenticated
+                    and artist.followers.filter(pk=request.user.pk).exists()
+                ),
+                "songs": SongSerializer(songs, many=True).data,
+                "albums": AlbumSerializer(albums, many=True).data,
+                "singles": AlbumSerializer(singles, many=True).data,
+                "total_streams": total_streams,
             }
         )
