@@ -58,6 +58,15 @@ function pickRandomIndex(current: number, length: number): number {
   return idx;
 }
 
+function getAudioElement(): HTMLAudioElement {
+  if (!(window as any).__playerAudio) {
+    const audio = new Audio();
+    audio.preload = "auto";
+    (window as any).__playerAudio = audio;
+  }
+  return (window as any).__playerAudio;
+}
+
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
@@ -75,7 +84,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     streamError: null,
   });
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
   const songIdRef = useRef<string | null>(null);
@@ -91,55 +99,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   // Sync volume to audio element
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = state.volume / 100;
-    }
+    getAudioElement().volume = state.volume / 100;
   }, [state.volume]);
 
-  // Handle song changes — load new audio source
+  // Set up event listeners once
   useEffect(() => {
-    const song = state.currentSong;
-    if (!song || !song.audioFile) return;
-
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.volume = state.volume / 100;
-    }
-    const audio = audioRef.current;
-
-    const src = song.audioFile.startsWith("http")
-      ? song.audioFile
-      : `${window.location.origin}${song.audioFile}`;
-
-    // Only change source if the song actually changed
-    if (songIdRef.current !== song.id) {
-      songIdRef.current = song.id;
-      audio.src = src;
-      audio.load();
-      if (state.isPlaying) {
-        audio.play().catch(() => {});
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentSong?.id]);
-
-  // Handle play/pause toggling
-  useEffect(() => {
-    const song = state.currentSong;
-    if (!song || !song.audioFile || !audioRef.current) return;
-
-    if (state.isPlaying) {
-      audioRef.current.play().catch(() => {});
-    } else {
-      audioRef.current.pause();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.isPlaying]);
-
-  // Time update and ended listeners
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const audio = getAudioElement();
 
     const onTimeUpdate = () => {
       setState((prev) => ({
@@ -162,13 +127,49 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handle song changes — load new audio source
+  useEffect(() => {
+    const song = state.currentSong;
+    if (!song || !song.audioFile) return;
+
+    const audio = getAudioElement();
+
+    const src = song.audioFile.startsWith("http")
+      ? song.audioFile
+      : `${window.location.origin}${song.audioFile}`;
+
+    if (songIdRef.current !== song.id) {
+      songIdRef.current = song.id;
+      audio.src = src;
+      audio.load();
+      if (state.isPlaying) {
+        audio.play().catch(() => {});
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentSong?.id]);
+
+  // Handle play/pause toggling
+  useEffect(() => {
+    const song = state.currentSong;
+    if (!song || !song.audioFile) return;
+
+    const audio = getAudioElement();
+
+    if (state.isPlaying) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.isPlaying]);
+
   function advanceToNext() {
     setState((prev) => {
       if (prev.repeatMode === "one") {
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => {});
-        }
+        const audio = getAudioElement();
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
         return { ...prev, progress: 0 };
       }
 
@@ -192,7 +193,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Record stream (fire and forget)
       recordStream(prev.queue[nextIndex].id).catch(() => {});
 
       return {
@@ -215,7 +215,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Stream enforcement
       const allowed = await canStream();
       if (!allowed) {
         setState((prev) => ({
@@ -225,7 +224,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Record stream (fire and forget)
       recordStream(song.id).catch(() => {});
 
       const newQueue = queue ?? [song];
@@ -271,7 +269,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Record stream (fire and forget)
       recordStream(prev.queue[nextIndex].id).catch(() => {});
 
       return {
@@ -289,11 +286,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       if (!prev.currentSong) return prev;
 
-      // If more than 3 seconds in, restart current song
       if (prev.progress > 3) {
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-        }
+        const audio = getAudioElement();
+        audio.currentTime = 0;
         return { ...prev, progress: 0 };
       }
 
@@ -318,9 +313,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const seek = useCallback((time: number) => {
     const clamped = Math.max(0, Math.min(time, stateRef.current.currentSong?.durationSec ?? 0));
-    if (audioRef.current) {
-      audioRef.current.currentTime = clamped;
-    }
+    const audio = getAudioElement();
+    audio.currentTime = clamped;
     setState((prev) => ({
       ...prev,
       progress: clamped,
@@ -393,15 +387,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       let newIndex = prev.currentIndex;
       if (from === prev.currentIndex) {
         newIndex = to;
-      } else if (
-        from < prev.currentIndex &&
-        to >= prev.currentIndex
-      ) {
+      } else if (from < prev.currentIndex && to >= prev.currentIndex) {
         newIndex--;
-      } else if (
-        from > prev.currentIndex &&
-        to <= prev.currentIndex
-      ) {
+      } else if (from > prev.currentIndex && to <= prev.currentIndex) {
         newIndex++;
       }
 
@@ -410,10 +398,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    const audio = getAudioElement();
+    audio.pause();
+    audio.currentTime = 0;
     songIdRef.current = null;
     setState((prev) => ({
       ...prev,
