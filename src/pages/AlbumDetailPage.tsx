@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Disc3, Play, Pause, Shuffle } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { getAllAlbums, getAllSongs } from "@/lib/services/musicService";
 import * as playlistService from "@/lib/services/playlistService";
 import { AddToPlaylistMenu } from "@/components/albums/AddToPlaylistMenu";
@@ -17,19 +18,25 @@ function formatDuration(seconds: number): string {
 
 export default function AlbumDetailPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { albumId } = useParams();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [songs, setSongs] = useState<Song[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [allPlaylists, setAllPlaylists] = useState<Playlist[]>([]);
   const [loaded, setLoaded] = useState(false);
   const { currentSong, isPlaying, playSong, togglePlay, toggleShuffle } = usePlayer();
+
+  const playlists = useMemo(
+    () => (user ? allPlaylists.filter((p) => p.createdBy === user.id) : []),
+    [allPlaylists, user]
+  );
 
   const refresh = () => {
     Promise.all([getAllAlbums(), getAllSongs(), playlistService.getUserPlaylists()]).then(
       ([a, s, p]) => {
         setAlbums(a);
         setSongs(s);
-        setPlaylists(p);
+        setAllPlaylists(p);
         setLoaded(true);
       }
     );
