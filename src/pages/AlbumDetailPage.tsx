@@ -3,9 +3,11 @@ import { ArrowLeft, Disc3, Play, Pause, Shuffle } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllAlbums, getAllSongs } from "@/lib/services/musicService";
+import * as playlistService from "@/lib/services/playlistService";
+import { AddToPlaylistMenu } from "@/components/albums/AddToPlaylistMenu";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePlayer } from "@/lib/hooks/usePlayer";
-import type { Song, Album } from "@/types/music";
+import type { Song, Album, Playlist } from "@/types/music";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -18,15 +20,23 @@ export default function AlbumDetailPage() {
   const { albumId } = useParams();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [songs, setSongs] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loaded, setLoaded] = useState(false);
   const { currentSong, isPlaying, playSong, togglePlay, toggleShuffle } = usePlayer();
 
+  const refresh = () => {
+    Promise.all([getAllAlbums(), getAllSongs(), playlistService.getUserPlaylists()]).then(
+      ([a, s, p]) => {
+        setAlbums(a);
+        setSongs(s);
+        setPlaylists(p);
+        setLoaded(true);
+      }
+    );
+  };
+
   useEffect(() => {
-    Promise.all([getAllAlbums(), getAllSongs()]).then(([a, s]) => {
-      setAlbums(a);
-      setSongs(s);
-      setLoaded(true);
-    });
+    refresh();
   }, []);
 
   const album = albums.find((a) => a.id === albumId);
@@ -34,6 +44,16 @@ export default function AlbumDetailPage() {
     () => (album ? songs.filter((s) => s.albumId === album.id) : []),
     [album, songs]
   );
+
+  const handleAddToPlaylist = async (playlistId: string, songId: string) => {
+    await playlistService.addSongToPlaylist(playlistId, songId);
+    refresh();
+  };
+
+  const handleRemoveFromPlaylist = async (playlistId: string, songId: string) => {
+    await playlistService.removeSongFromPlaylist(playlistId, songId);
+    refresh();
+  };
 
   if (!loaded) {
     return <p className="p-8 text-center text-zinc-400">{t.albumDetail.loading}</p>;
@@ -173,7 +193,7 @@ export default function AlbumDetailPage() {
                   {song.title}
                 </p>
                 <Link
-                   to={`/artist/${encodeURIComponent(song.artistUsername ?? song.artistName)}`}
+                  to={`/artist/${encodeURIComponent(song.artistUsername ?? song.artistName)}`}
                   className="block truncate text-xs text-zinc-400 hover:text-green-400 hover:underline"
                 >
                   {song.artistName}
@@ -182,6 +202,12 @@ export default function AlbumDetailPage() {
               <span className="text-xs text-zinc-500">
                 {formatDuration(song.durationSec)}
               </span>
+              <AddToPlaylistMenu
+                playlists={playlists}
+                songId={song.id}
+                onAdd={(plId) => handleAddToPlaylist(plId, song.id)}
+                onRemove={(plId) => handleRemoveFromPlaylist(plId, song.id)}
+              />
             </div>
           );
         })}

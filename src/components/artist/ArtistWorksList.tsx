@@ -1,7 +1,11 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Music, Disc3 } from "lucide-react";
-import type { Song, Album } from "@/types/music";
+import type { Song, Album, Playlist } from "@/types/music";
 import { usePlayer } from "@/lib/hooks/usePlayer";
+import { useAuth } from "@/lib/hooks/useAuth";
+import * as playlistService from "@/lib/services/playlistService";
+import { AddToPlaylistMenu } from "@/components/albums/AddToPlaylistMenu";
 import { ROUTES } from "@/lib/constants/routes";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -23,7 +27,31 @@ export function ArtistWorksList({
   allSongs,
 }: ArtistWorksListProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { playSong } = usePlayer();
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      playlistService.getUserPlaylists().then(setPlaylists);
+    }
+  }, [user]);
+
+  const refreshPlaylists = () => {
+    if (user) {
+      playlistService.getUserPlaylists().then(setPlaylists);
+    }
+  };
+
+  const handleAddToPlaylist = async (playlistId: string, songId: string) => {
+    await playlistService.addSongToPlaylist(playlistId, songId);
+    refreshPlaylists();
+  };
+
+  const handleRemoveFromPlaylist = async (playlistId: string, songId: string) => {
+    await playlistService.removeSongFromPlaylist(playlistId, songId);
+    refreshPlaylists();
+  };
 
   return (
     <div className="space-y-8">
@@ -110,6 +138,14 @@ export function ArtistWorksList({
                 >
                   <Music size={16} />
                 </button>
+                {user && (
+                  <AddToPlaylistMenu
+                    playlists={playlists}
+                    songId={song.id}
+                    onAdd={(plId) => handleAddToPlaylist(plId, song.id)}
+                    onRemove={(plId) => handleRemoveFromPlaylist(plId, song.id)}
+                  />
+                )}
               </div>
             ))}
           </div>

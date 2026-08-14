@@ -1,5 +1,6 @@
 import { Play, Music, Pause } from "lucide-react";
-import type { Song } from "@/types/music";
+import type { Song, Playlist } from "@/types/music";
+import { AddToPlaylistMenu } from "@/components/albums/AddToPlaylistMenu";
 import { usePlayer } from "@/lib/hooks/usePlayer";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -13,10 +14,16 @@ export function SongRow({
   song,
   index,
   queue,
+  playlists,
+  onAddToPlaylist,
+  onRemoveFromPlaylist,
 }: {
   song: Song;
   index: number;
   queue?: Song[];
+  playlists?: Playlist[];
+  onAddToPlaylist?: (playlistId: string, songId: string) => void;
+  onRemoveFromPlaylist?: (playlistId: string, songId: string) => void;
 }) {
   const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
   const { t } = useTranslation();
@@ -79,6 +86,14 @@ export function SongRow({
       <span className="text-xs text-zinc-500">
         {formatDuration(song.durationSec)}
       </span>
+      {playlists && onAddToPlaylist && onRemoveFromPlaylist && (
+        <AddToPlaylistMenu
+          playlists={playlists}
+          songId={song.id}
+          onAdd={(plId) => onAddToPlaylist(plId, song.id)}
+          onRemove={(plId) => onRemoveFromPlaylist(plId, song.id)}
+        />
+      )}
     </div>
   );
 }

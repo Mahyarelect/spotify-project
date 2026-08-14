@@ -9,6 +9,7 @@ import {
   getAllPlaylists,
   getRecentlyPlayed,
 } from "@/lib/services/musicService";
+import * as playlistService from "@/lib/services/playlistService";
 
 import { SectionHeading } from "@/components/home/SectionHeading";
 import { HorizontalCardScroller } from "@/components/home/HorizontalCardScroller";
@@ -26,16 +27,34 @@ export default function HomePage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [recentEntries, setRecentEntries] = useState<
     { songId: string; listenedAt: string }[]
   >([]);
 
-  useEffect(() => {
+  const refresh = () => {
     getAllSongs().then(setSongs);
     getAllAlbums().then(setAlbums);
     getAllPlaylists().then(setPlaylists);
     getRecentlyPlayed().then(setRecentEntries);
-  }, []);
+    if (user) {
+      playlistService.getUserPlaylists().then(setUserPlaylists);
+    }
+  };
+
+  useEffect(() => {
+    refresh();
+  }, [user]);
+
+  const handleAddToPlaylist = async (playlistId: string, songId: string) => {
+    await playlistService.addSongToPlaylist(playlistId, songId);
+    refresh();
+  };
+
+  const handleRemoveFromPlaylist = async (playlistId: string, songId: string) => {
+    await playlistService.removeSongFromPlaylist(playlistId, songId);
+    refresh();
+  };
 
   const recentPlaylists = recentEntries
     .map((e) => playlists.find((p) => p.id === e.songId))
@@ -112,7 +131,15 @@ export default function HomePage() {
         <SectionHeading title={t.home.popularSongs} />
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
           {popularSongs.map((song, i) => (
-            <SongRow key={song.id} song={song} index={i} queue={popularSongs} />
+            <SongRow
+              key={song.id}
+              song={song}
+              index={i}
+              queue={popularSongs}
+              playlists={userPlaylists}
+              onAddToPlaylist={handleAddToPlaylist}
+              onRemoveFromPlaylist={handleRemoveFromPlaylist}
+            />
           ))}
         </div>
       </section>
