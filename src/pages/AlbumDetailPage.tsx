@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Disc3, Play, Pause, Shuffle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllAlbums, getAllSongs } from "@/lib/services/musicService";
 import * as playlistService from "@/lib/services/playlistService";
