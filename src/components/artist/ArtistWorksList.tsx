@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Music, Disc3 } from "lucide-react";
 import type { Song, Album, Playlist } from "@/types/music";
@@ -29,22 +29,17 @@ export function ArtistWorksList({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { playSong } = usePlayer();
-  const [allPlaylists, setAllPlaylists] = useState<Playlist[]>([]);
-
-  const playlists = useMemo(
-    () => (user ? allPlaylists.filter((p) => p.createdBy === user.id) : []),
-    [allPlaylists, user]
-  );
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
   useEffect(() => {
     if (user) {
-      playlistService.getUserPlaylists().then(setAllPlaylists);
+      playlistService.getUserPlaylists().then(setPlaylists);
     }
   }, [user]);
 
   const refreshPlaylists = () => {
     if (user) {
-      playlistService.getUserPlaylists().then(setAllPlaylists);
+      playlistService.getUserPlaylists().then(setPlaylists);
     }
   };
 

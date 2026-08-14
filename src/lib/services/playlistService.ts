@@ -30,7 +30,7 @@ function mapPlaylist(raw: PlaylistResponse): Playlist {
 }
 
 export async function getUserPlaylists(): Promise<Playlist[]> {
-  const data = await apiRequest<PlaylistResponse[]>("music/playlists/");
+  const data = await apiRequest<PlaylistResponse[]>("music/playlists/mine/");
   return data.map(mapPlaylist);
 }
 

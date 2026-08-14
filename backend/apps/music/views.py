@@ -166,6 +166,19 @@ class PlaylistListCreateView(ListCreateAPIView):
         return Response(PlaylistSerializer(instance).data, status=status.HTTP_201_CREATED)
 
 
+class UserPlaylistListView(ListAPIView):
+    serializer_class = PlaylistSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return (
+            Playlist.objects.filter(created_by=self.request.user)
+            .select_related("created_by")
+            .prefetch_related("playlist_songs__song")
+            .annotate(song_count=Count("songs"))
+        )
+
+
 class PlaylistDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = PlaylistSerializer
     permission_classes = (AllowAny,)

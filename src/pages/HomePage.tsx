@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Link } from "react-router-dom";
@@ -27,15 +27,10 @@ export default function HomePage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [allUserPlaylists, setAllUserPlaylists] = useState<Playlist[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [recentEntries, setRecentEntries] = useState<
     { songId: string; listenedAt: string }[]
   >([]);
-
-  const userPlaylists = useMemo(
-    () => (user ? allUserPlaylists.filter((p) => p.createdBy === user.id) : []),
-    [allUserPlaylists, user]
-  );
 
   const refresh = () => {
     getAllSongs().then(setSongs);
@@ -43,7 +38,7 @@ export default function HomePage() {
     getAllPlaylists().then(setPlaylists);
     getRecentlyPlayed().then(setRecentEntries);
     if (user) {
-      playlistService.getUserPlaylists().then(setAllUserPlaylists);
+      playlistService.getUserPlaylists().then(setUserPlaylists);
     }
   };
 

@@ -18,6 +18,7 @@ from .views import (
     StreamCreateView,
     StreamStatusView,
     TopSongsView,
+    UserPlaylistListView,
 )
 
 
@@ -35,6 +36,7 @@ urlpatterns = [
     path("music/recently-played/", RecentlyPlayedListView.as_view(), name="recently-played-list"),
     path("music/recently-played/record/", RecentlyPlayedCreateView.as_view(), name="recently-played-create"),
     path("music/playlists/", PlaylistListCreateView.as_view(), name="playlist-list-create"),
+    path("music/playlists/mine/", UserPlaylistListView.as_view(), name="user-playlist-list"),
     path("music/playlists/<uuid:pk>/", PlaylistDetailView.as_view(), name="playlist-detail"),
     path("music/playlists/<uuid:pk>/songs/", PlaylistSongAddView.as_view(), name="playlist-song-add"),
     path("music/playlists/<uuid:pk>/songs/remove/", PlaylistSongRemoveView.as_view(), name="playlist-song-remove"),
