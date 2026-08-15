@@ -1,4 +1,3 @@
-import type { ArtistProfile } from "@/types/artist";
 import type { User } from "@/types/user";
 import type { Song, Album } from "@/types/music";
 import { apiRequest } from "@/lib/api/httpClient";
@@ -97,7 +96,7 @@ export async function getArtistProfile(username: string): Promise<{
   user: User;
   songs: Song[];
   albums: Album[];
-  singles: Album[];
+  singles: Song[];
   totalStreams: number;
   isFollowing: boolean;
 } | null> {
@@ -113,7 +112,9 @@ export async function getArtistProfile(username: string): Promise<{
       username: data.username,
       displayName: data.display_name,
       role: data.role as User["role"],
-      avatarUrl: data.avatar_url ?? undefined,
+      birthDate: null,
+      gender: "unspecified",
+      avatarUrl: data.avatar_url,
       bio: data.bio,
       artistVerified: data.artist_verified,
       followersCount: data.followers_count,
@@ -146,7 +147,11 @@ export async function getArtistProfile(username: string): Promise<{
       user,
       songs: data.songs.map((s) => mapSong(s, data.username)),
       albums: data.albums.map((a) => mapAlbum(a, data.username)),
-      singles: data.singles.map((a) => mapAlbum(a, data.username)),
+      singles: data.singles.flatMap((single) =>
+        data.songs
+          .filter((song) => song.album === single.id)
+          .map((song) => mapSong(song, data.username))
+      ),
       totalStreams: data.total_streams,
       isFollowing: data.is_following,
     };

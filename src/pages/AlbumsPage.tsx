@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllSongs, getAllAlbums } from "@/lib/services/musicService";
-import { useAuth } from "@/lib/hooks/useAuth";
 import * as playlistService from "@/lib/services/playlistService";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SearchBar } from "@/components/albums/SearchBar";
@@ -12,8 +11,6 @@ import type { Song, Album, Playlist } from "@/types/music";
 
 export default function AlbumsPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-
   const [allSongs, setAllSongs] = useState<Song[]>([]);
   const [allAlbums, setAllAlbums] = useState<Album[]>([]);
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);

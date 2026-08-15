@@ -54,6 +54,12 @@ npm run dev
 
 `VITE_API_BASE_URL` defaults to `/api/v1`; Vite proxies `/api` to the local Django server. Access and refresh tokens are stored in `sessionStorage`, never in URLs or persistent local storage.
 
+### Progressive Web App
+
+Production builds are installable PWAs. The manifest includes standard and maskable icons, standalone display metadata, and mobile theme settings. The service worker precaches the application shell and provides an offline navigation fallback while deliberately excluding authenticated `/api/` responses and uploaded `/media/` content from runtime caching.
+
+Service workers run only in production builds. Test locally with `npm run build` followed by `npm run preview`, then use the browser's Application panel to inspect installation, caching, offline navigation, and updates.
+
 ## Development accounts
 
 Run `python manage.py seed_demo_data` in `DEBUG` mode. It is idempotent and creates:

@@ -56,7 +56,7 @@ export default function AlbumDetailPage() {
   };
 
   if (!loaded) {
-    return <p className="p-8 text-center text-zinc-400">{t.albumDetail.loading}</p>;
+    return <p className="p-8 text-center text-zinc-400">{t.routing.loading}</p>;
   }
 
   if (!album) {

@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 import type { Song } from "@/types/music";
-import { useAuth } from "@/lib/hooks/useAuth";
 import {
   getPlayerPrefs,
   savePlayerPrefs,
@@ -69,8 +68,6 @@ function getAudioElement(): HTMLAudioElement {
 }
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-
   const prefs = getPlayerPrefs();
   const [state, setState] = useState<PlayerState>({
     currentSong: null,

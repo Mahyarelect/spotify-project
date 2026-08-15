@@ -2,6 +2,9 @@ graph TD
     %% Entry Point
     main["main.tsx"]
     app["App.tsx"]
+    pwaRegister["lib/pwa/registerServiceWorker.ts"]
+    serviceWorker["public/sw.js"]
+    cacheStorage[("Cache Storage")]
 
     %% Types
     user["types/user.ts"]
@@ -179,6 +182,9 @@ graph TD
 
     %% === ENTRY FLOW ===
     main --> app
+    main --> pwaRegister
+    pwaRegister --> serviceWorker
+    serviceWorker --> cacheStorage
     main --> indexCss["index.css"]
     main --> errorBoundary
     errorBoundary --> errorFallback
@@ -643,7 +649,8 @@ graph TD
     classDef backendService fill:#fb7185,stroke:#be123c,color:#000
     classDef infrastructure fill:#a3a3a3,stroke:#525252,color:#000
 
-    class main,app entry
+    class main,app,pwaRegister,serviceWorker entry
+    class cacheStorage infrastructure
     class user,music,sub,notifType,artistType,ticketType,auditType type
     class routes,plans,roles constant
     class authCtx,playerCtx context

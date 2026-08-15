@@ -12,6 +12,9 @@ digraph G {
     "App.tsx" [fillcolor="#e5e7eb"];
     "index.css" [fillcolor="#e5e7eb"];
     "main.tsx" [fillcolor="#e5e7eb"];
+    "lib/pwa/registerServiceWorker.ts" [fillcolor="#4ade80"];
+    "public/sw.js" [fillcolor="#4ade80"];
+    "Cache Storage" [shape=cylinder, fillcolor="#a3a3a3"];
     "test-setup.ts" [fillcolor="#e5e7eb"];
   }
 
@@ -572,6 +575,9 @@ digraph G {
   "main.tsx" -> "App.tsx";
   "main.tsx" -> "components/error/ErrorBoundary.tsx";
   "main.tsx" -> "index.css";
+  "main.tsx" -> "lib/pwa/registerServiceWorker.ts";
+  "lib/pwa/registerServiceWorker.ts" -> "public/sw.js";
+  "public/sw.js" -> "Cache Storage";
   "pages/AdminDashboardPage.tsx" -> "components/admin/AdminSidebar.tsx";
   "pages/AdminDashboardPage.tsx" -> "components/admin/ArtistVerificationTable.tsx";
   "pages/AdminDashboardPage.tsx" -> "components/admin/AuditPaymentsTable.tsx";

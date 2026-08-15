@@ -84,6 +84,7 @@ Updated from static analysis of `src/` and the Django backend dependency flow.
 ```
 main.tsx
   ├─→ ErrorBoundary → ErrorFallback (catches render errors)
+  ├─→ registerServiceWorker() → /sw.js → Cache Storage
   └─→ App.tsx
        ├─→ AuthContext (provider)
        ├─→ PlayerContext (provider)
@@ -110,6 +111,11 @@ PlayerContext
 useAuth ──→ AuthContext
 usePlayer ──→ PlayerContext
 useSubscriptionLimits ──→ constants/plans, types/user
+
+PWA registration
+  ├─→ production-only navigator.serviceWorker.register("/sw.js")
+  ├─→ emits spotify:pwa-update when an updated worker is waiting
+  └─→ activateServiceWorkerUpdate() → SKIP_WAITING → controller reload
 ```
 
 ### Service Layer

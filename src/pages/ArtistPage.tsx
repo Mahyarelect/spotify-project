@@ -21,7 +21,7 @@ export default function ArtistPage() {
   const [artist, setArtist] = useState<User | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
-  const [singles, setSingles] = useState<Album[]>([]);
+  const [singles, setSingles] = useState<Song[]>([]);
   const [totalStreams, setTotalStreams] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
