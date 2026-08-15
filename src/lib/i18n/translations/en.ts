@@ -446,6 +446,11 @@ export const en = {
     confirming: "Confirming...",
     confirmPurchase: "Confirm purchase",
     continuePayment: "Continue to payment",
+    redirectingPayment: "Connecting to payment...",
+    paymentSuccess: "Payment completed successfully. Reference: {ref}",
+    paymentSuccessNoRef: "Payment completed successfully.",
+    paymentCancelled: "Payment was cancelled. You can try again.",
+    paymentFailed: "Payment verification failed. No subscription change was made.",
     cancel: "Cancel",
   },
   earlyAccess: {

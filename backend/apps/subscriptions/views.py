@@ -1,7 +1,9 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Case, IntegerField, Value, When
 from django.http import Http404
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from urllib.parse import urlencode
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView
@@ -10,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
 from apps.common.permissions import IsAdminRole
+from apps.common.domain import DomainError
 
 from .models import SubscriptionOrder, SubscriptionPlan
 from .serializers import (
@@ -20,7 +23,13 @@ from .serializers import (
     SubscriptionPlanSerializer,
     serialize_current_subscription,
 )
-from .services import activate_paid_order, create_subscription_order, update_plan_price
+from .services import (
+    activate_paid_order,
+    create_subscription_order,
+    process_zarinpal_callback,
+    start_zarinpal_payment,
+    update_plan_price,
+)
 
 
 class PlanListView(ListAPIView):
@@ -78,6 +87,50 @@ class SubscriptionOrderDetailView(GenericAPIView):
             user=request.user,
         )
         return Response(self.get_serializer(order).data)
+
+
+class ZarinpalPaymentStartView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SubscriptionOrderSerializer
+
+    @extend_schema(request=None, responses={200: SubscriptionOrderSerializer})
+    def post(self, request, order_id):
+        try:
+            order = start_zarinpal_payment(order_id=order_id, user=request.user)
+        except SubscriptionOrder.DoesNotExist:
+            raise Http404 from None
+        return Response(self.get_serializer(order).data)
+
+
+class ZarinpalCallbackView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+    serializer_class = SubscriptionOrderSerializer
+
+    @extend_schema(responses={302: None})
+    def get(self, request):
+        order_id = request.query_params.get("order_id", "")
+        authority = request.query_params.get("Authority", "")
+        callback_status = request.query_params.get("Status", "")
+        result = "failed"
+        reference = ""
+        try:
+            order = process_zarinpal_callback(
+                order_id=order_id,
+                authority=authority,
+                callback_status=callback_status,
+            )
+            result = {
+                SubscriptionOrder.Status.PAID: "success",
+                SubscriptionOrder.Status.CANCELLED: "cancelled",
+            }.get(order.status, "failed")
+            reference = order.provider_reference or ""
+        except (SubscriptionOrder.DoesNotExist, ValueError, DjangoValidationError):
+            result = "invalid"
+        except DomainError:
+            result = "failed"
+        query = urlencode({"payment": result, "order": order_id, "ref_id": reference})
+        return redirect(f"{settings.FRONTEND_ORIGIN.rstrip('/')}/subscription?{query}")
 
 
 class MockSubscriptionConfirmationView(GenericAPIView):

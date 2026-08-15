@@ -5,7 +5,7 @@ from apps.accounts.serializers.profile import CurrentSubscriptionSerializer, Rej
 
 from .models import SubscriptionOrder, SubscriptionPlan
 from .selectors import get_effective_entitlements
-from .services import project_order_expiry
+from .services import get_order_payment_url, project_order_expiry
 
 
 class PlanLimitsSerializer(serializers.Serializer):
@@ -90,11 +90,13 @@ class SubscriptionOrderSerializer(serializers.ModelSerializer):
             "projected_expires_at",
             "created_at",
             "paid_at",
+            "provider_reference",
+            "gateway_message",
         )
 
     @extend_schema_field(serializers.URLField(allow_null=True))
     def get_payment_url(self, order):
-        return None
+        return get_order_payment_url(order)
 
     @extend_schema_field(serializers.DateTimeField())
     def get_projected_expires_at(self, order):
@@ -102,4 +104,9 @@ class SubscriptionOrderSerializer(serializers.ModelSerializer):
 
 
 class PlanPriceUpdateSerializer(RejectUnknownFieldsMixin, serializers.Serializer):
-    monthly_price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0)
+    monthly_price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=1)
+
+    def validate_monthly_price(self, value):
+        if value != value.to_integral_value():
+            raise serializers.ValidationError("Zarinpal plan prices must be whole rials.")
+        return value

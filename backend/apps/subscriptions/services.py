@@ -1,7 +1,9 @@
 import calendar
 from datetime import datetime
 from decimal import Decimal
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
@@ -11,6 +13,7 @@ from apps.common.domain import DomainError
 from apps.common.events import subscription_activated
 
 from .models import SubscriptionOrder, SubscriptionPlan, UserSubscription
+from .gateways.zarinpal import request_payment, start_pay_url, verify_payment
 from .selectors import get_effective_entitlements
 
 
@@ -146,6 +149,67 @@ def create_subscription_order(*, user, plan_code: str, months: int, idempotency_
             )
         return existing, False
     return order, True
+
+
+@transaction.atomic
+def start_zarinpal_payment(*, order_id, user) -> SubscriptionOrder:
+    order = (
+        SubscriptionOrder.objects.select_for_update()
+        .select_related("plan", "user")
+        .get(pk=order_id, user=user)
+    )
+    if order.status != SubscriptionOrder.Status.PENDING:
+        raise DomainError("order_not_pending", "Only pending orders can be sent to payment.", status_code=409)
+    if order.currency != "IRR":
+        raise DomainError("unsupported_gateway_currency", "Zarinpal payments must be priced in IRR.", status_code=409)
+    if order.gateway_authority:
+        return order
+
+    callback_url = f"{settings.ZARINPAL_CALLBACK_URL}?{urlencode({'order_id': order.id})}"
+    result = request_payment(
+        amount=order.total_amount,
+        description=f"Spotify {order.plan.display_name} subscription for {order.months} month(s)",
+        callback_url=callback_url,
+    )
+    order.gateway_authority = result.authority
+    order.gateway_code = result.code
+    order.gateway_message = result.message
+    order.payment_started_at = timezone.now()
+    order.save(update_fields=("gateway_authority", "gateway_code", "gateway_message", "payment_started_at"))
+    return order
+
+
+def get_order_payment_url(order: SubscriptionOrder) -> str | None:
+    return start_pay_url(order.gateway_authority) if order.gateway_authority else None
+
+
+@transaction.atomic
+def process_zarinpal_callback(*, order_id, authority: str, callback_status: str) -> SubscriptionOrder:
+    order = SubscriptionOrder.objects.select_for_update().select_related("plan", "user").get(pk=order_id)
+    if not authority or authority != order.gateway_authority:
+        raise DomainError("payment_authority_mismatch", "The payment authority does not match this order.", status_code=409)
+    if order.status == SubscriptionOrder.Status.PAID:
+        return order
+    if callback_status != "OK":
+        order.status = SubscriptionOrder.Status.CANCELLED if callback_status == "NOK" else SubscriptionOrder.Status.FAILED
+        order.gateway_message = "Payment was cancelled or rejected by the gateway."
+        order.save(update_fields=("status", "gateway_message"))
+        return order
+
+    try:
+        result = verify_payment(amount=order.total_amount, authority=authority)
+    except DomainError as error:
+        if error.code == "payment_verification_failed":
+            order.status = SubscriptionOrder.Status.FAILED
+            order.gateway_message = error.message
+            order.save(update_fields=("status", "gateway_message"))
+            return order
+        raise
+
+    order.gateway_code = result.code
+    order.gateway_message = result.message
+    order.save(update_fields=("gateway_code", "gateway_message"))
+    return activate_paid_order(order.id, result.ref_id)
 
 
 @transaction.atomic

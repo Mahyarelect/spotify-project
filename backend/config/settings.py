@@ -128,6 +128,15 @@ AUTH_USER_MODEL = "accounts.User"
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 CORS_ALLOWED_ORIGINS = [FRONTEND_ORIGIN]
 
+ZARINPAL_MERCHANT_ID = os.getenv("ZARINPAL_MERCHANT_ID", "c8d2f8b6-07c1-496c-9f4c-f8e8afae1955")
+ZARINPAL_API_BASE_URL = os.getenv("ZARINPAL_API_BASE_URL", "https://sandbox.zarinpal.com/pg/v4/payment")
+ZARINPAL_START_PAY_BASE_URL = os.getenv("ZARINPAL_START_PAY_BASE_URL", "https://sandbox.zarinpal.com/pg/StartPay")
+ZARINPAL_CALLBACK_URL = os.getenv(
+    "ZARINPAL_CALLBACK_URL",
+    "http://127.0.0.1:9000/api/v1/subscriptions/zarinpal/callback/",
+)
+ZARINPAL_TIMEOUT_SECONDS = int(os.getenv("ZARINPAL_TIMEOUT_SECONDS", "10"))
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",

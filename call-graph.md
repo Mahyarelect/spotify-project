@@ -189,8 +189,10 @@ SettingsPage
 
 SubscriptionPage
   ├─→ PageHeader, PageShell
-  ├─→ PlanCard, PlanComparisonTable, UpgradeModal
-  ├─→ useAuth, subscriptionService, userService
+  ├─→ PlanCard, PlanComparisonTable, SubscriptionPurchaseModal
+  ├─→ subscriptionService.createOrder() → backend server-priced order
+  ├─→ subscriptionService.startPayment() → Zarinpal StartPay redirect
+  └─→ Zarinpal callback query → refreshUser() and localized result
 
 PlaylistsPage
   ├─→ PageHeader, Button
@@ -413,8 +415,9 @@ config/urls.py
   │    └─→ public/private profile serializers
   │
   ├─→ subscriptions views
-  │    ├─→ order and entitlement services
+  │    ├─→ order, Zarinpal payment, callback, and entitlement services
   │    ├─→ SubscriptionPlan / UserSubscription / SubscriptionOrder
+  │    ├─→ Zarinpal request.json / verify.json → StartPay redirect
   │    └─→ IsAdminRole for subscription price changes
   │
   ├─→ music views
@@ -473,6 +476,14 @@ generate monthly payouts
 
 update payout status
   └─→ enforce pending → approved/disputed → paid transition rules
+
+listener subscription payment
+  ├─→ create server-priced IRR SubscriptionOrder
+  ├─→ POST Zarinpal request.json with server amount and callback URL
+  ├─→ redirect browser to sandbox StartPay/{authority}
+  ├─→ validate callback order + authority + Status
+  ├─→ POST Zarinpal verify.json with snapshotted amount
+  └─→ atomically mark paid and activate/extend the subscription
 ```
 
 ---

@@ -179,7 +179,7 @@ export function SubscriptionPurchaseModal({
             </a>
           ) : (
             <Button onClick={confirmOrder} disabled={busy || order.status !== "pending"}>
-              {busy ? t.subscription.confirming : t.subscription.confirmPurchase}
+              {busy ? t.subscription.redirectingPayment : t.subscription.continuePayment}
             </Button>
           )}
         </div>

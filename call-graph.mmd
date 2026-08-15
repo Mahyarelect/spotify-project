@@ -559,8 +559,9 @@ graph TD
     accountServices["accounts/services.py"]
 
     subscriptionModels["subscription models<br/>Plan · Subscription · Order"]
-    subscriptionViews["subscription APIs<br/>plans · orders · admin pricing"]
+    subscriptionViews["subscription APIs<br/>plans · orders · Zarinpal callback · admin pricing"]
     subscriptionServices["subscriptions/services.py"]
+    zarinpalGateway["Zarinpal gateway<br/>request · StartPay · verify"]
 
     musicModels["music models<br/>Album · Song · Playlist · Stream"]
     musicViews["music APIs<br/>catalog · playback · artist catalog"]
@@ -596,6 +597,7 @@ graph TD
     subscriptionViews --> subscriptionModels
     subscriptionViews --> commonPerms
     subscriptionServices --> subscriptionModels
+    subscriptionServices --> zarinpalGateway
 
     musicViews --> musicModels
     musicViews --> subscriptionServices

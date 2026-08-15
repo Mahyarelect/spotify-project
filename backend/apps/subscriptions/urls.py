@@ -7,6 +7,8 @@ from .views import (
     PlanListView,
     SubscriptionOrderCreateView,
     SubscriptionOrderDetailView,
+    ZarinpalCallbackView,
+    ZarinpalPaymentStartView,
 )
 
 
@@ -18,6 +20,16 @@ urlpatterns = [
         "subscriptions/orders/<uuid:order_id>/",
         SubscriptionOrderDetailView.as_view(),
         name="subscription-order-detail",
+    ),
+    path(
+        "subscriptions/orders/<uuid:order_id>/pay/",
+        ZarinpalPaymentStartView.as_view(),
+        name="subscription-order-pay",
+    ),
+    path(
+        "subscriptions/zarinpal/callback/",
+        ZarinpalCallbackView.as_view(),
+        name="zarinpal-callback",
     ),
     path(
         "subscriptions/orders/<uuid:order_id>/confirm/",

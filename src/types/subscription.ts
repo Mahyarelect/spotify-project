@@ -28,4 +28,6 @@ export interface SubscriptionOrder {
   projectedExpiresAt: string;
   createdAt: string;
   paidAt: string | null;
+  providerReference: string | null;
+  gatewayMessage: string | null;
 }

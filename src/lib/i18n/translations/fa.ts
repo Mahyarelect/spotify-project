@@ -448,6 +448,11 @@ export const fa: Translations = {
     confirming: "در حال تأیید...",
     confirmPurchase: "تأیید خرید",
     continuePayment: "ادامه پرداخت",
+    redirectingPayment: "در حال اتصال به درگاه پرداخت...",
+    paymentSuccess: "پرداخت با موفقیت انجام شد. شماره پیگیری: {ref}",
+    paymentSuccessNoRef: "پرداخت با موفقیت انجام شد.",
+    paymentCancelled: "پرداخت لغو شد. می‌توانید دوباره تلاش کنید.",
+    paymentFailed: "تأیید پرداخت ناموفق بود و اشتراک تغییری نکرد.",
     cancel: "لغو",
   },
   earlyAccess: {

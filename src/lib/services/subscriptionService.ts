@@ -30,6 +30,8 @@ interface OrderDto {
   projected_expires_at: string;
   created_at: string;
   paid_at: string | null;
+  provider_reference: string;
+  gateway_message: string;
 }
 
 function mapPlan(dto: PlanDto): PlanLimits {
@@ -61,6 +63,8 @@ function mapOrder(dto: OrderDto): SubscriptionOrder {
     projectedExpiresAt: dto.projected_expires_at,
     createdAt: dto.created_at,
     paidAt: dto.paid_at,
+    providerReference: dto.provider_reference || null,
+    gatewayMessage: dto.gateway_message || null,
   };
 }
 
@@ -98,6 +102,10 @@ export async function getOrder(orderId: string): Promise<SubscriptionOrder> {
 
 export async function confirmMockOrder(orderId: string): Promise<SubscriptionOrder> {
   return mapOrder(await apiRequest<OrderDto>(`subscriptions/orders/${orderId}/confirm/`, { method: "POST" }));
+}
+
+export async function startPayment(orderId: string): Promise<SubscriptionOrder> {
+  return mapOrder(await apiRequest<OrderDto>(`subscriptions/orders/${orderId}/pay/`, { method: "POST" }));
 }
 
 export async function updatePlanPrices(prices: { silver: number; gold: number }): Promise<PlanLimits[]> {

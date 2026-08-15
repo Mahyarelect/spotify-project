@@ -711,8 +711,9 @@ digraph G {
     "backend/accounts/views" [label="accounts APIs\nauth · profiles · verification", fillcolor="#14b8a6"];
     "backend/accounts/services" [fillcolor="#fb7185"];
     "backend/subscriptions/models" [label="subscription models\nPlan · Subscription · Order", fillcolor="#818cf8"];
-    "backend/subscriptions/views" [label="subscription APIs\norders · admin pricing", fillcolor="#14b8a6"];
+    "backend/subscriptions/views" [label="subscription APIs\norders · Zarinpal callback · admin pricing", fillcolor="#14b8a6"];
     "backend/subscriptions/services" [fillcolor="#fb7185"];
+    "Zarinpal sandbox" [label="Zarinpal\nrequest · StartPay · verify", fillcolor="#f59e0b"];
     "backend/music/models" [label="music models\nAlbum · Song · Playlist · Stream", fillcolor="#818cf8"];
     "backend/music/views" [label="music APIs\ncatalog · playback", fillcolor="#14b8a6"];
     "backend/support/models" [label="support models\nTicket · Message", fillcolor="#818cf8"];
@@ -737,6 +738,7 @@ digraph G {
   "backend/accounts/services" -> "backend/subscriptions/services";
   "backend/accounts/services" -> "backend/notifications/services";
   "backend/subscriptions/views" -> "backend/subscriptions/services";
+  "backend/subscriptions/services" -> "Zarinpal sandbox";
   "backend/subscriptions/views" -> "backend/common/permissions";
   "backend/music/views" -> "backend/music/models";
   "backend/music/views" -> "backend/subscriptions/services";

@@ -54,7 +54,8 @@ def test_plan_list_returns_database_prices_limits_and_billing_months():
 
     assert response.status_code == 200
     assert [plan["code"] for plan in response.data] == ["free", "silver", "gold"]
-    assert response.data[1]["monthly_price"] == "9.99"
+    assert response.data[1]["monthly_price"] == "150000.00"
+    assert response.data[1]["currency"] == "IRR"
     assert response.data[1]["allowed_billing_months"] == [1, 3, 6, 12]
     assert response.data[2]["limits"]["max_playlists"] is None
 
@@ -104,8 +105,8 @@ def test_order_total_is_calculated_from_server_snapshot():
         order_payload(months=6, idempotency_key="clean-key"),
         format="json",
     )
-    assert clean.data["unit_price"] == "9.99"
-    assert clean.data["total_amount"] == "59.94"
+    assert clean.data["unit_price"] == "150000.00"
+    assert clean.data["total_amount"] == "900000.00"
 
 
 @freeze_time("2026-01-31 12:00:00", tz_offset=0)
@@ -289,13 +290,13 @@ def test_admin_can_update_paid_price_and_other_roles_cannot():
     listener = create_user()
     url = "/api/v1/admin/subscription-plans/silver/"
 
-    denied = client_for(listener).patch(url, {"monthly_price": "12.50"}, format="json")
-    updated = client_for(admin).patch(url, {"monthly_price": "12.50"}, format="json")
+    denied = client_for(listener).patch(url, {"monthly_price": "175000"}, format="json")
+    updated = client_for(admin).patch(url, {"monthly_price": "175000"}, format="json")
 
     assert denied.status_code == 403
     assert updated.status_code == 200
-    assert SubscriptionPlan.objects.get(code="silver").monthly_price == Decimal("12.50")
-    assert APIClient().get("/api/v1/subscriptions/plans/").data[1]["monthly_price"] == "12.50"
+    assert SubscriptionPlan.objects.get(code="silver").monthly_price == Decimal("175000")
+    assert APIClient().get("/api/v1/subscriptions/plans/").data[1]["monthly_price"] == "175000.00"
 
 
 def test_free_price_cannot_be_changed():

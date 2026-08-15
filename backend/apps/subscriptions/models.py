@@ -93,6 +93,10 @@ class SubscriptionOrder(models.Model):
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING, db_index=True)
     idempotency_key = models.CharField(max_length=100)
     provider_reference = models.CharField(max_length=150, unique=True, null=True, blank=True)
+    gateway_authority = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    gateway_code = models.IntegerField(null=True, blank=True)
+    gateway_message = models.CharField(max_length=255, blank=True)
+    payment_started_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
 

@@ -14,8 +14,8 @@ class SubscriptionPlanFactory(DjangoModelFactory):
 
     code = SubscriptionPlan.Code.SILVER
     display_name = "Silver"
-    monthly_price = Decimal("9.99")
-    currency = "USD"
+    monthly_price = Decimal("150000")
+    currency = "IRR"
     daily_stream_limit = None
     max_playlists = 100
     profile_image_allowed = True
@@ -38,7 +38,7 @@ class SubscriptionOrderFactory(DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     plan = factory.SubFactory(SubscriptionPlanFactory)
     months = 1
-    unit_price_snapshot = Decimal("9.99")
-    total_amount = Decimal("9.99")
-    currency = "USD"
+    unit_price_snapshot = Decimal("150000")
+    total_amount = Decimal("150000")
+    currency = "IRR"
     idempotency_key = factory.Sequence(lambda number: f"order-key-{number}")

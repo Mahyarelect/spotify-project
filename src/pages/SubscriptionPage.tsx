@@ -16,6 +16,7 @@ export default function SubscriptionPage() {
   const [plans, setPlans] = useState<PlanLimits[]>([]);
   const [selection, setSelection] = useState<{ plan: PlanLimits; mode: PurchaseMode } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentNotice, setPaymentNotice] = useState<{ message: string; success: boolean } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -34,6 +35,27 @@ export default function SubscriptionPage() {
     return () => controller.abort();
   }, [t.subscription.loadError]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    if (!payment) return;
+    const reference = params.get("ref_id");
+    if (payment === "success") {
+      setPaymentNotice({
+        message: reference
+          ? t.subscription.paymentSuccess.replace("{ref}", reference)
+          : t.subscription.paymentSuccessNoRef,
+        success: true,
+      });
+      void refreshUser();
+    } else if (payment === "cancelled") {
+      setPaymentNotice({ message: t.subscription.paymentCancelled, success: false });
+    } else {
+      setPaymentNotice({ message: t.subscription.paymentFailed, success: false });
+    }
+    window.history.replaceState({}, "", window.location.pathname);
+  }, [refreshUser, t.subscription.paymentCancelled, t.subscription.paymentFailed, t.subscription.paymentSuccess, t.subscription.paymentSuccessNoRef]);
+
   if (!user) return null;
 
   const handleCreateOrder = async (months: number, idempotencyKey: string) => {
@@ -42,9 +64,9 @@ export default function SubscriptionPage() {
   };
 
   const handleConfirmOrder = async (orderId: string) => {
-    await subscriptionService.confirmMockOrder(orderId);
-    await refreshUser();
-    setSelection(null);
+    const order = await subscriptionService.startPayment(orderId);
+    if (!order.paymentUrl) throw new Error("Payment URL was not returned.");
+    window.location.assign(order.paymentUrl);
   };
 
   const renewal = user.subscription.expiresAt
@@ -69,6 +91,12 @@ export default function SubscriptionPage() {
       {error && (
         <p role="alert" className="mb-4 rounded-lg bg-red-950/50 p-3 text-sm text-red-300">
           {error}
+        </p>
+      )}
+
+      {paymentNotice && (
+        <p role="status" className={`mb-4 rounded-lg p-3 text-sm ${paymentNotice.success ? "bg-green-950/40 text-green-300" : "bg-amber-950/40 text-amber-300"}`}>
+          {paymentNotice.message}
         </p>
       )}
 

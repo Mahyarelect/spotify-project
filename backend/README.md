@@ -37,6 +37,7 @@ Effective entitlements automatically fall back to Free for missing, cancelled, o
 - Public and private profile serializers are distinct.
 - The development mock order confirmation requires authentication, ownership, and `DEBUG=true`.
 - Prices use `Decimal`; order price and currency are snapshotted; activation is transactional and idempotent.
+- Zarinpal checkout uses the snapshotted IRR amount. `POST /api/v1/subscriptions/orders/<id>/pay/` creates an authority, and the public callback verifies it server-side before activation. Configure all `ZARINPAL_*` variables; use HTTPS callback URLs outside local sandbox development.
 
 For production, terminate HTTPS at the proxy, use a managed secret and PostgreSQL service, configure a real email/payment provider, validate provider callbacks, and tune throttle rates.
 

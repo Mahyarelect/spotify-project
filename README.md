@@ -31,6 +31,7 @@ Notable Phase 2 contracts include:
 - `PATCH /api/v1/users/me/` for JSON profile updates or multipart avatar upload
 - `POST /api/v1/subscriptions/orders/` for server-priced upgrades and renewals;
   order responses include the server-calculated `projected_expires_at`
+- `POST /api/v1/subscriptions/orders/<id>/pay/` to create a Zarinpal authority and return its StartPay URL; Zarinpal calls `GET /api/v1/subscriptions/zarinpal/callback/`, which verifies the authority and exact server-snapshotted IRR amount before activation
 - `POST /api/v1/auth/password-reset/confirm/`, used by the frontend
   `/reset-password` route
 

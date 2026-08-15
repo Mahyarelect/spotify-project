@@ -32,6 +32,8 @@ const order: SubscriptionOrder = {
   projectedExpiresAt: "2026-10-21T00:00:00Z",
   createdAt: "2026-07-21T00:00:00Z",
   paidAt: null,
+  providerReference: null,
+  gatewayMessage: null,
 };
 
 const currentSubscription = {
@@ -76,7 +78,7 @@ it("shows the server-calculated quote before confirming an order", async () => {
   expect(screen.getByRole("button", { name: "6mo" })).toBeEnabled();
   expect(screen.getByText(/Changing the duration will discard this quote/)).toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "Confirm purchase" }));
+  await user.click(screen.getByRole("button", { name: "Continue to payment" }));
   expect(onConfirm).toHaveBeenCalledWith(order.orderId);
 });
 
