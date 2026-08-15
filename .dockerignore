@@ -1,0 +1,13 @@
+.git
+.github
+.launcher-state
+.venv
+backend/.env
+backend/.pytest_cache
+backend/**/__pycache__
+dist
+node_modules
+*.pyc
+*.log
+start-spotify-project.bat
+start-spotify-project.ps1

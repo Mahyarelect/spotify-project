@@ -2,6 +2,20 @@
 
 Updated from static analysis of `src/` and the Django backend dependency flow.
 
+## Container Deployment Flow
+
+```text
+browser :8080
+  └─→ Nginx frontend
+       ├─→ React/PWA static application
+       ├─→ /api and /admin → Django/Gunicorn :8000
+       ├─→ /static → shared collected-static volume
+       └─→ /media → shared persistent-media volume
+
+Django/Gunicorn
+  └─→ PostgreSQL :5432 → persistent database volume
+```
+
 - **176 frontend TypeScript modules** mapped
 - **117 backend Python modules** inspected
 - **0 frontend circular dependencies** found by the existing Madge analysis

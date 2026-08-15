@@ -8,6 +8,28 @@ A React 19 streaming application with a Django REST Framework backend for authen
 - Python 3.12
 - PostgreSQL 15 or newer
 
+## Docker setup (frontend + backend)
+
+Docker Compose runs the complete application: an Nginx-hosted React/PWA frontend, a Gunicorn/Django backend, and PostgreSQL with persistent database, media, and static-file volumes.
+
+```bash
+copy .env.example .env
+docker compose up --build -d
+docker compose ps
+```
+
+Open [http://localhost:8080](http://localhost:8080). Nginx exposes the frontend and proxies `/api/` and `/admin/` to Django on the same origin. The backend container waits for PostgreSQL, applies migrations, collects static files, and then starts Gunicorn.
+
+Useful commands:
+
+```bash
+docker compose logs -f backend frontend
+docker compose exec backend python manage.py createsuperuser
+docker compose down
+```
+
+Named volumes preserve PostgreSQL and uploads across `docker compose down`. Use `docker compose down --volumes` only when you intentionally want to erase container data. For a public deployment, replace the database password and Django secret, configure the public HTTPS host in `DJANGO_ALLOWED_HOSTS` and `FRONTEND_ORIGIN`, and set `ZARINPAL_CALLBACK_URL` to that public HTTPS origin.
+
 ## Backend setup
 
 ```bash

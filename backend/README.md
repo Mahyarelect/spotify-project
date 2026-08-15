@@ -13,6 +13,8 @@ It also owns verified artist profiles, support tickets/messages, user notificati
 5. In debug mode, run `python manage.py seed_demo_data` (safe to repeat).
 6. Run `python manage.py runserver`.
 
+The repository root also includes `compose.yaml`. It builds this backend with Python 3.12/Gunicorn, waits for the PostgreSQL health check, applies migrations, collects admin static assets into a shared Nginx volume, and persists uploaded media in a named volume.
+
 Health is `GET /api/v1/health/`. In debug mode, OpenAPI documentation is available at `/api/docs/` and `/api/redoc/`.
 
 ## Entitlement integration contract

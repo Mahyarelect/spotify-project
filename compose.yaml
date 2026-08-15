@@ -1,0 +1,65 @@
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spotify}
+      POSTGRES_USER: ${POSTGRES_USER:-spotify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spotify}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-spotify}:${POSTGRES_PASSWORD:-spotify}@database:5432/${POSTGRES_DB:-spotify}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-docker-development-secret-change-before-production}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8080}
+      MEDIA_ROOT: /app/media
+      STATIC_ROOT: /app/staticfiles
+      ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID:-c8d2f8b6-07c1-496c-9f4c-f8e8afae1955}
+      ZARINPAL_API_BASE_URL: ${ZARINPAL_API_BASE_URL:-https://sandbox.zarinpal.com/pg/v4/payment}
+      ZARINPAL_START_PAY_BASE_URL: ${ZARINPAL_START_PAY_BASE_URL:-https://sandbox.zarinpal.com/pg/StartPay}
+      ZARINPAL_CALLBACK_URL: ${ZARINPAL_CALLBACK_URL:-http://localhost:8080/api/v1/subscriptions/zarinpal/callback/}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=2)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - media_data:/srv/media:ro
+      - static_data:/srv/static:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  media_data:
+  static_data:
