@@ -34,6 +34,16 @@ Notable Phase 2 contracts include:
 - `POST /api/v1/auth/password-reset/confirm/`, used by the frontend
   `/reset-password` route
 
+Backend operations contracts include:
+
+- `GET/PATCH /api/v1/artists/<username>/profile/` for verified artist profiles
+- `GET/POST /api/v1/tickets/` plus ticket detail/message endpoints for account owners
+- `PATCH /api/v1/support/tickets/<id>/` for support/admin assignment and status handling
+- `GET /api/v1/notifications/` plus unread-count, mark-read, mark-all-read, and delete endpoints
+- `GET /api/v1/artist/payouts/` for an artist's monthly reports
+- `POST /api/v1/admin/payouts/generate/` and `PATCH /api/v1/admin/payouts/<id>/status/` for admin-only payout audit workflows
+- `PATCH /api/v1/admin/subscription-plans/<code>/` for admin-only plan price changes
+
 ## Frontend setup
 
 ```bash
@@ -77,6 +87,7 @@ Backend tests intentionally require PostgreSQL; SQLite is unsupported. The front
 ## Source-of-truth boundaries
 
 - Django/PostgreSQL owns accounts, credentials, roles, artist applications, follows, preferences, avatars, subscription plans, entitlements, and orders.
+- Django/PostgreSQL also owns artist profiles, support tickets and messages, notifications, monthly artist payout reports, and payout audit status.
 - The frontend renders server-provided plan prices, currencies, durations, and limits. Client guards are UX only.
 - Music catalog, playback simulation, playlists, notifications, tickets, and audit demo data remain local Phase 1 modules. They receive effective entitlement values from the authenticated backend user and must not infer limits from a plan name.
 - Public and private profile DTOs are separate; public responses never include email, demographics, preferences, or subscription expiry.

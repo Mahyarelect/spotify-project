@@ -691,4 +691,65 @@ digraph G {
   "types/artist.ts" -> "types/music.ts";
   "types/artist.ts" -> "types/user.ts";
   "types/subscription.ts" -> "types/user.ts";
+
+  subgraph cluster_backend {
+    label="Django backend";
+    style=filled;
+    color="#14b8a640";
+    fillcolor="#14b8a615";
+    "backend/config/urls.py" [fillcolor="#14b8a6"];
+    "backend/config/settings.py" [fillcolor="#a3a3a3"];
+    "backend/common/permissions" [fillcolor="#a3a3a3"];
+    "backend/common/domain+exceptions" [fillcolor="#a3a3a3"];
+    "backend/accounts/models" [label="accounts models\nUser · ArtistApplication · ArtistProfile", fillcolor="#818cf8"];
+    "backend/accounts/views" [label="accounts APIs\nauth · profiles · verification", fillcolor="#14b8a6"];
+    "backend/accounts/services" [fillcolor="#fb7185"];
+    "backend/subscriptions/models" [label="subscription models\nPlan · Subscription · Order", fillcolor="#818cf8"];
+    "backend/subscriptions/views" [label="subscription APIs\norders · admin pricing", fillcolor="#14b8a6"];
+    "backend/subscriptions/services" [fillcolor="#fb7185"];
+    "backend/music/models" [label="music models\nAlbum · Song · Playlist · Stream", fillcolor="#818cf8"];
+    "backend/music/views" [label="music APIs\ncatalog · playback", fillcolor="#14b8a6"];
+    "backend/support/models" [label="support models\nTicket · Message", fillcolor="#818cf8"];
+    "backend/support/views" [label="support APIs\nowner + staff", fillcolor="#14b8a6"];
+    "backend/notifications/models" [label="Notification", fillcolor="#818cf8"];
+    "backend/notifications/views" [label="notification APIs\nlist · read · delete", fillcolor="#14b8a6"];
+    "backend/notifications/services" [fillcolor="#fb7185"];
+    "backend/payments/models" [label="ArtistPayout", fillcolor="#818cf8"];
+    "backend/payments/views" [label="payout APIs\nartist reports · admin audit", fillcolor="#14b8a6"];
+    "backend/payments/services" [fillcolor="#fb7185"];
+    "PostgreSQL" [shape=cylinder, fillcolor="#a3a3a3"];
+  }
+
+  "backend/config/urls.py" -> "backend/accounts/views";
+  "backend/config/urls.py" -> "backend/subscriptions/views";
+  "backend/config/urls.py" -> "backend/music/views";
+  "backend/config/urls.py" -> "backend/support/views";
+  "backend/config/urls.py" -> "backend/notifications/views";
+  "backend/config/urls.py" -> "backend/payments/views";
+  "backend/accounts/views" -> "backend/accounts/services";
+  "backend/accounts/views" -> "backend/accounts/models";
+  "backend/accounts/services" -> "backend/subscriptions/services";
+  "backend/accounts/services" -> "backend/notifications/services";
+  "backend/subscriptions/views" -> "backend/subscriptions/services";
+  "backend/subscriptions/views" -> "backend/common/permissions";
+  "backend/music/views" -> "backend/music/models";
+  "backend/music/views" -> "backend/subscriptions/services";
+  "backend/support/views" -> "backend/support/models";
+  "backend/support/views" -> "backend/common/permissions";
+  "backend/support/views" -> "backend/notifications/services";
+  "backend/notifications/views" -> "backend/notifications/models";
+  "backend/notifications/services" -> "backend/notifications/models";
+  "backend/payments/views" -> "backend/payments/services";
+  "backend/payments/views" -> "backend/common/permissions";
+  "backend/payments/services" -> "backend/payments/models";
+  "backend/payments/services" -> "backend/music/models";
+  "backend/payments/services" -> "backend/accounts/models";
+  "backend/payments/services" -> "backend/notifications/services";
+  "backend/config/settings.py" -> "PostgreSQL";
+  "backend/accounts/models" -> "PostgreSQL";
+  "backend/subscriptions/models" -> "PostgreSQL";
+  "backend/music/models" -> "PostgreSQL";
+  "backend/support/models" -> "PostgreSQL";
+  "backend/notifications/models" -> "PostgreSQL";
+  "backend/payments/models" -> "PostgreSQL";
 }

@@ -2,6 +2,8 @@
 
 Django REST Framework API backed exclusively by PostgreSQL. It owns authentication, profiles, preferences, follows, artist applications, subscription plans, entitlements, and server-priced orders.
 
+It also owns verified artist profiles, support tickets/messages, user notifications, monthly artist payout reports, and the admin-only payout audit workflow. Support staff can review artists and manage tickets; only administrators can change subscription pricing or generate/review payouts.
+
 ## Local setup
 
 1. Create a PostgreSQL database and user matching `DATABASE_URL`.

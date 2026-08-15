@@ -542,6 +542,85 @@ graph TD
     artistDash --> routes
     adminDash --> routes
 
+    %% === DJANGO BACKEND ===
+    djangoUrls["backend/config/urls.py"]
+    djangoSettings["backend/config/settings.py"]
+    commonPerms["common/permissions.py"]
+    domainErrors["common/domain.py + exceptions.py"]
+
+    accountModels["accounts models<br/>User · ArtistApplication · ArtistProfile"]
+    accountViews["accounts APIs<br/>auth · profiles · artist verification"]
+    accountServices["accounts/services.py"]
+
+    subscriptionModels["subscription models<br/>Plan · Subscription · Order"]
+    subscriptionViews["subscription APIs<br/>plans · orders · admin pricing"]
+    subscriptionServices["subscriptions/services.py"]
+
+    musicModels["music models<br/>Album · Song · Playlist · Stream"]
+    musicViews["music APIs<br/>catalog · playback · artist catalog"]
+
+    supportModels["support models<br/>SupportTicket · TicketMessage"]
+    supportViews["support APIs<br/>owner tickets · staff management"]
+
+    notificationModels["notification model<br/>Notification"]
+    notificationViews["notification APIs<br/>list · unread · read · delete"]
+    notificationServices["notifications/services.py"]
+
+    payoutModels["payment model<br/>ArtistPayout"]
+    payoutViews["payment APIs<br/>artist reports · admin audit/status"]
+    payoutServices["payments/services.py"]
+
+    postgres[("PostgreSQL")]
+
+    djangoUrls --> accountViews
+    djangoUrls --> subscriptionViews
+    djangoUrls --> musicViews
+    djangoUrls --> supportViews
+    djangoUrls --> notificationViews
+    djangoUrls --> payoutViews
+    djangoSettings --> postgres
+
+    accountViews --> accountServices
+    accountViews --> accountModels
+    accountServices --> accountModels
+    accountServices --> subscriptionServices
+    accountServices --> notificationServices
+
+    subscriptionViews --> subscriptionServices
+    subscriptionViews --> subscriptionModels
+    subscriptionViews --> commonPerms
+    subscriptionServices --> subscriptionModels
+
+    musicViews --> musicModels
+    musicViews --> subscriptionServices
+    musicViews --> commonPerms
+
+    supportViews --> supportModels
+    supportViews --> commonPerms
+    supportViews --> notificationServices
+
+    notificationViews --> notificationModels
+    notificationServices --> notificationModels
+
+    payoutViews --> payoutServices
+    payoutViews --> payoutModels
+    payoutViews --> commonPerms
+    payoutServices --> payoutModels
+    payoutServices --> musicModels
+    payoutServices --> accountModels
+    payoutServices --> notificationServices
+
+    accountModels --> postgres
+    subscriptionModels --> postgres
+    musicModels --> postgres
+    supportModels --> postgres
+    notificationModels --> postgres
+    payoutModels --> postgres
+    domainErrors --> accountViews
+    domainErrors --> subscriptionViews
+    domainErrors --> musicViews
+    domainErrors --> payoutViews
+
     %% === STYLING ===
     classDef entry fill:#4ade80,stroke:#16a34a,color:#000
     classDef type fill:#60a5fa,stroke:#2563eb,color:#000
@@ -559,6 +638,10 @@ graph TD
     classDef artistComp fill:#a3e635,stroke:#65a30d,color:#000
     classDef adminComp fill:#ef4444,stroke:#dc2626,color:#000
     classDef page fill:#38bdf8,stroke:#0284c7,color:#000
+    classDef backendView fill:#14b8a6,stroke:#0f766e,color:#000
+    classDef backendModel fill:#818cf8,stroke:#4f46e5,color:#000
+    classDef backendService fill:#fb7185,stroke:#be123c,color:#000
+    classDef infrastructure fill:#a3a3a3,stroke:#525252,color:#000
 
     class main,app entry
     class user,music,sub,notifType,artistType,ticketType,auditType type
@@ -576,3 +659,7 @@ graph TD
     class artistHeader,verifiedBadge,artistWorks,artistStats,artistDashStats,artistDashTable,workForm,uploadAudio,coverUploader artistComp
     class adminSidebar,artistVerifyTable,supportTicketsTable,ticketChatBox,auditPaymentsTable,subPriceForm,revenueCharts adminComp
     class homePage,loginPage,registerPage,artistRegPage,forgotPwPage,profilePage,editProfilePage,settingsPage,subPage,playlistsPage,albumsPage,albumDetailPage,artistPage,playerPage,artistDash,adminDash,notifPage page
+    class djangoUrls,accountViews,subscriptionViews,musicViews,supportViews,notificationViews,payoutViews backendView
+    class accountModels,subscriptionModels,musicModels,supportModels,notificationModels,payoutModels backendModel
+    class accountServices,subscriptionServices,notificationServices,payoutServices backendService
+    class djangoSettings,commonPerms,domainErrors,postgres infrastructure

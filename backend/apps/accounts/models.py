@@ -118,3 +118,29 @@ class ArtistApplication(models.Model):
 
     def __str__(self) -> str:
         return f"{self.artist_name} ({self.status})"
+
+
+class ArtistProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="artist_profile",
+        limit_choices_to={"role": User.Role.ARTIST},
+    )
+    stage_name = models.CharField(max_length=150)
+    genres = models.JSONField(default=list, blank=True)
+    website = models.URLField(blank=True)
+    country = models.CharField(max_length=2, blank=True)
+    payout_currency = models.CharField(max_length=3, default="USD")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        super().clean()
+        if self.user_id and self.user.role != User.Role.ARTIST:
+            raise ValidationError({"user": "Artist profiles can only belong to artist accounts."})
+        self.country = self.country.upper()
+        self.payout_currency = self.payout_currency.upper()
+
+    def __str__(self) -> str:
+        return self.stage_name

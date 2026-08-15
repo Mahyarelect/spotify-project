@@ -7,7 +7,7 @@ from rest_framework import serializers
 from apps.subscriptions.selectors import get_effective_entitlements
 from apps.subscriptions.models import SubscriptionPlan, UserSubscription
 
-from ..models import User, UserPreference
+from ..models import ArtistProfile, User, UserPreference
 
 
 class RejectUnknownFieldsMixin:
@@ -226,3 +226,24 @@ class UserSearchResultSerializer(serializers.ModelSerializer):
             return None
         request = self.context.get("request")
         return request.build_absolute_uri(user.avatar.url) if request else user.avatar.url
+
+
+class ArtistProfileSerializer(RejectUnknownFieldsMixin, serializers.ModelSerializer):
+    username = serializers.CharField(source="user.username", read_only=True)
+    verified = serializers.BooleanField(source="user.artist_verified", read_only=True)
+
+    class Meta:
+        model = ArtistProfile
+        fields = ("username", "stage_name", "genres", "website", "country", "payout_currency", "verified", "created_at", "updated_at")
+        read_only_fields = ("username", "verified", "created_at", "updated_at")
+
+    def validate_genres(self, value):
+        if not isinstance(value, list) or len(value) > 10 or any(not isinstance(item, str) or not item.strip() for item in value):
+            raise serializers.ValidationError("Genres must be a list of at most 10 non-empty strings.")
+        return [item.strip()[:50] for item in value]
+
+    def validate_country(self, value):
+        return value.upper()
+
+    def validate_payout_currency(self, value):
+        return value.upper()

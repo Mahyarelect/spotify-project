@@ -15,6 +15,7 @@ from .views.auth import (
     RegisterView,
 )
 from .views.profile import (
+    ArtistProfileView,
     CurrentUserView,
     FollowView,
     PreferencesView,
@@ -36,6 +37,7 @@ urlpatterns = [
     path("users/search/", UserSearchView.as_view(), name="user-search"),
     path("users/<str:username>/", PublicProfileView.as_view(), name="public-profile"),
     path("users/<str:username>/follow/", FollowView.as_view(), name="follow-user"),
+    path("artists/<str:username>/profile/", ArtistProfileView.as_view(), name="artist-profile-detail"),
     path(
         "admin/artist-applications/",
         ArtistApplicationListView.as_view(),

@@ -9,11 +9,12 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from ..models import User, UserPreference
+from ..models import ArtistProfile, User, UserPreference
 from ..selectors import get_current_user, get_public_profile, search_users
 from ..serializers.profile import (
     AccountDeleteSerializer,
     AvatarUploadRequestSerializer,
+    ArtistProfileSerializer,
     CurrentUserSerializer,
     ProfileUpdateSerializer,
     PublicProfileSerializer,
@@ -22,6 +23,25 @@ from ..serializers.profile import (
     UserPreferenceSerializer,
 )
 from ..services import delete_own_account, follow_user, set_avatar, unfollow_user, update_own_profile
+
+
+class ArtistProfileView(GenericAPIView):
+    serializer_class = ArtistProfileSerializer
+
+    def get_object(self, username):
+        return get_object_or_404(ArtistProfile.objects.select_related("user"), user__username=username, user__artist_verified=True)
+
+    def get(self, request, username):
+        return Response(self.get_serializer(self.get_object(username)).data)
+
+    def patch(self, request, username):
+        profile = self.get_object(username)
+        if profile.user_id != request.user.id:
+            self.permission_denied(request)
+        serializer = self.get_serializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        profile = serializer.save()
+        return Response(self.get_serializer(profile).data)
 
 
 class CurrentUserView(GenericAPIView):

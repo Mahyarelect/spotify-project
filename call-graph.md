@@ -1,9 +1,10 @@
 # Call Graph — Spotify
 
-Generated from static analysis of `src/` using `madge`.
+Updated from static analysis of `src/` and the Django backend dependency flow.
 
-- **146 modules** analyzed
-- **0 circular dependencies** found
+- **176 frontend TypeScript modules** mapped
+- **117 backend Python modules** inspected
+- **0 frontend circular dependencies** found by the existing Madge analysis
 
 ---
 
@@ -394,13 +395,88 @@ EarlyAccessBanner → AlbumCard, routes, useAuth, types/music
 
 ---
 
+## Django Backend Dependency Map
+
+```text
+config/urls.py
+  ├─→ accounts views
+  │    ├─→ accounts services
+  │    │    ├─→ ArtistApplication / ArtistProfile / User
+  │    │    ├─→ subscription entitlement services
+  │    │    └─→ notification creation
+  │    └─→ public/private profile serializers
+  │
+  ├─→ subscriptions views
+  │    ├─→ order and entitlement services
+  │    ├─→ SubscriptionPlan / UserSubscription / SubscriptionOrder
+  │    └─→ IsAdminRole for subscription price changes
+  │
+  ├─→ music views
+  │    ├─→ Album / Song / Playlist / Stream / RecentlyPlayed
+  │    ├─→ entitlement checks for streams, downloads, and playlists
+  │    └─→ owner/artist permissions
+  │
+  ├─→ support views
+  │    ├─→ SupportTicket / TicketMessage
+  │    ├─→ ticket-owner access
+  │    ├─→ IsSupportOrAdmin management access
+  │    └─→ ticket-update notification creation
+  │
+  ├─→ notification views
+  │    └─→ Notification (owner-scoped list, unread count, read, delete)
+  │
+  └─→ payment views
+       ├─→ payout services
+       │    ├─→ Stream aggregation by artist and month
+       │    ├─→ ArtistPayout generation/status transitions
+       │    └─→ monthly financial notifications
+       ├─→ artist-owned reporting endpoint
+       └─→ IsAdminRole generation and audit/status endpoints
+
+All backend model paths terminate at PostgreSQL.
+```
+
+### Backend Role Boundaries
+
+| Workflow | Listener | Artist | Support | Admin |
+|---|---:|---:|---:|---:|
+| Create/view own support tickets | Yes | Yes | Yes | Yes |
+| Manage all support tickets | No | No | Yes | Yes |
+| Review artist applications | No | No | Yes | Yes |
+| Read/update own verified artist profile | No | Yes | No | No |
+| Read own payout reports | No | Yes | No | Yes |
+| Change subscription prices | No | No | No | Yes |
+| Generate or change payout status | No | No | No | Yes |
+
+### Backend Workflow Integrations
+
+```text
+approve artist application
+  ├─→ activate and verify artist user
+  ├─→ create ArtistProfile
+  └─→ create artist-approved Notification
+
+create/reply to support ticket
+  ├─→ persist SupportTicket / TicketMessage
+  └─→ notify subscribed staff or ticket owner
+
+generate monthly payouts
+  ├─→ aggregate Stream rows per verified artist
+  ├─→ calculate and persist ArtistPayout
+  └─→ create monthly-financial Notification
+
+update payout status
+  └─→ enforce pending → approved/disputed → paid transition rules
+```
+
+---
+
 ## Files Generated
 
 | File | Format | Usage |
 |---|---|---|
 | `call-graph.mmd` | Mermaid | GitHub Markdown, VS Code preview |
 | `call-graph.dot` | Graphviz DOT | `dot -Tsvg call-graph.dot -o call-graph.svg` |
-| `call-graph.json` | JSON (madge) | Raw dependency data |
 
 ### View the Graph
 

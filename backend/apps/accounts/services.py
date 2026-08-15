@@ -15,7 +15,7 @@ from apps.common.events import (
 from apps.subscriptions.services import ensure_free_subscription
 from apps.subscriptions.selectors import get_effective_entitlements
 
-from .models import ArtistApplication, User, UserPreference
+from .models import ArtistApplication, ArtistProfile, User, UserPreference
 
 
 def _email_exists_error():
@@ -140,6 +140,18 @@ def approve_artist_application(*, application_id, reviewer: User) -> ArtistAppli
     user.is_active = True
     user.artist_verified = True
     user.save(update_fields=("is_active", "artist_verified", "updated_at"))
+    ArtistProfile.objects.get_or_create(
+        user=user,
+        defaults={"stage_name": application.artist_name},
+    )
+    from apps.notifications.models import Notification
+    from apps.notifications.services import create_notification
+    create_notification(
+        user=user, type=Notification.Type.ARTIST_APPROVED,
+        title="Artist application approved",
+        message=f"Your application as {application.artist_name} was approved.",
+        link="/artist-dashboard",
+    )
     transaction.on_commit(
         lambda: artist_application_approved.send_robust(sender=ArtistApplication, application_id=application.id)
     )
@@ -175,6 +187,14 @@ def reject_artist_application(*, application_id, reviewer: User, reason: str) ->
     user.is_active = False
     user.artist_verified = False
     user.save(update_fields=("is_active", "artist_verified", "updated_at"))
+    from apps.notifications.models import Notification
+    from apps.notifications.services import create_notification
+    create_notification(
+        user=user, type=Notification.Type.ARTIST_REJECTED,
+        title="Artist application update",
+        message=f"Your application was rejected: {reason}",
+        link="/register-artist",
+    )
     transaction.on_commit(
         lambda: artist_application_rejected.send_robust(sender=ArtistApplication, application_id=application.id)
     )
