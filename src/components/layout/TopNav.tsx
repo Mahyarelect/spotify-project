@@ -37,7 +37,15 @@ export function TopNav() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const items = useMemo(() => getNavigationItems(user, t), [t, user]);
-  const unreadCount = user ? getUnreadCount(user.id) : 0;
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+    getUnreadCount().then(setUnreadCount).catch(() => setUnreadCount(0));
+  }, [location.pathname, user]);
 
   const profileItems = items.filter((item) =>
     item.kind === "action"

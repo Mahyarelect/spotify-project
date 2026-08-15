@@ -30,6 +30,19 @@ class IsAdminRole(BasePermission):
         return bool(user.is_authenticated and user.is_staff and user.role == User.Role.ADMIN)
 
 
+class IsVerifiedArtist(BasePermission):
+    message = "Only verified artists can manage published music."
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(
+            user.is_authenticated
+            and user.is_active
+            and user.role == User.Role.ARTIST
+            and user.artist_verified
+        )
+
+
 class AllowedRoles(BasePermission):
     def has_permission(self, request, view):
         return bool(

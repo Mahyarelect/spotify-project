@@ -1,4 +1,4 @@
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Sum
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.accounts.models import User
+from apps.common.permissions import IsVerifiedArtist
 from apps.subscriptions.permissions import HasPlanFeature
 from apps.subscriptions.selectors import get_effective_entitlements
 
@@ -38,7 +39,7 @@ class AlbumListCreateView(ListCreateAPIView):
     def get_permissions(self):
         if self.request.method == "GET":
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsVerifiedArtist()]
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -62,6 +63,11 @@ class AlbumDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AlbumSerializer
     permission_classes = (AllowAny,)
     lookup_field = "pk"
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsVerifiedArtist()]
 
     def get_serializer_class(self):
         if self.request.method in ("PUT", "PATCH"):
@@ -92,7 +98,7 @@ class SongListCreateView(ListCreateAPIView):
     def get_permissions(self):
         if self.request.method == "GET":
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsVerifiedArtist()]
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -116,6 +122,11 @@ class SongDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = SongSerializer
     permission_classes = (AllowAny,)
     lookup_field = "pk"
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsVerifiedArtist()]
 
     def get_serializer_class(self):
         if self.request.method in ("PUT", "PATCH"):
@@ -255,7 +266,7 @@ class PlaylistSongRemoveView(GenericAPIView):
 
 
 class SongAudioUploadView(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsVerifiedArtist,)
     parser_classes = (MultiPartParser, FormParser)
     serializer_class = SongCreateUpdateSerializer
 
@@ -265,6 +276,24 @@ class SongAudioUploadView(GenericAPIView):
         if not audio:
             return Response(
                 {"audio_file": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        extension = audio.name.rsplit(".", 1)[-1].lower() if "." in audio.name else ""
+        allowed_types = {
+            "mp3": {"audio/mpeg", "audio/mp3"},
+            "wav": {"audio/wav", "audio/x-wav", "audio/wave"},
+            "flac": {"audio/flac", "audio/x-flac"},
+        }
+        content_type = (getattr(audio, "content_type", "") or "").lower()
+        if extension not in allowed_types or content_type not in allowed_types[extension]:
+            return Response(
+                {"audio_file": ["Only MP3, WAV, and FLAC audio files are supported."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        max_size = 50 * 1024 * 1024
+        if audio.size > max_size:
+            return Response(
+                {"audio_file": ["Audio files must not exceed 50 MB."]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         song.audio_file = audio
@@ -421,7 +450,7 @@ class ArtistProfileView(GenericAPIView):
             .filter(song_count=1)
             .select_related("artist")
         )
-        total_streams = songs.aggregate(total=Count("play_count"))["total"] or 0
+        total_streams = songs.aggregate(total=Sum("play_count"))["total"] or 0
 
         return Response(
             {

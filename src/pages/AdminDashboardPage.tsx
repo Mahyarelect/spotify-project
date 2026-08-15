@@ -70,15 +70,16 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setTickets(getAllTickets());
     setPayments(getAuditPaymentsByMonth(getCurrentMonth()));
     getRevenueStats().then(setRevenueStats);
     Promise.all([
       getPendingApplications(controller.signal),
       getPlans(controller.signal),
-    ]).then(([nextApplications, nextPlans]) => {
+      getAllTickets(controller.signal),
+    ]).then(([nextApplications, nextPlans, nextTickets]) => {
       setApplications(nextApplications);
       setPlans(nextPlans);
+      setTickets(nextTickets);
       setAdminError(null);
     }).catch((caught) => {
       if (!controller.signal.aborted) {
@@ -112,23 +113,26 @@ export default function AdminDashboardPage() {
     setSelectedTicket(ticket);
   }
 
-  function handleSendMessage(content: string) {
+  async function handleSendMessage(content: string) {
     if (!selectedTicket || !user) return;
-    const updated = addTicketMessage(
-      selectedTicket.id,
-      user.id,
-      user.displayName,
-      content
-    );
-    setSelectedTicket(updated);
-    triggerRefresh();
+    try {
+      const updated = await addTicketMessage(selectedTicket.id, content);
+      setSelectedTicket(updated);
+      triggerRefresh();
+    } catch (caught) {
+      setAdminError(caught instanceof Error ? caught.message : "Unable to send message.");
+    }
   }
 
-  function handleUpdateTicketStatus(status: TicketStatus) {
+  async function handleUpdateTicketStatus(status: TicketStatus) {
     if (!selectedTicket) return;
-    const updated = updateTicketStatus(selectedTicket.id, status);
-    setSelectedTicket(updated);
-    triggerRefresh();
+    try {
+      const updated = await updateTicketStatus(selectedTicket.id, status);
+      setSelectedTicket(updated);
+      triggerRefresh();
+    } catch (caught) {
+      setAdminError(caught instanceof Error ? caught.message : "Unable to update ticket.");
+    }
   }
 
   async function handleGenerateAudit() {

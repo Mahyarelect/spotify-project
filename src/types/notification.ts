@@ -4,13 +4,11 @@ export type NotificationType =
   | "artist_approved"
   | "artist_rejected"
   | "monthly_financial"
-  | "new_ticket"
-  | "artist_verification"
-  | "admin_announcement";
+  | "ticket_update"
+  | "announcement";
 
 export interface Notification {
   id: string;
-  userId: string;
   type: NotificationType;
   title: string;
   message: string;

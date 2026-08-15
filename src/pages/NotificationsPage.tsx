@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import {
@@ -17,34 +17,53 @@ import type { Notification } from "@/types/notification";
 export default function NotificationsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>(() =>
-    user ? getNotifications(user.id) : []
-  );
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getNotifications()
+      .then((items) => {
+        setNotifications(items);
+        setError(null);
+      })
+      .catch((caught) => setError(caught instanceof Error ? caught.message : "Unable to load notifications."));
+  }, [user]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleMarkRead = useCallback(
-    (id: string) => {
+    async (id: string) => {
       if (!user) return;
-      markAsRead(user.id, id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
+      try {
+        await markAsRead(id);
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Unable to update notification.");
+      }
     },
     [user]
   );
 
-  const handleMarkAllRead = useCallback(() => {
+  const handleMarkAllRead = useCallback(async () => {
     if (!user) return;
-    markAllAsRead(user.id);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to update notifications.");
+    }
   }, [user]);
 
   const handleDelete = useCallback(
-    (id: string) => {
+    async (id: string) => {
       if (!user) return;
-      deleteNotification(user.id, id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      try {
+        await deleteNotification(id);
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Unable to delete notification.");
+      }
     },
     [user]
   );
@@ -68,6 +87,8 @@ export default function NotificationsPage() {
           ) : undefined
         }
       />
+
+      {error && <p role="alert" className="rounded-lg bg-red-950/50 p-3 text-sm text-red-300">{error}</p>}
 
       {notifications.length === 0 ? (
         <EmptyNotificationsState />

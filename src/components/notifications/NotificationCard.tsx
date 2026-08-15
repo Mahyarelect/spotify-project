@@ -7,7 +7,6 @@ import {
   XCircle,
   DollarSign,
   MessageSquare,
-  UserCheck,
   Megaphone,
   Trash2,
 } from "lucide-react";
@@ -43,17 +42,12 @@ const TYPE_CONFIG: Record<
     color: "text-blue-400",
     bg: "bg-blue-400/10",
   },
-  new_ticket: {
+  ticket_update: {
     icon: MessageSquare,
     color: "text-orange-400",
     bg: "bg-orange-400/10",
   },
-  artist_verification: {
-    icon: UserCheck,
-    color: "text-purple-400",
-    bg: "bg-purple-400/10",
-  },
-  admin_announcement: {
+  announcement: {
     icon: Megaphone,
     color: "text-cyan-400",
     bg: "bg-cyan-400/10",

@@ -1,90 +1,74 @@
-import type { SupportTicket, TicketMessage, TicketStatus, TicketPriority } from "@/types/ticket";
-import { getTickets, saveTickets } from "./storage";
+import { apiRequest } from "@/lib/api/httpClient";
+import type { SupportTicket, TicketPriority, TicketStatus } from "@/types/ticket";
 
-function createId(prefix: string): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return `${prefix}_${crypto.randomUUID()}`;
-  }
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+interface TicketDto {
+  id: string;
+  created_by: string;
+  user_name: string;
+  subject: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  messages: Array<{
+    id: string;
+    sender: string;
+    sender_name: string;
+    content: string;
+    created_at: string;
+  }>;
+  created_at: string;
+  updated_at: string;
 }
 
-export function getAllTickets(): SupportTicket[] {
-  return getTickets();
+function mapTicket(dto: TicketDto): SupportTicket {
+  return {
+    id: dto.id,
+    userId: dto.created_by,
+    userName: dto.user_name,
+    subject: dto.subject,
+    status: dto.status,
+    priority: dto.priority,
+    messages: dto.messages.map((message) => ({
+      id: message.id,
+      senderId: message.sender,
+      senderName: message.sender_name,
+      content: message.content,
+      createdAt: message.created_at,
+    })),
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  };
 }
 
-export function getTicketById(ticketId: string): SupportTicket | null {
-  return getTickets().find((t) => t.id === ticketId) ?? null;
+export async function getAllTickets(signal?: AbortSignal): Promise<SupportTicket[]> {
+  const data = await apiRequest<TicketDto[]>("tickets/", { signal });
+  return data.map(mapTicket);
 }
 
-export function getTicketsByUser(userId: string): SupportTicket[] {
-  return getTickets().filter((t) => t.userId === userId);
+export async function getTicketById(ticketId: string): Promise<SupportTicket> {
+  return mapTicket(await apiRequest<TicketDto>(`tickets/${ticketId}/`));
 }
 
-export function createTicket(data: {
-  userId: string;
-  userName: string;
+export async function createTicket(data: {
   subject: string;
   message: string;
   priority?: TicketPriority;
-}): SupportTicket {
-  const tickets = getTickets();
-  const now = new Date().toISOString();
-  const ticket: SupportTicket = {
-    id: createId("ticket"),
-    userId: data.userId,
-    userName: data.userName,
-    subject: data.subject,
-    status: "open",
-    priority: data.priority ?? "medium",
-    messages: [
-      {
-        id: createId("msg"),
-        senderId: data.userId,
-        senderName: data.userName,
-        content: data.message,
-        createdAt: now,
-      },
-    ],
-    createdAt: now,
-    updatedAt: now,
-  };
-  tickets.push(ticket);
-  saveTickets(tickets);
-  return ticket;
+}): Promise<SupportTicket> {
+  return mapTicket(await apiRequest<TicketDto>("tickets/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  }));
 }
 
-export function addTicketMessage(
-  ticketId: string,
-  senderId: string,
-  senderName: string,
-  content: string
-): SupportTicket {
-  const tickets = getTickets();
-  const idx = tickets.findIndex((t) => t.id === ticketId);
-  if (idx === -1) throw new Error("Ticket not found");
-
-  const msg: TicketMessage = {
-    id: createId("msg"),
-    senderId,
-    senderName,
-    content,
-    createdAt: new Date().toISOString(),
-  };
-  tickets[idx].messages.push(msg);
-  tickets[idx].updatedAt = new Date().toISOString();
-  saveTickets(tickets);
-  return tickets[idx];
+export async function addTicketMessage(ticketId: string, content: string): Promise<SupportTicket> {
+  return mapTicket(await apiRequest<TicketDto>(`tickets/${ticketId}/messages/`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  }));
 }
 
-export function updateTicketStatus(
-  ticketId: string,
-  status: TicketStatus
-): SupportTicket {
-  const tickets = getTickets();
-  const idx = tickets.findIndex((t) => t.id === ticketId);
-  if (idx === -1) throw new Error("Ticket not found");
-  tickets[idx].status = status;
-  tickets[idx].updatedAt = new Date().toISOString();
-  saveTickets(tickets);
-  return tickets[idx];
+export async function updateTicketStatus(ticketId: string, status: TicketStatus): Promise<SupportTicket> {
+  return mapTicket(await apiRequest<TicketDto>(`support/tickets/${ticketId}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  }));
 }

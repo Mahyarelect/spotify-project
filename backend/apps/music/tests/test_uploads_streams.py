@@ -44,6 +44,7 @@ def create_artist(email=None, username=None):
         birth_date=date(1995, 6, 15),
         role=User.Role.ARTIST,
         username=username,
+        artist_verified=True,
     )
 
 
@@ -124,6 +125,33 @@ class TestSongAudioUpload:
         )
         assert response.status_code == 400
 
+    @pytest.mark.parametrize(
+        ("name", "content_type"),
+        (("track.exe", "application/octet-stream"), ("track.mp3", "text/plain")),
+    )
+    def test_rejects_unsupported_or_mismatched_audio(self, name, content_type):
+        artist = create_artist()
+        song = SongFactory(artist=artist)
+        audio = SimpleUploadedFile(name, b"not audio", content_type=content_type)
+        response = client_for(artist).put(
+            f"/api/v1/music/songs/{song.pk}/upload-audio/",
+            {"audio_file": audio},
+            format="multipart",
+        )
+        assert response.status_code == 400
+
+    def test_unverified_artist_cannot_upload_audio(self):
+        artist = create_artist()
+        artist.artist_verified = False
+        artist.save(update_fields=("artist_verified",))
+        song = SongFactory(artist=artist)
+        response = client_for(artist).put(
+            f"/api/v1/music/songs/{song.pk}/upload-audio/",
+            {"audio_file": fake_audio()},
+            format="multipart",
+        )
+        assert response.status_code == 403
+
 
 # ── Cover Image Upload ──────────────────────────────────────────────────
 
@@ -152,6 +180,18 @@ class TestCoverImageUpload:
         response = client_for(artist).post("/api/v1/music/songs/", payload, format="multipart")
         assert response.status_code == 201
         assert response.data["cover_image"] is not None
+
+    @pytest.mark.parametrize("endpoint", ("/api/v1/music/albums/", "/api/v1/music/songs/"))
+    def test_unverified_artist_cannot_publish_music(self, endpoint):
+        artist = create_artist()
+        artist.artist_verified = False
+        artist.save(update_fields=("artist_verified",))
+        payload = (
+            {"title": "Album", "cover_color": "#123456", "release_date": "2026-08-15"}
+            if endpoint.endswith("albums/")
+            else {"title": "Song", "duration_sec": 180, "cover_color": "#123456"}
+        )
+        assert client_for(artist).post(endpoint, payload, format="json").status_code == 403
 
 
 # ── Stream Tracking ─────────────────────────────────────────────────────
@@ -221,6 +261,14 @@ class TestStreamCreate:
             format="json",
         )
         assert response.status_code == 404
+
+    def test_artist_profile_sums_song_play_counts(self):
+        artist = create_artist(username="streaming_artist")
+        SongFactory(artist=artist, play_count=7)
+        SongFactory(artist=artist, play_count=11)
+        response = APIClient().get(f"/api/v1/music/artists/{artist.username}/")
+        assert response.status_code == 200
+        assert response.data["total_streams"] == 18
 
 
 # ── Download Permission ─────────────────────────────────────────────────
