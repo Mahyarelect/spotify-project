@@ -4,6 +4,7 @@ import {
   Disc3,
   Gauge,
   Home,
+  Headphones,
   ListMusic,
   LogIn,
   LogOut,
@@ -60,6 +61,7 @@ export function getNavigationItems(user: User | null, t: Translations): Navigati
   items.push(
     { kind: "route", label: t.nav.playlists, to: ROUTES.PLAYLISTS, icon: ListMusic },
     { kind: "route", label: t.nav.albums, to: ROUTES.ALBUMS, icon: Disc3 },
+    { kind: "route", label: t.nav.groupListening, to: ROUTES.GROUP_LISTENING, icon: Headphones },
     { kind: "route", label: t.nav.notifications, to: ROUTES.NOTIFICATIONS, icon: Bell },
     { kind: "route", label: t.nav.profile, to: ROUTES.PROFILE, icon: UserRound },
   );

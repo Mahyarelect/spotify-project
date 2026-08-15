@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
+    "channels",
     "apps.common",
     "apps.accounts",
     "apps.subscriptions",
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
     "apps.support",
     "apps.notifications",
     "apps.payments",
+    "apps.listening",
 ]
 
 MIDDLEWARE = [
@@ -100,6 +102,15 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+
+REDIS_URL = os.getenv("REDIS_URL")
+CHANNEL_LAYERS = {
+    "default": (
+        {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [REDIS_URL]}}
+        if REDIS_URL
+        else {"BACKEND": "channels.layers.InMemoryChannelLayer"}
+    )
+}
 
 DATABASES = {
     "default": _postgres_database(

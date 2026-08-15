@@ -10,7 +10,7 @@ A React 19 streaming application with a Django REST Framework backend for authen
 
 ## Docker setup (frontend + backend)
 
-Docker Compose runs the complete application: an Nginx-hosted React/PWA frontend, a Gunicorn/Django backend, and PostgreSQL with persistent database, media, and static-file volumes.
+Docker Compose runs the complete application: an Nginx-hosted React/PWA frontend, a Daphne/Django backend, PostgreSQL with persistent database, media, and static-file volumes, and Redis for ephemeral realtime group-listening events.
 
 ```bash
 copy .env.example .env
@@ -54,6 +54,7 @@ Notable Phase 2 contracts include:
 - `POST /api/v1/subscriptions/orders/` for server-priced upgrades and renewals;
   order responses include the server-calculated `projected_expires_at`
 - `POST /api/v1/subscriptions/orders/<id>/pay/` to create a Zarinpal authority and return its StartPay URL; Zarinpal calls `GET /api/v1/subscriptions/zarinpal/callback/`, which verifies the authority and exact server-snapshotted IRR amount before activation
+- `POST /api/v1/listening-groups/` creates a temporary group and `GET /api/v1/listening-groups/<invite>/` resolves an invite; authenticated members connect to `/ws/listening/<invite>/` for synchronized play, pause, seek, song changes, and presence updates
 - `POST /api/v1/auth/password-reset/confirm/`, used by the frontend
   `/reset-password` route
 
@@ -80,6 +81,8 @@ npm run dev
 ### Progressive Web App
 
 Production builds are installable PWAs. The manifest includes standard and maskable icons, standalone display metadata, and mobile theme settings. The service worker precaches the application shell and provides an offline navigation fallback while deliberately excluding authenticated `/api/` responses and uploaded `/media/` content from runtime caching.
+
+WebSocket traffic under `/ws/` is never handled by the service worker or browser Cache Storage. Group state is live and ephemeral; Redis carries events between backend processes, while PostgreSQL holds a room only until its last connected member leaves.
 
 Service workers run only in production builds. Test locally with `npm run build` followed by `npm run preview`, then use the browser's Application panel to inspect installation, caching, offline navigation, and updates.
 

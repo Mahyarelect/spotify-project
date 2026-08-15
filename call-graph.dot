@@ -714,6 +714,8 @@ digraph G {
     "backend/subscriptions/views" [label="subscription APIs\norders · Zarinpal callback · admin pricing", fillcolor="#14b8a6"];
     "backend/subscriptions/services" [fillcolor="#fb7185"];
     "Zarinpal sandbox" [label="Zarinpal\nrequest · StartPay · verify", fillcolor="#f59e0b"];
+    "backend/listening/consumer" [label="group listening WebSocket\nplay · pause · seek · presence", fillcolor="#14b8a6"];
+    "Redis" [label="Redis channel layer", fillcolor="#ef4444"];
     "backend/music/models" [label="music models\nAlbum · Song · Playlist · Stream", fillcolor="#818cf8"];
     "backend/music/views" [label="music APIs\ncatalog · playback", fillcolor="#14b8a6"];
     "backend/support/models" [label="support models\nTicket · Message", fillcolor="#818cf8"];
@@ -739,6 +741,10 @@ digraph G {
   "backend/accounts/services" -> "backend/notifications/services";
   "backend/subscriptions/views" -> "backend/subscriptions/services";
   "backend/subscriptions/services" -> "Zarinpal sandbox";
+  "backend/config/urls.py" -> "backend/listening/consumer";
+  "backend/listening/consumer" -> "Redis";
+  "backend/listening/consumer" -> "backend/music/models";
+  "backend/listening/consumer" -> "PostgreSQL";
   "backend/subscriptions/views" -> "backend/common/permissions";
   "backend/music/views" -> "backend/music/models";
   "backend/music/views" -> "backend/subscriptions/services";

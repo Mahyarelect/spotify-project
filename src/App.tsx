@@ -27,6 +27,7 @@ import AlbumDetailPage from "@/pages/AlbumDetailPage";
 import ArtistPage from "@/pages/ArtistPage";
 import PlayerPage from "@/pages/PlayerPage";
 import NotificationsPage from "@/pages/NotificationsPage";
+import GroupListeningPage from "@/pages/GroupListeningPage";
 
 export default function App() {
   return (
@@ -50,6 +51,8 @@ export default function App() {
                 <Route path={ROUTES.ARTIST} element={<ArtistPage />} />
                 <Route path={ROUTES.PLAYER} element={<PlayerPage />} />
                 <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
+                <Route path={ROUTES.GROUP_LISTENING} element={<GroupListeningPage />} />
+                <Route path={ROUTES.GROUP_LISTENING_ROOM} element={<GroupListeningPage />} />
                 <Route element={<RoleRoute allow={["artist"]} />}>
                   <Route path={ROUTES.ARTIST_DASHBOARD} element={<ArtistDashboardPage />} />
                 </Route>

@@ -8,4 +8,4 @@ if [ "${SEED_DEMO_DATA:-false}" = "true" ]; then
   python manage.py seed_demo_data
 fi
 
-exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers "${GUNICORN_WORKERS:-3}" --timeout "${GUNICORN_TIMEOUT:-60}"
+exec daphne -b 0.0.0.0 -p 8000 config.asgi:application

@@ -23,6 +23,8 @@ export const ROUTES = {
   PLAYER: "/player/:songId",
   MUSIC_LIBRARY: "/music",
   NOTIFICATIONS: "/notifications",
+  GROUP_LISTENING: "/listen",
+  GROUP_LISTENING_ROOM: "/listen/:inviteCode",
 } as const;
 
 export const ROLE_HOME_ROUTE: Record<Role, string> = {

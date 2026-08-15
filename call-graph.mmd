@@ -562,6 +562,8 @@ graph TD
     subscriptionViews["subscription APIs<br/>plans · orders · Zarinpal callback · admin pricing"]
     subscriptionServices["subscriptions/services.py"]
     zarinpalGateway["Zarinpal gateway<br/>request · StartPay · verify"]
+    listeningConsumer["group listening WebSocket<br/>play · pause · seek · presence"]
+    redis["Redis channel layer"]
 
     musicModels["music models<br/>Album · Song · Playlist · Stream"]
     musicViews["music APIs<br/>catalog · playback · artist catalog"]
@@ -598,6 +600,10 @@ graph TD
     subscriptionViews --> commonPerms
     subscriptionServices --> subscriptionModels
     subscriptionServices --> zarinpalGateway
+    djangoUrls --> listeningConsumer
+    listeningConsumer --> redis
+    listeningConsumer --> musicModels
+    listeningConsumer --> postgres
 
     musicViews --> musicModels
     musicViews --> subscriptionServices

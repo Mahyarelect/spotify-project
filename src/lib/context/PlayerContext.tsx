@@ -45,6 +45,7 @@ interface PlayerContextType extends PlayerState {
   reorderQueue: (from: number, to: number) => void;
   stop: () => void;
   clearStreamError: () => void;
+  syncFromGroup: (song: Song | null, isPlaying: boolean, position: number) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -86,6 +87,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const stateRef = useRef(state);
   stateRef.current = state;
   const songIdRef = useRef<string | null>(null);
+  const pendingGroupPositionRef = useRef<number | null>(null);
 
   // Persist volume, shuffle, repeatMode
   useEffect(() => {
@@ -141,6 +143,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       songIdRef.current = song.id;
       audio.src = src;
       audio.load();
+      const applyPosition = () => {
+        const position = pendingGroupPositionRef.current;
+        if (position !== null) {
+          audio.currentTime = Math.max(0, Math.min(position, song.durationSec));
+          pendingGroupPositionRef.current = null;
+        }
+      };
+      audio.addEventListener("loadedmetadata", applyPosition, { once: true });
+      applyPosition();
       if (state.isPlaying) {
         audio.play().catch(() => {});
       }
@@ -416,9 +427,30 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, streamError: null }));
   }, []);
 
+  const syncFromGroup = useCallback((song: Song | null, isPlaying: boolean, position: number) => {
+    const safePosition = Math.max(0, Math.min(position, song?.durationSec ?? 0));
+    pendingGroupPositionRef.current = safePosition;
+    const audio = getAudioElement();
+    if (songIdRef.current === song?.id) {
+      audio.currentTime = safePosition;
+      pendingGroupPositionRef.current = null;
+    }
+    setState((prev) => ({
+      ...prev,
+      currentSong: song,
+      queue: song ? [song] : [],
+      currentIndex: song ? 0 : -1,
+      isPlaying: Boolean(song && isPlaying),
+      progress: safePosition,
+      streamError: null,
+      sourcePlaylistId: null,
+    }));
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (window.location.pathname === "/listen" || window.location.pathname.startsWith("/listen/")) return;
       const target = e.target as HTMLElement;
       if (
         target.tagName === "INPUT" ||
@@ -464,6 +496,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         reorderQueue,
         stop,
         clearStreamError,
+        syncFromGroup,
       }}
     >
       {children}

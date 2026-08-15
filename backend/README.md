@@ -2,7 +2,7 @@
 
 Django REST Framework API backed exclusively by PostgreSQL. It owns authentication, profiles, preferences, follows, artist applications, subscription plans, entitlements, and server-priced orders.
 
-It also owns verified artist profiles, support tickets/messages, user notifications, monthly artist payout reports, and the admin-only payout audit workflow. Support staff can review artists and manage tickets; only administrators can change subscription pricing or generate/review payouts.
+It also owns verified artist profiles, support tickets/messages, user notifications, monthly artist payout reports, the admin-only payout audit workflow, and temporary realtime listening groups. Support staff can review artists and manage tickets; only administrators can change subscription pricing or generate/review payouts.
 
 ## Local setup
 
@@ -13,7 +13,11 @@ It also owns verified artist profiles, support tickets/messages, user notificati
 5. In debug mode, run `python manage.py seed_demo_data` (safe to repeat).
 6. Run `python manage.py runserver`.
 
-The repository root also includes `compose.yaml`. It builds this backend with Python 3.12/Gunicorn, waits for the PostgreSQL health check, applies migrations, collects admin static assets into a shared Nginx volume, and persists uploaded media in a named volume.
+The repository root also includes `compose.yaml`. It builds this backend with Python 3.12/Daphne, waits for PostgreSQL and Redis health checks, applies migrations, collects admin static assets into a shared Nginx volume, and persists uploaded media in a named volume.
+
+## Realtime group listening
+
+Authenticated users create or resolve rooms over REST and connect to `/ws/listening/<invite_code>/` using WebSocket subprotocols `spotify.jwt` and their access token. Django Channels validates the token, Redis fans out state changes, and PostgreSQL serializes each room update. The server calculates playback progress from the last state-change timestamp and periodically corrects client drift. Membership counts connections per user, so multiple tabs are safe; after the final connection closes, the room and memberships are deleted transactionally.
 
 Health is `GET /api/v1/health/`. In debug mode, OpenAPI documentation is available at `/api/docs/` and `/api/redoc/`.
 

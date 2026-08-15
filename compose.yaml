@@ -31,8 +31,11 @@ services:
       ZARINPAL_START_PAY_BASE_URL: ${ZARINPAL_START_PAY_BASE_URL:-https://sandbox.zarinpal.com/pg/StartPay}
       ZARINPAL_CALLBACK_URL: ${ZARINPAL_CALLBACK_URL:-http://localhost:8080/api/v1/subscriptions/zarinpal/callback/}
       SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - media_data:/app/media
@@ -43,6 +46,16 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
   frontend:

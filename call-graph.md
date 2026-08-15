@@ -12,8 +12,24 @@ browser :8080
        ├─→ /static → shared collected-static volume
        └─→ /media → shared persistent-media volume
 
-Django/Gunicorn
+Django/Daphne
   └─→ PostgreSQL :5432 → persistent database volume
+```
+
+### Realtime Group Listening
+
+```text
+GroupListeningPage
+  ├─→ REST create/resolve invite → listening views → ListeningGroup
+  ├─→ WebSocket /ws/listening/<invite>
+  │    ├─→ JWT subprotocol middleware
+  │    ├─→ ListeningGroupConsumer
+  │    ├─→ Redis channel layer → all connected members
+  │    └─→ play · pause · seek · song · presence state
+  └─→ PlayerContext.syncFromGroup() → shared HTMLAudioElement
+
+last WebSocket disconnect
+  └─→ decrement connection count → no active connections → delete temporary group
 ```
 
 - **176 frontend TypeScript modules** mapped
