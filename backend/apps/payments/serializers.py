@@ -32,3 +32,16 @@ class PayoutStatusSerializer(RejectUnknownFieldsMixin, serializers.Serializer):
             raise serializers.ValidationError({"provider_reference": ["Required when marking a payout paid."]})
         return attrs
 
+
+class RevenueTierSerializer(serializers.Serializer):
+    tier = serializers.CharField()
+    count = serializers.IntegerField()
+    revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class RevenueStatsSerializer(serializers.Serializer):
+    total_revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
+    total_streams = serializers.IntegerField()
+    paid_amount = serializers.DecimalField(max_digits=14, decimal_places=2)
+    pending_amount = serializers.DecimalField(max_digits=14, decimal_places=2)
+    by_tier = RevenueTierSerializer(many=True)

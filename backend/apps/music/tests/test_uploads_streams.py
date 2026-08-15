@@ -104,7 +104,7 @@ class TestSongAudioUpload:
             {"audio_file": fake_audio()},
             format="multipart",
         )
-        assert response.status_code == 404
+        assert response.status_code == 403
 
     def test_upload_audio_requires_auth(self):
         song = SongFactory()
@@ -266,7 +266,7 @@ class TestStreamCreate:
         artist = create_artist(username="streaming_artist")
         SongFactory(artist=artist, play_count=7)
         SongFactory(artist=artist, play_count=11)
-        response = APIClient().get(f"/api/v1/music/artists/{artist.username}/")
+        response = client_for(artist).get(f"/api/v1/music/artists/{artist.username}/")
         assert response.status_code == 200
         assert response.data["total_streams"] == 18
 

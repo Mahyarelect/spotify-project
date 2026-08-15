@@ -5,6 +5,6 @@ export interface AuditPayment {
   month: string;
   totalStreams: number;
   amount: number;
-  status: "pending" | "paid" | "disputed";
+  status: "pending" | "approved" | "paid" | "disputed";
   paidAt?: string;
 }

@@ -113,6 +113,7 @@ export default function ArtistDashboardPage() {
           title: data.title,
           genre: data.genre || undefined,
           lyrics: data.lyrics || undefined,
+          collaborators: data.collaborators.split(",").map((name) => name.trim()).filter(Boolean),
         });
       } else {
         const album = await createAlbum({
@@ -129,6 +130,7 @@ export default function ArtistDashboardPage() {
           durationSec: data.durationSec || 210,
           coverColor: data.coverColor || "#1a1a2e",
           lyrics: data.lyrics || undefined,
+          collaborators: data.collaborators.split(",").map((name) => name.trim()).filter(Boolean),
           genre: data.genre || undefined,
           releaseYear: data.releaseYear ? parseInt(data.releaseYear) : undefined,
         });

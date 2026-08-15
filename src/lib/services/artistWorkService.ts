@@ -17,6 +17,7 @@ interface SongResponse {
   has_audio: boolean;
   play_count: number;
   lyrics: string;
+  collaborators: string[];
   genre: string;
   release_year: number | null;
   track_number: number | null;
@@ -51,6 +52,7 @@ function mapSong(raw: SongResponse): Song {
     hasAudio: raw.has_audio,
     playCount: raw.play_count,
     lyrics: raw.lyrics || undefined,
+    collaborators: raw.collaborators,
     genre: raw.genre || undefined,
     releaseYear: raw.release_year ?? undefined,
   };
@@ -108,6 +110,7 @@ export interface CreateSongData {
   coverColor: string;
   coverImage?: File;
   lyrics?: string;
+  collaborators?: string[];
   genre?: string;
   releaseYear?: number;
 }
@@ -119,6 +122,7 @@ export async function createSong(data: CreateSongData): Promise<Song> {
   formData.append("duration_sec", String(data.durationSec));
   formData.append("cover_color", data.coverColor);
   if (data.lyrics) formData.append("lyrics", data.lyrics);
+  formData.append("collaborators", JSON.stringify(data.collaborators ?? []));
   if (data.genre) formData.append("genre", data.genre);
   if (data.releaseYear) formData.append("release_year", String(data.releaseYear));
   if (data.coverImage) formData.append("cover_image", data.coverImage);
@@ -132,7 +136,7 @@ export async function createSong(data: CreateSongData): Promise<Song> {
 
 export async function updateSong(
   songId: string,
-  patch: { title?: string; genre?: string; lyrics?: string }
+  patch: { title?: string; genre?: string; lyrics?: string; collaborators?: string[] }
 ): Promise<Song> {
   const raw = await apiRequest<SongResponse>(`music/songs/${songId}/`, {
     method: "PATCH",

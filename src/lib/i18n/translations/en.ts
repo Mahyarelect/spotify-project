@@ -523,6 +523,7 @@ export const en = {
     auditStatus: "Status",
     actions: "Actions",
     pending: "Pending",
+    approved: "Approved",
     paid: "Paid",
     disputed: "Disputed",
     markPaid: "Mark Paid",

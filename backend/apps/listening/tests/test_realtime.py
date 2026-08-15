@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from apps.accounts.models import User
 from apps.listening.models import ListeningGroup
 from apps.music.models import Song
+from apps.subscriptions.models import SubscriptionPlan
 from config.asgi import application
 
 
@@ -16,6 +17,16 @@ pytestmark = pytest.mark.django_db(transaction=True)
 
 @sync_to_async
 def create_user(email):
+    SubscriptionPlan.objects.get_or_create(
+        code=SubscriptionPlan.Code.FREE,
+        defaults={
+            "display_name": "Free",
+            "monthly_price": 0,
+            "currency": "USD",
+            "daily_stream_limit": 60,
+            "max_playlists": 6,
+        },
+    )
     return User.objects.create_user(
         email=email,
         password="VeryStrongPass908!",

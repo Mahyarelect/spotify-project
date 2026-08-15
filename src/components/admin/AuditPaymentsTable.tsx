@@ -7,6 +7,7 @@ const STATUS_CONFIG: Record<
   { icon: typeof Clock; color: string; key: string }
 > = {
   pending: { icon: Clock, color: "text-yellow-400", key: "pending" },
+  approved: { icon: CheckCircle, color: "text-blue-400", key: "approved" },
   paid: { icon: CheckCircle, color: "text-green-400", key: "paid" },
   disputed: { icon: XCircle, color: "text-red-400", key: "disputed" },
 };

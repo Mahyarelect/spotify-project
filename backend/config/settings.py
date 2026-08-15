@@ -40,6 +40,12 @@ def _postgres_database(url: str) -> dict[str, object]:
     }
 
 
+def _database(url: str) -> dict[str, object]:
+    if url == "sqlite:///:memory:":
+        return {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+    return _postgres_database(url)
+
+
 _load_local_env()
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-development-key-change-me-at-least-32-bytes")
@@ -113,7 +119,7 @@ CHANNEL_LAYERS = {
 }
 
 DATABASES = {
-    "default": _postgres_database(
+    "default": _database(
         os.getenv("DATABASE_URL", "postgresql://spotify:spotify@localhost:5432/spotify")
     )
 }

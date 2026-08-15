@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 from apps.accounts.models import User
 from apps.accounts.tests.factories import UserFactory
 from apps.payments.models import ArtistPayout
+from apps.subscriptions.models import SubscriptionOrder, SubscriptionPlan, UserSubscription
 
 pytestmark = pytest.mark.django_db
 
@@ -41,4 +42,28 @@ def test_artist_sees_only_own_reports():
     response = client_for(artist).get("/api/v1/artist/payouts/")
     assert response.status_code == 200
     assert len(response.data) == 1
-    assert response.data[0]["artist"] == str(artist.id)
+    assert str(response.data[0]["artist"]) == str(artist.id)
+
+
+def test_admin_revenue_report_uses_payment_records_and_is_admin_only():
+    admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+    support = UserFactory(role=User.Role.SUPPORT, is_staff=True)
+    listener = UserFactory(role=User.Role.LISTENER)
+    gold = SubscriptionPlan.objects.get(code=SubscriptionPlan.Code.GOLD)
+    UserSubscription.objects.filter(user=listener).update(plan=gold)
+    SubscriptionOrder.objects.create(
+        user=listener,
+        plan=gold,
+        months=1,
+        unit_price_snapshot="9.00",
+        total_amount="9.00",
+        currency="USD",
+        status=SubscriptionOrder.Status.PAID,
+        idempotency_key="revenue-report-test",
+    )
+
+    assert client_for(support).get("/api/v1/admin/reports/revenue/").status_code == 403
+    response = client_for(admin).get("/api/v1/admin/reports/revenue/")
+    assert response.status_code == 200
+    assert Decimal(response.data["total_revenue"]) == Decimal("9.00")
+    assert any(row["tier"] == "gold" and row["count"] == 1 for row in response.data["by_tier"])

@@ -1,119 +1,85 @@
+import { apiRequest } from "@/lib/api/httpClient";
 import type { AuditPayment } from "@/types/audit";
-import { getAuditPayments, saveAuditPayments } from "./storage";
-import { getAllSongs } from "./musicService";
-import { MOCK_USERS } from "@/lib/mockData/users";
 
-function createId(prefix: string): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return `${prefix}_${crypto.randomUUID()}`;
-  }
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+interface PayoutDto {
+  id: string;
+  artist: string;
+  artist_name: string;
+  month: string;
+  total_streams: number;
+  amount: string;
+  status: AuditPayment["status"];
+  provider_reference: string | null;
+  paid_at: string | null;
 }
 
-const RATE_PER_STREAM = 0.003;
-
-export function getAllAuditPayments(): AuditPayment[] {
-  return getAuditPayments();
+interface RevenueDto {
+  total_revenue: string;
+  total_streams: number;
+  paid_amount: string;
+  pending_amount: string;
+  by_tier: Array<{ tier: string; count: number; revenue: string }>;
 }
 
-export function getAuditPaymentsByMonth(month: string): AuditPayment[] {
-  return getAuditPayments().filter((p) => p.month === month);
+function mapPayout(dto: PayoutDto): AuditPayment {
+  return {
+    id: dto.id,
+    artistId: dto.artist,
+    artistName: dto.artist_name,
+    month: dto.month.slice(0, 7),
+    totalStreams: dto.total_streams,
+    amount: Number(dto.amount),
+    status: dto.status,
+    paidAt: dto.paid_at ?? undefined,
+  };
+}
+
+export async function getAuditPaymentsByMonth(month: string, signal?: AbortSignal): Promise<AuditPayment[]> {
+  const data = await apiRequest<PayoutDto[]>(`artist/payouts/?month=${month}-01`, { signal });
+  return data.map(mapPayout);
 }
 
 export async function generateMonthlyAudit(month: string): Promise<AuditPayment[]> {
-  const users = MOCK_USERS.filter((u) => u.role === "artist");
-  const songs = await getAllSongs();
-  const existing = getAuditPayments();
-  const existingIds = new Set(existing.filter((p) => p.month === month).map((p) => p.artistId));
-
-  const newPayments: AuditPayment[] = [];
-  for (const artist of users) {
-    if (existingIds.has(artist.id)) continue;
-
-    const artistSongs = songs.filter(
-      (s) => s.artistName.toLowerCase() === artist.displayName.toLowerCase()
-    );
-    const totalStreams = artistSongs.reduce((sum, s) => sum + s.playCount, 0);
-    const amount = Math.round(totalStreams * RATE_PER_STREAM * 100) / 100;
-
-    newPayments.push({
-      id: createId("audit"),
-      artistId: artist.id,
-      artistName: artist.displayName,
-      month,
-      totalStreams,
-      amount,
-      status: "pending",
-    });
-  }
-
-  const updated = [...existing, ...newPayments];
-  saveAuditPayments(updated);
-  return updated.filter((p) => p.month === month);
+  const data = await apiRequest<PayoutDto[]>("admin/payouts/generate/", {
+    method: "POST",
+    body: JSON.stringify({ month: `${month}-01`, rate_per_stream: "0.003000", currency: "USD" }),
+  });
+  return data.map(mapPayout);
 }
 
-export function markPaymentPaid(paymentId: string): AuditPayment {
-  const payments = getAuditPayments();
-  const idx = payments.findIndex((p) => p.id === paymentId);
-  if (idx === -1) throw new Error("Payment not found");
-  payments[idx].status = "paid";
-  payments[idx].paidAt = new Date().toISOString();
-  saveAuditPayments(payments);
-  return payments[idx];
+async function transition(paymentId: string, status: "approved" | "paid" | "disputed", providerReference?: string): Promise<AuditPayment> {
+  const data = await apiRequest<PayoutDto>(`admin/payouts/${paymentId}/status/`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status,
+      ...(providerReference ? { provider_reference: providerReference } : {}),
+    }),
+  });
+  return mapPayout(data);
 }
 
-export function markPaymentDisputed(paymentId: string): AuditPayment {
-  const payments = getAuditPayments();
-  const idx = payments.findIndex((p) => p.id === paymentId);
-  if (idx === -1) throw new Error("Payment not found");
-  payments[idx].status = "disputed";
-  saveAuditPayments(payments);
-  return payments[idx];
+export async function markPaymentPaid(paymentId: string): Promise<AuditPayment> {
+  await transition(paymentId, "approved");
+  return transition(paymentId, "paid", `admin:${crypto.randomUUID()}`);
 }
 
-export async function getRevenueStats(): Promise<{
+export function markPaymentDisputed(paymentId: string): Promise<AuditPayment> {
+  return transition(paymentId, "disputed");
+}
+
+export async function getRevenueStats(signal?: AbortSignal): Promise<{
   totalRevenue: number;
   totalStreams: number;
   paidAmount: number;
   pendingAmount: number;
   byTier: { tier: string; count: number; revenue: number }[];
 }> {
-  const users = MOCK_USERS;
-  const songs = await getAllSongs();
-  const payments = getAuditPayments();
-
-  const totalStreams = songs.reduce((sum, s) => sum + s.playCount, 0);
-  const totalRevenue = Math.round(totalStreams * RATE_PER_STREAM * 100) / 100;
-  const paidAmount = payments
-    .filter((p) => p.status === "paid")
-    .reduce((sum, p) => sum + p.amount, 0);
-  const pendingAmount = payments
-    .filter((p) => p.status === "pending")
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  const tierCounts: Record<string, { count: number; revenue: number }> = {};
-  for (const user of users) {
-    const tier = user.subscription.plan;
-    if (!tierCounts[tier]) {
-      tierCounts[tier] = { count: 0, revenue: 0 };
-    }
-    tierCounts[tier].count++;
-  }
-
-  const tierPrices: Record<string, number> = { free: 0, silver: 9.99, gold: 14.99 };
-  for (const tier of Object.keys(tierCounts)) {
-    tierCounts[tier].revenue =
-      Math.round(tierCounts[tier].count * (tierPrices[tier] ?? 0) * 100) / 100;
-  }
-
+  const dto = await apiRequest<RevenueDto>("admin/reports/revenue/", { signal });
   return {
-    totalRevenue,
-    totalStreams,
-    paidAmount: Math.round(paidAmount * 100) / 100,
-    pendingAmount: Math.round(pendingAmount * 100) / 100,
-    byTier: Object.entries(tierCounts).map(([tier, data]) => ({
-      tier,
-      ...data,
-    })),
+    totalRevenue: Number(dto.total_revenue),
+    totalStreams: dto.total_streams,
+    paidAmount: Number(dto.paid_amount),
+    pendingAmount: Number(dto.pending_amount),
+    byTier: dto.by_tier.map((row) => ({ ...row, revenue: Number(row.revenue) })),
   };
 }

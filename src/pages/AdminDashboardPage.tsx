@@ -70,16 +70,18 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setPayments(getAuditPaymentsByMonth(getCurrentMonth()));
-    getRevenueStats().then(setRevenueStats);
     Promise.all([
       getPendingApplications(controller.signal),
       getPlans(controller.signal),
       getAllTickets(controller.signal),
-    ]).then(([nextApplications, nextPlans, nextTickets]) => {
+      getAuditPaymentsByMonth(getCurrentMonth(), controller.signal),
+      getRevenueStats(controller.signal),
+    ]).then(([nextApplications, nextPlans, nextTickets, nextPayments, nextRevenue]) => {
       setApplications(nextApplications);
       setPlans(nextPlans);
       setTickets(nextTickets);
+      setPayments(nextPayments);
+      setRevenueStats(nextRevenue);
       setAdminError(null);
     }).catch((caught) => {
       if (!controller.signal.aborted) {
@@ -136,18 +138,30 @@ export default function AdminDashboardPage() {
   }
 
   async function handleGenerateAudit() {
-    await generateMonthlyAudit(getCurrentMonth());
-    triggerRefresh();
+    try {
+      await generateMonthlyAudit(getCurrentMonth());
+      triggerRefresh();
+    } catch (caught) {
+      setAdminError(caught instanceof Error ? caught.message : "Unable to generate report.");
+    }
   }
 
-  function handleMarkPaid(id: string) {
-    markPaymentPaid(id);
-    triggerRefresh();
+  async function handleMarkPaid(id: string) {
+    try {
+      await markPaymentPaid(id);
+      triggerRefresh();
+    } catch (caught) {
+      setAdminError(caught instanceof Error ? caught.message : "Unable to update payout.");
+    }
   }
 
-  function handleMarkDisputed(id: string) {
-    markPaymentDisputed(id);
-    triggerRefresh();
+  async function handleMarkDisputed(id: string) {
+    try {
+      await markPaymentDisputed(id);
+      triggerRefresh();
+    } catch (caught) {
+      setAdminError(caught instanceof Error ? caught.message : "Unable to update payout.");
+    }
   }
 
   async function handleSavePrices(prices: {

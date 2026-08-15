@@ -8,6 +8,7 @@ from django.db.models import F, Sum
 from django.utils import timezone
 
 from apps.music.models import Song
+from apps.subscriptions.services import get_effective_entitlements
 
 from .models import ListeningGroup, ListeningMember
 
@@ -90,6 +91,7 @@ class ListeningGroupConsumer(AsyncJsonWebsocketConsumer):
             return
         payload = await self._apply_command(
             self.group_id,
+            self.scope["user"].id,
             str(content.get("action", "")),
             content.get("songId"),
             content.get("position"),
@@ -143,7 +145,7 @@ class ListeningGroupConsumer(AsyncJsonWebsocketConsumer):
             return _state_payload(group, group.members.filter(connection_count__gt=0).count())
 
     @database_sync_to_async
-    def _apply_command(self, group_id, action, song_id, raw_position):
+    def _apply_command(self, group_id, user_id, action, song_id, raw_position):
         if action not in {"play", "pause", "seek"}:
             return None
         with transaction.atomic():
@@ -160,6 +162,13 @@ class ListeningGroupConsumer(AsyncJsonWebsocketConsumer):
                 try:
                     song = Song.objects.select_related("artist", "album").exclude(audio_file="").get(pk=song_id)
                 except (Song.DoesNotExist, ValueError):
+                    return None
+                if (
+                    song.album_id
+                    and song.album.is_early_access
+                    and song.artist_id != user_id
+                    and not get_effective_entitlements(group.members.get(user_id=user_id).user).get("early_access_allowed")
+                ):
                     return None
                 group.current_song = song
                 group.position_seconds = max(0, min(requested_position, song.duration_sec))

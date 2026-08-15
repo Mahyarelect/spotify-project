@@ -66,6 +66,7 @@ class Song(models.Model):
     audio_file = models.FileField(upload_to=song_audio_upload_path, null=True, blank=True)
     play_count = models.PositiveIntegerField(default=0)
     lyrics = models.TextField(blank=True)
+    collaborators = models.JSONField(default=list, blank=True)
     genre = models.CharField(max_length=100, blank=True)
     release_year = models.PositiveIntegerField(null=True, blank=True)
     track_number = models.PositiveIntegerField(null=True, blank=True)

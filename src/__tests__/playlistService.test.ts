@@ -1,113 +1,57 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import {
-  createPlaylist,
-  deletePlaylist,
-  getUserPlaylists,
-  canCreatePlaylist,
-  renamePlaylist,
-  addSongToPlaylist,
-  removeSongFromPlaylist,
-} from "@/lib/services/playlistService";
-import { STORAGE_KEYS } from "@/lib/services/storage";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { addSongToPlaylist, canCreatePlaylist, createPlaylist, deletePlaylist, getPlaylistById, getUserPlaylists, removeSongFromPlaylist, renamePlaylist } from "@/lib/services/playlistService";
 
-beforeEach(() => {
-  localStorage.clear();
-  localStorage.setItem(STORAGE_KEYS.playlists, JSON.stringify([]));
-});
+const playlist = {
+  id: "playlist-1", title: "Focus", cover_color: "#1b1b2f", created_by: "user-1",
+  created_by_name: "Listener", description: "Work music", song_count: 1,
+  songs: [{ song: "song-1", song_title: "Song", song_artist: "Artist", song_duration: 180, position: 0 }],
+};
 
-describe("playlistService.createPlaylist", () => {
-  it("creates a playlist and persists it", () => {
-    const playlist = createPlaylist("u1", "My Playlist", "A description");
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+}
 
-    expect(playlist.id).toMatch(/^pl_/);
-    expect(playlist.title).toBe("My Playlist");
-    expect(playlist.description).toBe("A description");
-    expect(playlist.createdBy).toBe("u1");
-    expect(playlist.songIds).toEqual([]);
+beforeEach(() => { localStorage.clear(); vi.restoreAllMocks(); });
 
-    const stored = getUserPlaylists("u1");
-    expect(stored).toHaveLength(1);
-    expect(stored[0].id).toBe(playlist.id);
+describe("playlistService backend contract", () => {
+  it("maps the authenticated user's playlists", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([playlist]));
+    await expect(getUserPlaylists()).resolves.toEqual([{
+      id: "playlist-1", title: "Focus", coverColor: "#1b1b2f", createdBy: "user-1",
+      description: "Work music", songIds: ["song-1"],
+    }]);
+    expect(fetchMock.mock.calls[0][0]).toContain("music/playlists/mine/");
   });
 
-  it("trims whitespace from title", () => {
-    const playlist = createPlaylist("u1", "  Spaced Title  ");
-    expect(playlist.title).toBe("Spaced Title");
-  });
-});
-
-describe("playlistService.deletePlaylist", () => {
-  it("removes the playlist", () => {
-    const p1 = createPlaylist("u1", "First");
-    createPlaylist("u1", "Second");
-
-    expect(getUserPlaylists("u1")).toHaveLength(2);
-
-    deletePlaylist(p1.id);
-
-    const remaining = getUserPlaylists("u1");
-    expect(remaining).toHaveLength(1);
-    expect(remaining[0].title).toBe("Second");
-  });
-});
-
-describe("playlistService.renamePlaylist", () => {
-  it("renames an existing playlist", () => {
-    const p = createPlaylist("u1", "Old Name");
-    renamePlaylist(p.id, "New Name");
-
-    const stored = getUserPlaylists("u1");
-    expect(stored[0].title).toBe("New Name");
-  });
-});
-
-describe("playlistService.addSongToPlaylist", () => {
-  it("adds a song to the playlist", () => {
-    const p = createPlaylist("u1", "My Playlist");
-    addSongToPlaylist(p.id, "s1");
-
-    const stored = getUserPlaylists("u1");
-    expect(stored[0].songIds).toContain("s1");
+  it("creates a trimmed playlist through the API", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(playlist, 201));
+    await expect(createPlaylist("  Focus  ", "  Work music  ")).resolves.toMatchObject({ id: "playlist-1" });
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({ title: "Focus", cover_color: "#1b1b2f", description: "Work music" }),
+    });
   });
 
-  it("does not add duplicate songs", () => {
-    const p = createPlaylist("u1", "My Playlist");
-    addSongToPlaylist(p.id, "s1");
-    addSongToPlaylist(p.id, "s1");
-
-    const stored = getUserPlaylists("u1");
-    expect(stored[0].songIds).toEqual(["s1"]);
-  });
-});
-
-describe("playlistService.removeSongFromPlaylist", () => {
-  it("removes a song from the playlist", () => {
-    const p = createPlaylist("u1", "My Playlist");
-    addSongToPlaylist(p.id, "s1");
-    addSongToPlaylist(p.id, "s2");
-    removeSongFromPlaylist(p.id, "s1");
-
-    const stored = getUserPlaylists("u1");
-    expect(stored[0].songIds).toEqual(["s2"]);
-  });
-});
-
-describe("playlistService uses backend-provided limits", () => {
-  it("allows playlist creation under the provided limit", () => {
-    expect(canCreatePlaylist("u1", 6)).toBe(true);
+  it("uses the backend list to enforce finite limits", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse([playlist]));
+    await expect(canCreatePlaylist(1)).resolves.toBe(false);
+    await expect(canCreatePlaylist(2)).resolves.toBe(true);
+    await expect(canCreatePlaylist(null)).resolves.toBe(true);
   });
 
-  it("free user cannot create playlists at the limit", () => {
-    for (let i = 0; i < 6; i++) {
-      createPlaylist("u1", `Playlist ${i}`);
-    }
-    expect(canCreatePlaylist("u1", 6)).toBe(false);
+  it("sends update, delete, add, and remove mutations", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
+    await renamePlaylist("playlist-1", "  New name  ");
+    await deletePlaylist("playlist-1");
+    await addSongToPlaylist("playlist-1", "song-2");
+    await removeSongFromPlaylist("playlist-1", "song-2");
+    expect(fetchMock.mock.calls.map(([, init]) => init?.method)).toEqual(["PATCH", "DELETE", "POST", "DELETE"]);
+    expect(fetchMock.mock.calls[0][1]?.body).toBe(JSON.stringify({ title: "New name" }));
+    expect(fetchMock.mock.calls[2][1]?.body).toBe(JSON.stringify({ song_id: "song-2" }));
   });
 
-  it("gold user can always create playlists", () => {
-    for (let i = 0; i < 20; i++) {
-      createPlaylist("u1", `Playlist ${i}`);
-    }
-    expect(canCreatePlaylist("u1", null)).toBe(true);
+  it("returns undefined when a public playlist cannot be loaded", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ detail: "Not found" }, 404));
+    await expect(getPlaylistById("missing")).resolves.toBeUndefined();
   });
 });

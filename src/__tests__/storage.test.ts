@@ -24,12 +24,12 @@ describe("storage.readJson", () => {
   });
 
   it("migrates legacy product keys without losing stored data", () => {
-    const legacyKey = ["music", "app_playlists"].join("");
-    const playlists = [{ id: "playlist-1", title: "Saved" }];
-    localStorage.setItem(legacyKey, JSON.stringify(playlists));
+    const legacyKey = ["music", "app_playerPrefs"].join("");
+    const preferences = { volume: 55, shuffle: true, repeatMode: "all" };
+    localStorage.setItem(legacyKey, JSON.stringify(preferences));
 
-    expect(readJson(STORAGE_KEYS.playlists, [])).toEqual(playlists);
-    expect(localStorage.getItem(STORAGE_KEYS.playlists)).toBe(JSON.stringify(playlists));
+    expect(readJson(STORAGE_KEYS.playerPrefs, {})).toEqual(preferences);
+    expect(localStorage.getItem(STORAGE_KEYS.playerPrefs)).toBe(JSON.stringify(preferences));
     expect(localStorage.getItem(legacyKey)).toBeNull();
   });
 });

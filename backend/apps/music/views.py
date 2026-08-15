@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Count, F, Q, Sum
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -12,6 +13,8 @@ from apps.accounts.models import User
 from apps.common.permissions import IsVerifiedArtist
 from apps.subscriptions.permissions import HasPlanFeature
 from apps.subscriptions.selectors import get_effective_entitlements
+from apps.subscriptions.services import get_daily_stream_limit, get_playlist_limit
+from apps.common.domain import DomainError
 
 from .models import Album, Playlist, PlaylistSong, RecentlyPlayed, Song, Stream
 from .serializers.serializers import (
@@ -33,6 +36,34 @@ from .serializers.serializers import (
 )
 
 
+def _can_view_early_access(request):
+    user = request.user
+    if not user.is_authenticated:
+        return False
+    if user.role == User.Role.ADMIN:
+        return True
+    return get_effective_entitlements(user).early_access_allowed
+
+
+def _visible_albums(request):
+    queryset = Album.objects.all()
+    if _can_view_early_access(request):
+        return queryset
+    if request.user.is_authenticated and request.user.role == User.Role.ARTIST:
+        return queryset.filter(Q(is_early_access=False) | Q(artist=request.user))
+    return queryset.filter(is_early_access=False)
+
+
+def _visible_songs(request):
+    queryset = Song.objects.all()
+    if _can_view_early_access(request):
+        return queryset
+    visible = Q(album__isnull=True) | Q(album__is_early_access=False)
+    if request.user.is_authenticated and request.user.role == User.Role.ARTIST:
+        visible |= Q(artist=request.user)
+    return queryset.filter(visible)
+
+
 class AlbumListCreateView(ListCreateAPIView):
     serializer_class = AlbumSerializer
 
@@ -47,7 +78,7 @@ class AlbumListCreateView(ListCreateAPIView):
         return AlbumSerializer
 
     def get_queryset(self):
-        return Album.objects.select_related("artist").annotate(song_count=Count("songs"))
+        return _visible_albums(self.request).select_related("artist").annotate(song_count=Count("songs"))
 
     def perform_create(self, serializer):
         serializer.save(artist=self.request.user)
@@ -75,7 +106,7 @@ class AlbumDetailView(RetrieveUpdateDestroyAPIView):
         return AlbumSerializer
 
     def get_queryset(self):
-        return Album.objects.select_related("artist").annotate(song_count=Count("songs"))
+        return _visible_albums(self.request).select_related("artist").annotate(song_count=Count("songs"))
 
     def perform_update(self, serializer):
         if serializer.instance.artist != self.request.user:
@@ -106,7 +137,7 @@ class SongListCreateView(ListCreateAPIView):
         return SongSerializer
 
     def get_queryset(self):
-        return Song.objects.select_related("artist", "album")
+        return _visible_songs(self.request).select_related("artist", "album")
 
     def perform_create(self, serializer):
         serializer.save(artist=self.request.user)
@@ -134,7 +165,7 @@ class SongDetailView(RetrieveUpdateDestroyAPIView):
         return SongSerializer
 
     def get_queryset(self):
-        return Song.objects.select_related("artist", "album")
+        return _visible_songs(self.request).select_related("artist", "album")
 
     def perform_update(self, serializer):
         if serializer.instance.artist != self.request.user:
@@ -171,9 +202,18 @@ class PlaylistListCreateView(ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save(created_by=request.user)
+        with transaction.atomic():
+            User.objects.select_for_update().get(pk=request.user.pk)
+            limit = get_playlist_limit(request.user)
+            if limit is not None and Playlist.objects.filter(created_by=request.user).count() >= limit:
+                raise DomainError(
+                    "playlist_limit_reached",
+                    f"Your current subscription allows at most {limit} playlists.",
+                    status_code=403,
+                )
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            instance = serializer.save(created_by=request.user)
         return Response(PlaylistSerializer(instance).data, status=status.HTTP_201_CREATED)
 
 
@@ -230,7 +270,7 @@ class PlaylistSongAddView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         song_id = serializer.validated_data["song_id"]
-        song = get_object_or_404(Song, pk=song_id)
+        song = get_object_or_404(_visible_songs(request), pk=song_id)
 
         if PlaylistSong.objects.filter(playlist=playlist, song=song).exists():
             return Response(
@@ -310,10 +350,22 @@ class StreamCreateView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         song_id = serializer.validated_data["song_id"]
-        song = get_object_or_404(Song, pk=song_id)
+        song = get_object_or_404(_visible_songs(request), pk=song_id)
 
-        stream = Stream.objects.create(user=request.user, song=song)
-        Song.objects.filter(pk=song_id).update(play_count=F("play_count") + 1)
+        with transaction.atomic():
+            User.objects.select_for_update().get(pk=request.user.pk)
+            daily_limit = get_daily_stream_limit(request.user)
+            if daily_limit is not None:
+                today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                used = Stream.objects.filter(user=request.user, streamed_at__gte=today_start).count()
+                if used >= daily_limit:
+                    raise DomainError(
+                        "daily_stream_limit_reached",
+                        "Your daily streaming limit has been reached.",
+                        status_code=403,
+                    )
+            stream = Stream.objects.create(user=request.user, song=song)
+            Song.objects.filter(pk=song_id).update(play_count=F("play_count") + 1)
 
         return Response(StreamSerializer(stream).data, status=status.HTTP_201_CREATED)
 
@@ -323,7 +375,7 @@ class SongDownloadView(GenericAPIView):
     required_plan_feature = "download_allowed"
 
     def get(self, request, pk):
-        song = get_object_or_404(Song, pk=pk)
+        song = get_object_or_404(_visible_songs(request), pk=pk)
         if not song.audio_file:
             raise Http404("No audio file available for this song.")
         return FileResponse(
@@ -346,11 +398,11 @@ class SearchView(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        songs = Song.objects.filter(
+        songs = _visible_songs(request).filter(
             Q(title__icontains=q) | Q(artist__display_name__icontains=q) | Q(genre__icontains=q)
         ).select_related("artist", "album")[:20]
 
-        albums = Album.objects.filter(
+        albums = _visible_albums(request).filter(
             Q(title__icontains=q) | Q(artist__display_name__icontains=q) | Q(genre__icontains=q)
         ).select_related("artist").annotate(song_count=Count("songs"))[:20]
 
@@ -386,7 +438,7 @@ class RecentlyPlayedCreateView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         song_id = serializer.validated_data["song_id"]
-        song = get_object_or_404(Song, pk=song_id)
+        song = get_object_or_404(_visible_songs(request), pk=song_id)
 
         RecentlyPlayed.objects.create(user=request.user, song=song)
         return Response(status=status.HTTP_201_CREATED)
@@ -400,7 +452,7 @@ class TopSongsView(ListAPIView):
         limit = int(self.request.query_params.get("limit", 50))
         limit = min(limit, 100)
         return (
-            Song.objects.select_related("artist", "album")
+            _visible_songs(self.request).select_related("artist", "album")
             .filter(play_count__gt=0)
             .order_by("-play_count")[:limit]
         )
@@ -437,18 +489,26 @@ class ArtistProfileView(GenericAPIView):
             username=username,
         )
 
-        songs = Song.objects.filter(artist=artist).select_related("album")
+        songs = _visible_songs(request).filter(artist=artist).select_related("album")
         albums = (
-            Album.objects.filter(artist=artist)
+            _visible_albums(request).filter(artist=artist)
             .annotate(song_count=Count("songs"))
             .filter(song_count__gt=1)
             .select_related("artist")
         )
         singles = (
-            Album.objects.filter(artist=artist)
+            _visible_albums(request).filter(artist=artist)
             .annotate(song_count=Count("songs"))
             .filter(song_count=1)
             .select_related("artist")
+        )
+        can_view_statistics = (
+            request.user.is_authenticated
+            and (
+                request.user == artist
+                or request.user.role == User.Role.ADMIN
+                or get_effective_entitlements(request.user).statistics_allowed
+            )
         )
         total_streams = songs.aggregate(total=Sum("play_count"))["total"] or 0
 
@@ -469,6 +529,6 @@ class ArtistProfileView(GenericAPIView):
                 "songs": SongSerializer(songs, many=True).data,
                 "albums": AlbumSerializer(albums, many=True).data,
                 "singles": AlbumSerializer(singles, many=True).data,
-                "total_streams": total_streams,
+                "total_streams": total_streams if can_view_statistics else None,
             }
         )

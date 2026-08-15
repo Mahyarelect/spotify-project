@@ -39,6 +39,7 @@ def create_artist(email=None, username=None):
         birth_date=date(1995, 6, 15),
         role=User.Role.ARTIST,
         username=username,
+        artist_verified=True,
     )
 
 

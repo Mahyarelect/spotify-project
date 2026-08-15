@@ -3,15 +3,19 @@ import { render, screen, act, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { PlayerProvider, usePlayer } from "@/lib/context/PlayerContext";
-import { STORAGE_KEYS } from "@/lib/services/storage";
 import type { Song } from "@/types/music";
 import type { ReactNode } from "react";
 import type { User } from "@/types/user";
 import { makeUser } from "./apiFixtures";
 
 const authState = vi.hoisted(() => ({ user: null as User | null }));
+const streamState = vi.hoisted(() => ({ allowed: true }));
 vi.mock("@/lib/hooks/useAuth", () => ({
   useAuth: () => ({ user: authState.user, loading: false }),
+}));
+vi.mock("@/lib/services/streamService", () => ({
+  canStream: vi.fn(async () => streamState.allowed),
+  recordStream: vi.fn(async () => undefined),
 }));
 
 const MOCK_SONG_A: Song = {
@@ -23,6 +27,7 @@ const MOCK_SONG_A: Song = {
   durationSec: 100,
   coverColor: "#000000",
   playCount: 100,
+  audioFile: "/media/test-a.mp3",
 };
 
 const MOCK_SONG_B: Song = {
@@ -34,6 +39,7 @@ const MOCK_SONG_B: Song = {
   durationSec: 200,
   coverColor: "#111111",
   playCount: 200,
+  audioFile: "/media/test-b.mp3",
 };
 
 const MOCK_SONG_C: Song = {
@@ -45,6 +51,7 @@ const MOCK_SONG_C: Song = {
   durationSec: 150,
   coverColor: "#222222",
   playCount: 50,
+  audioFile: "/media/test-c.mp3",
 };
 
 let playerActions: ReturnType<typeof usePlayer> | null = null;
@@ -90,7 +97,14 @@ beforeEach(() => {
   authState.user = null;
   playerActions = null;
   authLoaded = false;
+  streamState.allowed = true;
 });
+
+async function playTestSong(song: Song, queue?: Song[]) {
+  await act(async () => {
+    await playerActions!.playSong(song, queue);
+  });
+}
 
 async function waitForAuth() {
   await waitFor(() => {
@@ -111,9 +125,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A);
-    });
+    await playTestSong(MOCK_SONG_A);
 
     expect(screen.getByTestId("current")).toHaveTextContent("Test Song A");
     expect(screen.getByTestId("playing")).toHaveTextContent("true");
@@ -125,9 +137,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_B, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
-    });
+    await playTestSong(MOCK_SONG_B, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
 
     expect(screen.getByTestId("current")).toHaveTextContent("Test Song B");
     expect(screen.getByTestId("queue-length")).toHaveTextContent("3");
@@ -138,9 +148,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A);
-    });
+    await playTestSong(MOCK_SONG_A);
     expect(screen.getByTestId("playing")).toHaveTextContent("true");
 
     act(() => {
@@ -159,9 +167,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
-    });
+    await playTestSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
     expect(screen.getByTestId("current")).toHaveTextContent("Test Song A");
 
     act(() => {
@@ -175,9 +181,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_B, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
-    });
+    await playTestSong(MOCK_SONG_B, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
 
     act(() => {
       playerActions!.previous();
@@ -190,9 +194,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_B, [MOCK_SONG_A, MOCK_SONG_B]);
-    });
+    await playTestSong(MOCK_SONG_B, [MOCK_SONG_A, MOCK_SONG_B]);
 
     act(() => {
       playerActions!.seek(10);
@@ -210,9 +212,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A);
-    });
+    await playTestSong(MOCK_SONG_A);
 
     act(() => {
       playerActions!.seek(50);
@@ -225,9 +225,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A);
-    });
+    await playTestSong(MOCK_SONG_A);
 
     act(() => {
       playerActions!.seek(999);
@@ -326,9 +324,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B]);
-    });
+    await playTestSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B]);
     expect(screen.getByTestId("current")).toHaveTextContent("Test Song A");
 
     act(() => {
@@ -344,9 +340,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
-    });
+    await playTestSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
     expect(screen.getByTestId("queue-length")).toHaveTextContent("3");
 
     act(() => {
@@ -360,9 +354,7 @@ describe("PlayerContext", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
-    });
+    await playTestSong(MOCK_SONG_A, [MOCK_SONG_A, MOCK_SONG_B, MOCK_SONG_C]);
 
     // Move song at index 2 to index 0
     act(() => {
@@ -376,20 +368,12 @@ describe("PlayerContext stream enforcement", () => {
   it("blocks playback when free user exceeds daily limit", async () => {
     setupUser("free");
 
-    // Pre-fill 60 streams for today
-    const today = new Date();
-    const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    localStorage.setItem(
-      STORAGE_KEYS.streamCounts,
-      JSON.stringify({ "test-user": { [dateKey]: 60 } })
-    );
+    streamState.allowed = false;
 
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A);
-    });
+    await playTestSong(MOCK_SONG_A);
 
     expect(screen.getByTestId("current")).toHaveTextContent("none");
     expect(screen.getByTestId("playing")).toHaveTextContent("false");
@@ -400,9 +384,7 @@ describe("PlayerContext stream enforcement", () => {
     render(<PlayerConsumer />, { wrapper: TestWrapper });
     await waitForAuth();
 
-    act(() => {
-      playerActions!.playSong(MOCK_SONG_A);
-    });
+    await playTestSong(MOCK_SONG_A);
 
     expect(screen.getByTestId("current")).toHaveTextContent("Test Song A");
     expect(screen.getByTestId("playing")).toHaveTextContent("true");

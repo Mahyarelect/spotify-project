@@ -77,7 +77,9 @@ beforeEach(() => {
 });
 
 it("loads a public profile and updates follow state from the API response", async () => {
-  service.getUserByUsername.mockResolvedValue(profile);
+  service.getUserByUsername
+    .mockResolvedValueOnce(profile)
+    .mockResolvedValue({ ...profile, followersCount: 11, isFollowing: true });
   service.followUser.mockResolvedValue({ ...profile, followersCount: 11, isFollowing: true });
   const user = userEvent.setup();
 
@@ -94,7 +96,9 @@ it("loads a public profile and updates follow state from the API response", asyn
 });
 
 it("shows the refreshed own following count after SPA navigation", async () => {
-  service.getUserByUsername.mockResolvedValue(profile);
+  service.getUserByUsername
+    .mockResolvedValueOnce(profile)
+    .mockResolvedValue({ ...profile, followersCount: 11, isFollowing: true });
   service.followUser.mockResolvedValue({ ...profile, followersCount: 11, isFollowing: true });
   state.refreshUser.mockImplementation(async () => {
     if (state.user) state.user = { ...state.user, followingCount: 4 };

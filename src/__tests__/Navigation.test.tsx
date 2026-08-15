@@ -17,6 +17,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/hooks/useAuth", () => ({ useAuth: () => state }));
+vi.mock("@/lib/services/notificationService", () => ({ getUnreadCount: vi.fn(async () => 0) }));
 
 function roleUser(role: "listener" | "artist" | "support" | "admin") {
   const user = makeUser();

@@ -1,84 +1,30 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import {
-  canStream,
-  recordStream,
-  getTodayStreamCount,
-  getTodayString,
-} from "@/lib/services/streamService";
-import { STORAGE_KEYS } from "@/lib/services/storage";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { canStream, getStreamStatus, getTodayStreamCount, recordStream } from "@/lib/services/streamService";
+import { jsonResponse } from "./apiFixtures";
 
-beforeEach(() => {
-  localStorage.clear();
-});
+describe("streamService", () => {
+  beforeEach(() => vi.restoreAllMocks());
 
-describe("getTodayString", () => {
-  it("returns a YYYY-MM-DD formatted string", () => {
-    const result = getTodayString();
-    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  });
-});
-
-describe("getTodayStreamCount", () => {
-  it("returns 0 when no streams recorded", () => {
-    expect(getTodayStreamCount("u1")).toBe(0);
+  it("reads the server-enforced stream status", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse({ streams_today: 12, daily_limit: 60, can_stream: true }));
+    await expect(getStreamStatus()).resolves.toEqual({ streams_today: 12, daily_limit: 60, can_stream: true });
+    await expect(getTodayStreamCount()).resolves.toBe(12);
   });
 
-  it("returns the correct count after streams are recorded", () => {
-    recordStream("u1");
-    recordStream("u1");
-    recordStream("u1");
-    expect(getTodayStreamCount("u1")).toBe(3);
+  it("uses the backend can_stream decision", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ streams_today: 60, daily_limit: 60, can_stream: false }));
+    await expect(canStream()).resolves.toBe(false);
   });
 
-  it("tracks streams per user independently", () => {
-    recordStream("u1");
-    recordStream("u1");
-    recordStream("u2");
-    expect(getTodayStreamCount("u1")).toBe(2);
-    expect(getTodayStreamCount("u2")).toBe(1);
-  });
-});
-
-describe("recordStream", () => {
-  it("persists stream count to localStorage", () => {
-    recordStream("u1");
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.streamCounts) ?? "{}");
-    const today = getTodayString();
-    expect(stored["u1"][today]).toBe(1);
+  it("records the selected song through the API", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({}, 201));
+    await recordStream("song-1");
+    expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe("POST");
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({ song_id: "song-1" });
   });
 
-  it("increments existing count", () => {
-    recordStream("u1");
-    recordStream("u1");
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.streamCounts) ?? "{}");
-    const today = getTodayString();
-    expect(stored["u1"][today]).toBe(2);
-  });
-});
-
-describe("canStream with backend-provided limits", () => {
-  it("allows streaming when the backend limit is unlimited", () => {
-    for (let i = 0; i < 100; i++) recordStream("u1");
-    expect(canStream("u1", null)).toBe(true);
-  });
-
-  it("allows streaming for free users under the limit", () => {
-    for (let i = 0; i < 59; i++) recordStream("u1");
-    expect(canStream("u1", 60)).toBe(true);
-  });
-
-  it("allows streaming at exactly 59 streams for free users", () => {
-    for (let i = 0; i < 59; i++) recordStream("u1");
-    expect(canStream("u1", 60)).toBe(true);
-  });
-
-  it("blocks streaming at 60 streams for free users", () => {
-    for (let i = 0; i < 60; i++) recordStream("u1");
-    expect(canStream("u1", 60)).toBe(false);
-  });
-
-  it("blocks streaming beyond 60 streams for free users", () => {
-    for (let i = 0; i < 65; i++) recordStream("u1");
-    expect(canStream("u1", 60)).toBe(false);
+  it("fails open only when the status endpoint is unavailable", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
+    await expect(canStream()).resolves.toBe(true);
   });
 });

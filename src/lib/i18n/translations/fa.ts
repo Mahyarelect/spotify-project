@@ -525,6 +525,7 @@ export const fa: Translations = {
     auditStatus: "وضعیت",
     actions: "عملیات",
     pending: "در انتظار",
+    approved: "تأیید شده",
     paid: "پرداخت شده",
     disputed: "مورد اختلاف",
     markPaid: "علامت پرداخت شده",

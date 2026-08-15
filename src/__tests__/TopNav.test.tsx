@@ -6,6 +6,8 @@ import { AuthProvider } from "@/lib/context/AuthContext";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { authenticate } from "./apiFixtures";
 
+vi.mock("@/lib/services/notificationService", () => ({ getUnreadCount: vi.fn(async () => 0) }));
+
 function renderNav() {
   return render(
     <MemoryRouter>
