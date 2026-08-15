@@ -38,3 +38,4 @@ opencode.json
 music-app@0.0.0
 tsc
 backend/music_samples/
+.launcher-state/
