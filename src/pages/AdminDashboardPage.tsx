@@ -70,26 +70,35 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([
-      getPendingApplications(controller.signal),
-      getPlans(controller.signal),
-      getAllTickets(controller.signal),
-      getAuditPaymentsByMonth(getCurrentMonth(), controller.signal),
-      getRevenueStats(controller.signal),
-    ]).then(([nextApplications, nextPlans, nextTickets, nextPayments, nextRevenue]) => {
-      setApplications(nextApplications);
-      setPlans(nextPlans);
-      setTickets(nextTickets);
-      setPayments(nextPayments);
-      setRevenueStats(nextRevenue);
-      setAdminError(null);
-    }).catch((caught) => {
-      if (!controller.signal.aborted) {
-        setAdminError(caught instanceof Error ? caught.message : "Unable to load admin data.");
+    async function loadDashboard() {
+      try {
+        const [nextApplications, nextTickets] = await Promise.all([
+          getPendingApplications(controller.signal),
+          getAllTickets(controller.signal),
+        ]);
+        setApplications(nextApplications);
+        setTickets(nextTickets);
+
+        if (isSuperAdmin) {
+          const [nextPlans, nextPayments, nextRevenue] = await Promise.all([
+            getPlans(controller.signal),
+            getAuditPaymentsByMonth(getCurrentMonth(), controller.signal),
+            getRevenueStats(controller.signal),
+          ]);
+          setPlans(nextPlans);
+          setPayments(nextPayments);
+          setRevenueStats(nextRevenue);
+        }
+        setAdminError(null);
+      } catch (caught) {
+        if (!controller.signal.aborted) {
+          setAdminError(caught instanceof Error ? caught.message : "Unable to load dashboard data.");
+        }
       }
-    });
+    }
+    void loadDashboard();
     return () => controller.abort();
-  }, [refreshKey]);
+  }, [isSuperAdmin, refreshKey]);
 
   async function handleApprove(id: string) {
     setAdminError(null);

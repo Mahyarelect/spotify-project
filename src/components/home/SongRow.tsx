@@ -68,10 +68,14 @@ export function SongRow({
         )}
       </button>
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded"
+        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded"
         style={{ backgroundColor: song.coverColor }}
       >
-        <Music size={16} className="text-white/60" />
+        {song.coverImage ? (
+          <img src={song.coverImage} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <Music size={16} className="text-white/60" />
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <p

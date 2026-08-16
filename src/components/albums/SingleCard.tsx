@@ -46,18 +46,22 @@ export function SingleCard({
     >
       <button
         onClick={handlePlay}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded sm:h-11 sm:w-11"
+        className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded sm:h-11 sm:w-11"
         style={{ backgroundColor: song.coverColor }}
         aria-label={isActive && isPlaying ? t.player.pause : t.player.playTitle.replace("{title}", song.title)}
       >
+        {song.coverImage && (
+          <img src={song.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        )}
+        <span className="absolute inset-0 bg-black/0 transition group-hover:bg-black/35" />
         {isActive && isPlaying ? (
-          <Pause size={16} className="text-white" fill="currentColor" />
+          <Pause size={16} className="relative text-white" fill="currentColor" />
         ) : (
           <>
-            <Music size={16} className="text-white/60 group-hover:hidden" />
+            {!song.coverImage && <Music size={16} className="relative text-white/60 group-hover:hidden" />}
             <Play
               size={16}
-              className="hidden text-white group-hover:block"
+              className="relative hidden text-white group-hover:block"
               fill="currentColor"
             />
           </>

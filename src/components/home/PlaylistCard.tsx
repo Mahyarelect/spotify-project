@@ -7,10 +7,14 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
   return (
     <div className="group w-40 shrink-0 cursor-pointer">
       <div
-        className="flex aspect-square items-center justify-center rounded-lg transition group-hover:brightness-110"
+        className="flex aspect-square items-center justify-center overflow-hidden rounded-lg transition group-hover:brightness-110"
         style={{ backgroundColor: playlist.coverColor }}
       >
-        <Music size={40} className="text-white/60" />
+        {playlist.coverImage ? (
+          <img src={playlist.coverImage} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <Music size={40} className="text-white/60" />
+        )}
       </div>
       <h3 className="mt-2 truncate text-sm font-semibold text-zinc-100">
         {playlist.title}

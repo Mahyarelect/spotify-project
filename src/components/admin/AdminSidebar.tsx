@@ -32,7 +32,7 @@ export function AdminSidebar({ active, onChange, isSuperAdmin }: AdminSidebarPro
   }[] = [
     { key: "verification", label: t.admin.verification, icon: UserCheck },
     { key: "tickets", label: t.admin.tickets, icon: MessageSquare },
-    { key: "audit", label: t.admin.audit, icon: DollarSign },
+    { key: "audit", label: t.admin.audit, icon: DollarSign, adminOnly: true },
     { key: "pricing", label: t.admin.pricing, icon: CreditCard, adminOnly: true },
     { key: "revenue", label: t.admin.revenue, icon: BarChart3, adminOnly: true },
   ];

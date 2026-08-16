@@ -91,7 +91,13 @@ export function NotificationCard({
       onMarkRead(notification.id);
     }
     if (notification.link) {
-      navigate(notification.link);
+      // Older monthly payout notifications used a backend API-shaped URL
+      // that was never a React route. Keep those persisted notifications
+      // useful while all newly generated ones point here directly.
+      const destination = notification.type === "monthly_financial"
+        ? "/artist-dashboard"
+        : notification.link;
+      navigate(destination);
     }
   }
 

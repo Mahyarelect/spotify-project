@@ -8,6 +8,7 @@ from apps.accounts.tests.factories import UserFactory
 from apps.payments.models import ArtistPayout
 from apps.music.models import Stream
 from apps.music.tests.factories import SongFactory
+from apps.notifications.models import Notification
 from apps.subscriptions.models import SubscriptionOrder, SubscriptionPlan, UserSubscription
 
 pytestmark = pytest.mark.django_db
@@ -29,6 +30,8 @@ def test_only_admin_can_generate_and_transition_payouts():
     assert response.status_code == 201
     payout = ArtistPayout.objects.get(artist=artist, month=date(2026, 7, 1))
     assert payout.amount == Decimal("0.00")
+    notice = Notification.objects.get(user=artist, type=Notification.Type.MONTHLY_FINANCIAL)
+    assert notice.link == "/artist-dashboard"
     assert client_for(support).patch(f"/api/v1/admin/payouts/{payout.id}/status/", {"status": "approved"}, format="json").status_code == 403
     assert client_for(admin).patch(f"/api/v1/admin/payouts/{payout.id}/status/", {"status": "approved"}, format="json").status_code == 200
     paid = client_for(admin).patch(f"/api/v1/admin/payouts/{payout.id}/status/", {"status": "paid", "provider_reference": "bank-123"}, format="json")

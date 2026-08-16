@@ -37,12 +37,17 @@ def generate_monthly_payouts(*, month, rate_per_stream, currency, generated_by):
         )
         from apps.notifications.models import Notification
         from apps.notifications.services import create_notification
-        if not Notification.objects.filter(user=artist, type=Notification.Type.MONTHLY_FINANCIAL, link=f"/artist/payouts/{payout.id}").exists():
+        notification_link = "/artist-dashboard"
+        if not Notification.objects.filter(
+            user=artist,
+            type=Notification.Type.MONTHLY_FINANCIAL,
+            message=f"Your financial report for {month:%B %Y} is ready.",
+        ).exists():
             create_notification(
                 user=artist, type=Notification.Type.MONTHLY_FINANCIAL,
                 title="Monthly financial report ready",
                 message=f"Your financial report for {month:%B %Y} is ready.",
-                link=f"/artist/payouts/{payout.id}",
+                link=notification_link,
             )
         payouts.append(payout)
     return payouts

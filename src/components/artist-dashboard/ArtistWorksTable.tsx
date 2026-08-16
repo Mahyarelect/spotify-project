@@ -86,10 +86,14 @@ export function ArtistWorksTable({
                         className="flex items-center gap-2 text-left"
                       >
                         <div
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded"
                           style={{ backgroundColor: song.coverColor }}
                         >
-                          <Music size={12} className="text-white/40" />
+                          {song.coverImage ? (
+                            <img src={song.coverImage} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <Music size={12} className="text-white/40" />
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-zinc-100">
@@ -176,10 +180,14 @@ export function ArtistWorksTable({
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded"
                           style={{ backgroundColor: album.coverColor }}
                         >
-                          <Disc3 size={12} className="text-white/40" />
+                          {album.coverImage ? (
+                            <img src={album.coverImage} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <Disc3 size={12} className="text-white/40" />
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-zinc-100">
