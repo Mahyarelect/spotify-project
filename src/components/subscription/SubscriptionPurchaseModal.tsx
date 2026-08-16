@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCurrency } from "@/lib/utils/currency";
 import { createSubscriptionAttemptKey } from "@/lib/services/subscriptionService";
+import { ApiError } from "@/lib/api/apiError";
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
@@ -83,8 +84,8 @@ export function SubscriptionPurchaseModal({
     setError(null);
     try {
       setOrder(await onCreateOrder(months, attemptKey.current));
-    } catch {
-      setError(t.subscription.createError);
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : t.subscription.createError);
     } finally {
       setBusy(false);
     }
@@ -96,8 +97,8 @@ export function SubscriptionPurchaseModal({
     setError(null);
     try {
       await onConfirm(order.orderId);
-    } catch {
-      setError(t.subscription.confirmError);
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : t.subscription.confirmError);
       setBusy(false);
     }
   };

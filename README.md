@@ -1,138 +1,585 @@
-# Spotify
+# Spotify Project
 
-A React 19 streaming application with a Django REST Framework backend for authentication, profiles, preferences, artist review, and subscriptions. PostgreSQL is the source of truth for users, JWT sessions, plan prices, entitlements, and orders. The remaining Phase 1 music/player demo data stays browser-local until its owning modules are migrated.
+A full-stack music streaming application built with React, TypeScript, Django REST Framework, PostgreSQL, Redis, Django Channels, and Nginx. It includes a server-backed catalog and player, subscriptions with ZarinPal sandbox checkout, artist workflows, support and administration tools, notifications, and real-time group listening.
 
-## Prerequisites
+## Contents
 
-- Node.js 22 or newer
-- Python 3.12
-- PostgreSQL 15 or newer
+- [Features](#features)
+- [Architecture](#architecture)
+- [Quick start with Docker](#quick-start-with-docker)
+- [Demo data and accounts](#demo-data-and-accounts)
+- [Run locally without Docker](#run-locally-without-docker)
+- [Database operations](#database-operations)
+- [Environment variables](#environment-variables)
+- [Testing](#testing)
+- [API and application URLs](#api-and-application-urls)
+- [Payments and group listening](#payments-and-group-listening)
+- [PWA behavior](#pwa-behavior)
+- [Project structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Production checklist](#production-checklist)
 
-## Docker setup (frontend + backend)
+## Features
 
-Docker Compose runs the complete application: an Nginx-hosted React/PWA frontend, a Daphne/Django backend, PostgreSQL with persistent database, media, and static-file volumes, and Redis for ephemeral realtime group-listening events.
+- Listener registration, artist applications, JWT login/refresh/logout, password reset, profiles, user search, and follows
+- Listener, verified artist, support, and admin roles with backend permissions
+- PostgreSQL-backed artists, albums, songs, collaborators, playlists, streams, and recently played history
+- Real audio and cover uploads, playback, queue controls, downloads, and artist statistics
+- Backend enforcement of streaming, playlist, Gold early-access, and statistics entitlements
+- Free, Silver, and Gold plans with server-authoritative pricing and expiry
+- Idempotent subscription orders and ZarinPal sandbox checkout/verification
+- Artist dashboards, monthly payouts, revenue reporting, and admin financial audit
+- Support tickets/messages and persistent notifications
+- English and Persian interfaces
+- Temporary invite-link listening rooms with synchronized song selection, play, pause, resume, seek, progress, and presence
+- Installable PWA shell without caching private API responses or media
+
+Subscription purchasing is available to **listener accounts only**. Support and admin permissions are distinct.
+
+## Architecture
+
+```text
+Browser
+  |
+  v
+Nginx / React PWA
+  |-- /api and /admin ------> Django REST Framework / Daphne
+  |-- /ws ------------------> Django Channels / Daphne
+  |-- /media ---------------> persistent media volume
+  `-- /static --------------> collected static volume
+                                  |              |
+                                  v              v
+                             PostgreSQL        Redis
+                             durable data      realtime events
+```
+
+PostgreSQL owns accounts, subscriptions, orders, music, playlists, streams, artist profiles, tickets, notifications, payouts, and listening-room state. Redis transports ephemeral Channels events. Audio and images live in persistent media storage. See [call-graph.md](call-graph.md) for dependency flow.
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS |
+| Forms | React Hook Form, Zod |
+| Frontend tests | Vitest, Testing Library |
+| Backend | Python 3.12, Django 5.2, Django REST Framework |
+| Realtime | Django Channels, Daphne, Redis |
+| Authentication | Simple JWT with refresh rotation/blacklisting |
+| Database | PostgreSQL 16 in Docker; PostgreSQL 15+ locally |
+| API documentation | drf-spectacular / OpenAPI |
+| Deployment | Docker Compose and Nginx |
+
+## Quick start with Docker
+
+Docker is recommended because it runs PostgreSQL, Redis, Django, Nginx, and the React production build together.
+
+### Requirements
+
+- Docker Desktop with Compose v2
+- Git
+- Port `8080`, or another available port
+
+### Configure and start
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+macOS/Linux:
 
 ```bash
-copy .env.example .env
-docker compose up --build -d
+cp .env.example .env
+```
+
+For demo accounts, edit `.env`:
+
+```dotenv
+DJANGO_DEBUG=true
+SEED_DEMO_DATA=true
+```
+
+Start the stack:
+
+```bash
+docker compose up -d --build
 docker compose ps
 ```
 
-Open [http://localhost:8080](http://localhost:8080). Nginx exposes the frontend and proxies `/api/` and `/admin/` to Django on the same origin. The backend container waits for PostgreSQL, applies migrations, collects static files, and then starts Gunicorn.
+Open:
 
-Useful commands:
+- App: <http://localhost:8080>
+- Health: <http://localhost:8080/api/v1/health/>
+- Admin: <http://localhost:8080/admin/>
+- Swagger when debug is enabled: <http://localhost:8080/api/docs/>
 
-```bash
-docker compose logs -f backend frontend
-docker compose exec backend python manage.py createsuperuser
-docker compose down
+The backend automatically runs migrations and `collectstatic`. With `SEED_DEMO_DATA=true`, it also seeds accounts idempotently.
+
+### Use port 8081 if 8080 is occupied
+
+Set all three matching values in `.env`:
+
+```dotenv
+APP_PORT=8081
+FRONTEND_ORIGIN=http://localhost:8081
+ZARINPAL_CALLBACK_URL=http://localhost:8081/api/v1/subscriptions/zarinpal/callback/
 ```
 
-Named volumes preserve PostgreSQL and uploads across `docker compose down`. Use `docker compose down --volumes` only when you intentionally want to erase container data. For a public deployment, replace the database password and Django secret, configure the public HTTPS host in `DJANGO_ALLOWED_HOSTS` and `FRONTEND_ORIGIN`, and set `ZARINPAL_CALLBACK_URL` to that public HTTPS origin.
+Then run `docker compose up -d --build` and open <http://localhost:8081>. Changing only `APP_PORT` can break CORS and payment callbacks.
 
-## Backend setup
+### Docker lifecycle
 
 ```bash
+docker compose logs -f backend frontend       # follow logs
+docker compose logs --tail 200 backend        # recent backend logs
+docker compose restart                        # restart
+docker compose up -d --build                  # rebuild and recreate
+docker compose down                           # stop; preserve data
+docker compose down --volumes                 # DANGER: delete DB/media volumes
+```
+
+## Demo data and accounts
+
+The development seed requires `DJANGO_DEBUG=true` and is safe to repeat:
+
+```bash
+docker compose exec backend python manage.py seed_demo_data
+```
+
+| Email | Password | Role | Plan |
+|---|---|---|---|
+| `mahyar@example.com` | `Password123!` | Listener | Free |
+| `ali@example.com` | `Password123!` | Verified artist | Silver |
+| `parsa@example.com` | `Password123!` | Support | Free |
+| `hasan@example.com` | `Password123!` | Admin/superuser | Gold |
+
+Use Mahyar to test subscription purchasing because only listeners may create orders.
+
+### Seed real sample music
+
+The music seed expects MP3 files in `backend/music_samples/` with the exact filenames listed in `backend/apps/music/management/commands/seed_music.py`. After adding them:
+
+```bash
+docker compose build backend
+docker compose up -d backend frontend
+docker compose exec backend python manage.py seed_music
+```
+
+This idempotently creates sample artists, albums, songs with audio, and playlists. Seeded music artists use password `MusicPass123!`.
+
+## Run locally without Docker
+
+### Requirements
+
+- Node.js 22+
+- Python 3.12
+- PostgreSQL 15+
+- Redis 7+ recommended for group listening
+
+### Create PostgreSQL database
+
+In `psql` as an administrator:
+
+```sql
+CREATE USER spotify WITH PASSWORD 'spotify';
+CREATE DATABASE spotify OWNER spotify;
+GRANT ALL PRIVILEGES ON DATABASE spotify TO spotify;
+```
+
+Or:
+
+```bash
+psql -U postgres -c "CREATE USER spotify WITH PASSWORD 'spotify';"
+psql -U postgres -c "CREATE DATABASE spotify OWNER spotify;"
+```
+
+If they already exist, update credentials/ownership instead of recreating them.
+
+### Backend on Windows PowerShell
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+Copy-Item backend\.env.example backend\.env
+.\.venv\Scripts\python.exe backend\manage.py migrate
+.\.venv\Scripts\python.exe backend\manage.py seed_demo_data
+.\.venv\Scripts\python.exe backend\manage.py runserver 9000
+```
+
+### Backend on macOS/Linux
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r backend/requirements.txt
+cp backend/.env.example backend/.env
+.venv/bin/python backend/manage.py migrate
+.venv/bin/python backend/manage.py seed_demo_data
+.venv/bin/python backend/manage.py runserver 9000
+```
+
+Port `9000` matches the proxy in `vite.config.ts`. Configure Redis in `backend/.env`:
+
+```dotenv
+REDIS_URL=redis://127.0.0.1:6379/0
+```
+
+Start Redis locally or use Compose:
+
+```bash
+docker compose up -d redis
+```
+
+Without `REDIS_URL`, Django uses an in-memory channel layer suitable only for one backend process. To run the ASGI server explicitly:
+
+```powershell
 cd backend
-python -m venv ../.venv
-../.venv/Scripts/python -m pip install -r requirements.txt
-copy .env.example .env
-../.venv/Scripts/python manage.py migrate
-../.venv/Scripts/python manage.py seed_demo_data
-../.venv/Scripts/python manage.py runserver
+..\.venv\Scripts\daphne.exe -b 127.0.0.1 -p 9000 config.asgi:application
 ```
 
-On macOS/Linux, activate the virtual environment or use `../.venv/bin/python`, and use `cp` instead of `copy`. Update `backend/.env` with a real PostgreSQL `DATABASE_URL` and a development secret before migrating.
+Use `../.venv/bin/daphne` on macOS/Linux.
 
-The API runs at `http://127.0.0.1:8000`. In development, Swagger UI is at [http://127.0.0.1:8000/api/docs/](http://127.0.0.1:8000/api/docs/) and the health endpoint is `GET /api/v1/health/`.
+### Frontend
 
-Notable Phase 2 contracts include:
-
-- `GET /api/v1/users/search/?q=<query>&page=<number>` for paginated,
-  privacy-safe account discovery and follow state
-- `PATCH /api/v1/users/me/` for JSON profile updates or multipart avatar upload
-- `POST /api/v1/subscriptions/orders/` for server-priced upgrades and renewals;
-  order responses include the server-calculated `projected_expires_at`
-- `POST /api/v1/subscriptions/orders/<id>/pay/` to create a Zarinpal authority and return its StartPay URL; Zarinpal calls `GET /api/v1/subscriptions/zarinpal/callback/`, which verifies the authority and exact server-snapshotted IRR amount before activation
-- `POST /api/v1/listening-groups/` creates a temporary group and `GET /api/v1/listening-groups/<invite>/` resolves an invite; authenticated members connect to `/ws/listening/<invite>/` for synchronized play, pause, seek, song changes, and presence updates
-- `POST /api/v1/auth/password-reset/confirm/`, used by the frontend
-  `/reset-password` route
-
-Backend operations contracts include:
-
-- `GET/PATCH /api/v1/artists/<username>/profile/` for verified artist profiles
-- `GET/POST /api/v1/tickets/` plus ticket detail/message endpoints for account owners
-- `PATCH /api/v1/support/tickets/<id>/` for support/admin assignment and status handling
-- `GET /api/v1/notifications/` plus unread-count, mark-read, mark-all-read, and delete endpoints
-- `GET /api/v1/artist/payouts/` for an artist's monthly reports
-- `POST /api/v1/admin/payouts/generate/` and `PATCH /api/v1/admin/payouts/<id>/status/` for admin-only payout audit workflows
-- `PATCH /api/v1/admin/subscription-plans/<code>/` for admin-only plan price changes
-
-## Frontend setup
+In another terminal at the repository root:
 
 ```bash
-npm install
-copy .env.example .env.local
+npm ci
 npm run dev
 ```
 
-`VITE_API_BASE_URL` defaults to `/api/v1`; Vite proxies `/api` to the local Django server. Access and refresh tokens are stored in `sessionStorage`, never in URLs or persistent local storage.
+Open <http://localhost:5173>. Vite proxies `/api` to Django on port `9000`.
 
-### Progressive Web App
-
-Production builds are installable PWAs. The manifest includes standard and maskable icons, standalone display metadata, and mobile theme settings. The service worker precaches the application shell and provides an offline navigation fallback while deliberately excluding authenticated `/api/` responses and uploaded `/media/` content from runtime caching.
-
-WebSocket traffic under `/ws/` is never handled by the service worker or browser Cache Storage. Group state is live and ephemeral; Redis carries events between backend processes, while PostgreSQL holds a room only until its last connected member leaves.
-
-Service workers run only in production builds. Test locally with `npm run build` followed by `npm run preview`, then use the browser's Application panel to inspect installation, caching, offline navigation, and updates.
-
-## Development accounts
-
-Run `python manage.py seed_demo_data` in `DEBUG` mode. It is idempotent and creates:
-
-| Email | Password | Role | Demo plan |
-|---|---|---|---|
-| `mahyar@example.com` | `Password123!` | Listener | Free |
-| `ali@example.com` | `Password123!` | Approved artist | Silver |
-| `hasan@example.com` | `Password123!` | Admin | Gold |
-| `parsa@example.com` | `Password123!` | Support | Free |
-
-The command is disabled when `DJANGO_DEBUG=false`. These credentials are development-only.
-
-## Verification
+Create a manual superuser with:
 
 ```bash
-# Backend (from backend/ with DATABASE_URL configured)
-pytest
-python manage.py check
-python manage.py makemigrations --check --dry-run
-python manage.py spectacular --file openapi.yaml --validate
+python backend/manage.py createsuperuser
+```
 
-# Frontend (from the repository root)
+Use the virtual-environment Python path where applicable.
+
+## Database operations
+
+### Migrations
+
+```bash
+docker compose exec backend python manage.py showmigrations
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py makemigrations
+docker compose exec backend python manage.py makemigrations --check --dry-run
+```
+
+Native equivalents use `python backend/manage.py ...`. Commit generated migrations with their model changes.
+
+### PostgreSQL and Django shells
+
+```bash
+docker compose exec database psql -U spotify -d spotify
+docker compose exec backend python manage.py shell
+```
+
+Useful `psql` commands:
+
+```text
+\dt                 list tables
+\d accounts_user    describe user table
+\du                 list roles
+\l                  list databases
+\q                  quit
+```
+
+Native connection:
+
+```bash
+psql -h 127.0.0.1 -p 5432 -U spotify -d spotify
+```
+
+Django user query:
+
+```python
+from apps.accounts.models import User
+User.objects.values("email", "role", "is_active")
+```
+
+Passwords are hashed and cannot be queried. Reset one with:
+
+```bash
+docker compose exec backend python manage.py changepassword mahyar@example.com
+```
+
+### Backup and restore
+
+```bash
+# Create compressed backup
+docker compose exec -T database pg_dump -U spotify -d spotify -Fc > spotify.dump
+
+# Restore into the intended project database
+docker compose exec -T database pg_restore -U spotify -d spotify --clean --if-exists < spotify.dump
+```
+
+For binary-safe PowerShell redirection, use:
+
+```powershell
+cmd /c "docker compose exec -T database pg_dump -U spotify -d spotify -Fc > spotify.dump"
+```
+
+Verify the target before using `--clean`.
+
+### Reset development records
+
+```bash
+docker compose exec backend python manage.py flush
+docker compose exec backend python manage.py seed_demo_data
+```
+
+`flush` permanently removes application records. `docker compose down --volumes` additionally deletes the entire database and uploaded media.
+
+## Environment variables
+
+### Root `.env` (Docker)
+
+| Variable | Purpose | Example |
+|---|---|---|
+| `APP_PORT` | Nginx host port | `8080` |
+| `POSTGRES_DB` | Database name | `spotify` |
+| `POSTGRES_USER` | Database role | `spotify` |
+| `POSTGRES_PASSWORD` | Database password | development only |
+| `DJANGO_SECRET_KEY` | Cryptographic secret | replace outside disposable dev |
+| `DJANGO_DEBUG` | Debug docs and demo seed availability | `false` |
+| `DJANGO_ALLOWED_HOSTS` | Accepted hostnames | comma-separated |
+| `FRONTEND_ORIGIN` | CORS and payment return origin | `http://localhost:8080` |
+| `ZARINPAL_MERCHANT_ID` | Merchant UUID | sandbox UUID |
+| `ZARINPAL_CALLBACK_URL` | Backend callback | app origin plus callback path |
+| `SEED_DEMO_DATA` | Seed accounts at startup | `false` |
+
+### `backend/.env` (native backend)
+
+Start from `backend/.env.example`. Important variables:
+
+```dotenv
+DATABASE_URL=postgresql://spotify:spotify@localhost:5432/spotify
+REDIS_URL=redis://127.0.0.1:6379/0
+FRONTEND_ORIGIN=http://localhost:5173
+DJANGO_TIME_ZONE=UTC
+```
+
+It also defines JWT lifetimes, throttle rates, media paths, ZarinPal API/StartPay/callback/timeout settings, and `ARTIST_RATE_PER_STREAM`. Never commit production secrets.
+
+## Testing
+
+### Frontend
+
+```bash
+npm ci
 npm run test:run
 npm run lint
 npm run build
 ```
 
-Backend tests intentionally require PostgreSQL; SQLite is unsupported. The frontend API tests mock HTTP at the service boundary, while Django tests verify database state and permissions.
+Focused example:
 
-## Source-of-truth boundaries
+```bash
+npm test -- --run src/__tests__/UpgradeModal.test.tsx
+```
 
-- Django/PostgreSQL owns accounts, credentials, roles, artist applications, follows, preferences, avatars, subscription plans, entitlements, and orders.
-- Django/PostgreSQL also owns artist profiles, support tickets and messages, notifications, monthly artist payout reports, and payout audit status.
-- The frontend renders server-provided plan prices, currencies, durations, and limits. Client guards are UX only.
-- Music catalog, playback simulation, playlists, notifications, tickets, and audit demo data remain local Phase 1 modules. They receive effective entitlement values from the authenticated backend user and must not infer limits from a plan name.
-- Public and private profile DTOs are separate; public responses never include email, demographics, preferences, or subscription expiry.
+### Backend with Docker
 
-## Phase 2 implementation notes
+Backend tests require PostgreSQL. `--entrypoint pytest` is important because the normal backend entrypoint starts Daphne.
 
-- Each user owns one preference record and one current entitlement, may create many subscription orders, and may follow other users. Artist applications belong to a user and record their reviewer; subscription orders snapshot their selected plan's price and currency before activation.
-- State-changing workflows live in backend services so artist review and payment confirmation stay transactional and idempotent. Serializers validate and shape data, selectors resolve effective entitlements, and permission classes enforce roles and plan features at the API boundary.
-- UUID identifiers, separate public/private DTOs, server-generated usernames, PostgreSQL constraints, and server-side price calculations were chosen to keep client input outside authorization and billing decisions.
-- Subscription transitions are server-authoritative: Free may upgrade to Silver or Gold, Silver may renew or upgrade to Gold, and Gold may renew. Renewal extends an active entitlement while an upgrade starts the selected plan from confirmation time.
-- English and Persian layouts share role-aware desktop/mobile navigation, accessible modal focus management, and localized authentication, profile, search, and subscription flows.
-- Codex assisted with the Phase 2 implementation and documentation. Its output was validated with the clean-database workflow and automated checks listed above; production deployment still requires the normal security and code-review process.
+```bash
+docker compose up -d database redis
+docker compose build backend
+docker compose run --rm --entrypoint pytest backend -q
+docker compose run --rm --entrypoint pytest backend apps/listening/tests/test_realtime.py -q
+```
 
-## Production notes
+Validation commands:
 
-Set `DJANGO_DEBUG=false`, use a strong `DJANGO_SECRET_KEY`, restrict `DJANGO_ALLOWED_HOSTS` and `FRONTEND_ORIGIN`, serve over HTTPS, configure durable email/payment providers, and tune the authentication throttle rates in `backend/.env`. The mock order-confirmation endpoint is unavailable outside debug mode.
+```bash
+docker compose run --rm --entrypoint python backend manage.py check
+docker compose run --rm --entrypoint python backend manage.py makemigrations --check --dry-run
+docker compose run --rm --entrypoint python backend manage.py spectacular --file /tmp/openapi.yaml --validate
+```
+
+Native backend, from `backend/`:
+
+```bash
+pytest -q
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py spectacular --file openapi.yaml --validate
+```
+
+## API and application URLs
+
+Default Docker URLs:
+
+| Resource | URL |
+|---|---|
+| React app | `http://localhost:8080/` |
+| REST API | `http://localhost:8080/api/v1/` |
+| Health | `http://localhost:8080/api/v1/health/` |
+| Listening socket | `ws://localhost:8080/ws/listening/<invite>/` |
+| Django admin | `http://localhost:8080/admin/` |
+| OpenAPI schema | `http://localhost:8080/api/schema/` |
+| Swagger (`DEBUG=true`) | `http://localhost:8080/api/docs/` |
+| ReDoc (`DEBUG=true`) | `http://localhost:8080/api/redoc/` |
+
+API groups:
+
+- `/api/v1/auth/` — authentication and password reset
+- `/api/v1/users/` — profiles, search, and follows
+- `/api/v1/subscriptions/` — plans, entitlements, orders, and payment
+- `/api/v1/music/` — catalog, playlists, streams, downloads, statistics
+- `/api/v1/artists/` — artist profiles
+- `/api/v1/tickets/` and `/api/v1/support/` — ticket workflows
+- `/api/v1/notifications/` — notifications
+- `/api/v1/artist/payouts/` and `/api/v1/admin/` — reporting/admin
+- `/api/v1/listening-groups/` — room creation and invite lookup
+
+Use Swagger/OpenAPI for exact contracts.
+
+## Payments and group listening
+
+### Subscription checkout
+
+1. A listener creates an order at `POST /api/v1/subscriptions/orders/`.
+2. `POST /api/v1/subscriptions/orders/<id>/pay/` requests a ZarinPal authority using the server-snapshotted IRR amount.
+3. The browser opens `https://sandbox.zarinpal.com/pg/StartPay/<authority>`.
+4. ZarinPal returns to `ZARINPAL_CALLBACK_URL`.
+5. Django verifies authority and amount, activates the plan transactionally, and redirects to the frontend result page.
+
+The callback must match the exposed application port. Production needs a real merchant ID and public HTTPS callback.
+
+### Group listening
+
+1. An authenticated user creates a temporary room over REST.
+2. Invitees open `/listen/<invite>` and return there after login.
+3. The client connects to `/ws/listening/<invite>/` with JWT WebSocket subprotocols.
+4. PostgreSQL serializes commands; Redis broadcasts state to all members.
+5. Song, play/pause, resume, seek, progress, and presence stay synchronized.
+6. The room is deleted after the final connection leaves.
+
+Browsers can block automatic sound. The room then shows **Enable audio**, which grants a local playback gesture without changing shared state.
+
+## PWA behavior
+
+Production builds use `public/sw.js` and the web manifest. The service worker caches the application shell and hashed assets, supplies offline navigation fallback, and deliberately excludes `/api/`, `/media/`, and WebSocket traffic.
+
+Test a production PWA locally:
+
+```bash
+npm run build
+npm run preview
+```
+
+If an old build appears, hard-refresh or clear the site's service worker and Cache Storage in browser developer tools.
+
+## Project structure
+
+```text
+spotify-project/
+|-- backend/
+|   |-- apps/
+|   |   |-- accounts/       users, profiles, follows, artist review
+|   |   |-- subscriptions/  plans, entitlements, orders, ZarinPal
+|   |   |-- music/          catalog, playlists, streams, downloads
+|   |   |-- support/        tickets and messages
+|   |   |-- notifications/  persistent notifications
+|   |   |-- payments/       payouts and financial reports
+|   |   `-- listening/      rooms and WebSockets
+|   |-- config/             Django and ASGI configuration
+|   |-- Dockerfile
+|   `-- manage.py
+|-- docker/nginx.conf       frontend/API/WebSocket/media proxy
+|-- public/                 PWA assets
+|-- src/                    React source and tests
+|-- compose.yaml
+|-- Dockerfile.frontend
+|-- call-graph.md
+`-- package.json
+```
+
+## Common commands
+
+| Task | Command |
+|---|---|
+| Start stack | `docker compose up -d --build` |
+| Container status | `docker compose ps` |
+| Backend logs | `docker compose logs -f backend` |
+| Migrate | `docker compose exec backend python manage.py migrate` |
+| Seed accounts | `docker compose exec backend python manage.py seed_demo_data` |
+| Seed music | `docker compose exec backend python manage.py seed_music` |
+| Create admin | `docker compose exec backend python manage.py createsuperuser` |
+| Django shell | `docker compose exec backend python manage.py shell` |
+| PostgreSQL shell | `docker compose exec database psql -U spotify -d spotify` |
+| Backend tests | `docker compose run --rm --entrypoint pytest backend -q` |
+| Frontend tests | `npm run test:run` |
+| Frontend build | `npm run build` |
+| Stop, keep data | `docker compose down` |
+
+## Troubleshooting
+
+### Port 8080 is allocated
+
+Set `APP_PORT=8081` and update `FRONTEND_ORIGIN` and `ZARINPAL_CALLBACK_URL` to port 8081, then rebuild.
+
+### Demo seed is disabled
+
+Set `DJANGO_DEBUG=true`, recreate the backend, and seed:
+
+```bash
+docker compose up -d --force-recreate backend frontend
+docker compose exec backend python manage.py seed_demo_data
+```
+
+### No songs or no sound
+
+Add expected MP3s to `backend/music_samples/`, rebuild the backend image, and run `seed_music`. A media URL should return HTTP `200`/`206` with an audio content type.
+
+### Subscription order returns 403
+
+Only listener accounts can purchase. Use `mahyar@example.com`. Other roles intentionally receive `subscription_purchase_forbidden`.
+
+### ZarinPal payment cannot start
+
+Confirm the plan currency is IRR, merchant ID is configured, callback matches the application port, and backend can access `sandbox.zarinpal.com`. Check `docker compose logs --tail 200 backend`.
+
+### Listening room closes or does not synchronize
+
+- Use a fresh link; empty rooms are deleted.
+- Check backend and Redis health with `docker compose ps`.
+- Check logs for `WSCONNECT`, `WSDISCONNECT`, or auth errors.
+- Click **Enable audio** if only sound is blocked.
+
+### PostgreSQL connection refused
+
+Native Django uses `localhost:5432`. A Compose backend must use host `database`, which Compose configures automatically.
+
+### Source changes are not visible
+
+```bash
+docker compose up -d --build frontend backend
+```
+
+Then hard-refresh if the PWA still serves an older shell.
+
+## Production checklist
+
+- Set `DJANGO_DEBUG=false` and use a long random `DJANGO_SECRET_KEY`.
+- Use unique database credentials and automated backups.
+- Restrict allowed hosts, CORS origin, and proxy hostnames.
+- Serve HTTPS and use secure public payment callback URLs.
+- Replace ZarinPal sandbox settings with production credentials.
+- Persist PostgreSQL and media outside ephemeral storage.
+- Run migrations, tests, lint, and builds in CI.
+- Configure production Redis availability, real email delivery, monitoring, and logging.
+- Review throttle rates and secret rotation.
+- Never enable demo seeding or reuse demo passwords in production.
+
+## More documentation
+
+- [Backend notes](backend/README.md)
+- [Call graph](call-graph.md)
+- [Remediation report](docs/remediation-report.md)
+- [Reported issues report](docs/reported-issues-remediation-report.md)
