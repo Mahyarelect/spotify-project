@@ -64,6 +64,8 @@ export function ArtistWorksTable({
                   <th className="px-4 py-3">{t.artistDashboard.tableTitle}</th>
                   <th className="hidden px-4 py-3 sm:table-cell">{t.artistDashboard.genre}</th>
                   <th className="hidden px-4 py-3 md:table-cell">{t.artistDashboard.plays}</th>
+                  <th className="hidden px-4 py-3 lg:table-cell">Listeners</th>
+                  <th className="hidden px-4 py-3 lg:table-cell">Revenue</th>
                   <th className="hidden px-4 py-3 lg:table-cell">{t.artistDashboard.duration}</th>
                   <th className="px-4 py-3 text-right">{t.artistDashboard.tableActions}</th>
                 </tr>
@@ -118,6 +120,8 @@ export function ArtistWorksTable({
                     <td className="hidden px-4 py-3 text-zinc-400 md:table-cell">
                       {song.playCount.toLocaleString()}
                     </td>
+                    <td className="hidden px-4 py-3 text-zinc-400 lg:table-cell">{(song.uniqueListeners ?? 0).toLocaleString()}</td>
+                    <td className="hidden px-4 py-3 text-zinc-400 lg:table-cell">${(song.revenue ?? 0).toFixed(2)}</td>
                     <td className="hidden px-4 py-3 text-zinc-400 lg:table-cell">
                       {Math.floor(song.durationSec / 60)}:
                       {(song.durationSec % 60).toString().padStart(2, "0")}

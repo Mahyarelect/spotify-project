@@ -467,6 +467,7 @@ export const fa: Translations = {
     copyInvite: "کپی لینک دعوت",
     members: "{count} عضو متصل",
     chooseSong: "انتخاب آهنگ برای همه",
+    enableAudio: "فعال‌کردن صدا",
     seek: "تغییر زمان پخش گروه",
     statuses: {
       idle: "متصل نیست",

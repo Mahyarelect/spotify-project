@@ -33,8 +33,8 @@ export default function PlaylistsPage() {
   const limit = user.subscription.limits.maxPlaylists;
   const limitReached = limit !== null && playlists.length >= limit;
 
-  const handleCreate = async (title: string, description?: string) => {
-    await playlistService.createPlaylist(title, description);
+  const handleCreate = async (title: string, description?: string, coverImage?: File) => {
+    await playlistService.createPlaylist(title, description, coverImage);
     refresh();
     setShowCreate(false);
   };

@@ -285,8 +285,22 @@ def update_plan_price(*, actor, code: str, monthly_price: Decimal) -> Subscripti
 
 def expire_due_subscriptions(at=None) -> int:
     at = at or timezone.now()
-    return UserSubscription.objects.filter(
+    due = UserSubscription.objects.filter(
         status=UserSubscription.Status.ACTIVE,
         expires_at__isnull=False,
         expires_at__lte=at,
-    ).exclude(plan__code=SubscriptionPlan.Code.FREE).update(status=UserSubscription.Status.EXPIRED)
+    ).exclude(plan__code=SubscriptionPlan.Code.FREE).select_related("user__preferences", "plan")
+    subscriptions = list(due)
+    updated = due.update(status=UserSubscription.Status.EXPIRED)
+    from apps.notifications.models import Notification
+    from apps.notifications.services import create_notification
+    for subscription in subscriptions:
+        if subscription.user.preferences.notify_subscription_expiry:
+            create_notification(
+                user=subscription.user,
+                type=Notification.Type.SUBSCRIPTION_EXPIRY,
+                title="Subscription expired",
+                message=f"Your {subscription.plan.display_name} subscription has expired.",
+                link="/subscription",
+            )
+    return updated

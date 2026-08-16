@@ -19,6 +19,11 @@ def song_audio_upload_path(instance, filename: str) -> str:
     return f"songs/{instance.pk}/audio/{uuid.uuid4().hex}.{extension}"
 
 
+def playlist_cover_upload_path(instance, filename: str) -> str:
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+    return f"playlists/{instance.pk}/{uuid.uuid4().hex}.{extension}"
+
+
 class Album(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
@@ -84,6 +89,7 @@ class Playlist(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     cover_color = models.CharField(max_length=7)
+    cover_image = models.ImageField(upload_to=playlist_cover_upload_path, null=True, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

@@ -5,7 +5,8 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
-from apps.music.models import Playlist, Song, Stream
+from apps.music.models import Playlist, PlaylistSong, Song, Stream
+from apps.notifications.models import Notification
 from apps.subscriptions.models import SubscriptionPlan, UserSubscription
 
 from .factories import AlbumFactory, PlaylistFactory, SongFactory
@@ -94,6 +95,25 @@ def test_early_access_catalog_requires_gold_entitlement():
     assert client_for(listener).get(f"/api/v1/music/songs/{song.id}/").status_code == 200
 
 
+def test_public_playlist_does_not_leak_early_access_tracks():
+    early_album = AlbumFactory(is_early_access=True)
+    early_song = SongFactory(album=early_album, artist=early_album.artist)
+    public_song = SongFactory(album=None)
+    playlist = PlaylistFactory()
+    PlaylistSong.objects.create(playlist=playlist, song=early_song, position=1)
+    PlaylistSong.objects.create(playlist=playlist, song=public_song, position=2)
+
+    public = APIClient().get(f"/api/v1/music/playlists/{playlist.id}/")
+    assert public.status_code == 200
+    assert [str(row["song"]) for row in public.data["songs"]] == [str(public_song.id)]
+    assert public.data["song_count"] == 1
+
+    listener = user()
+    assign_plan(listener, SubscriptionPlan.Code.GOLD)
+    gold = client_for(listener).get(f"/api/v1/music/playlists/{playlist.id}/")
+    assert gold.data["song_count"] == 2
+
+
 def test_artist_statistics_are_hidden_without_gold():
     artist = user(User.Role.ARTIST, verified=True)
     SongFactory(artist=artist, play_count=12)
@@ -117,3 +137,40 @@ def test_song_collaborators_are_persisted_and_serialized():
     assert response.status_code == 201
     assert response.data["collaborators"] == ["A", "B"]
     assert Song.objects.get(pk=response.data["id"]).collaborators == ["A", "B"]
+
+
+def test_gold_song_statistics_count_stream_rows_and_distinct_users():
+    artist = user(User.Role.ARTIST, verified=True)
+    song = SongFactory(artist=artist, album=None)
+    first, second = user(), user()
+    Stream.objects.create(user=first, song=song)
+    Stream.objects.create(user=first, song=song)
+    Stream.objects.create(user=second, song=song)
+
+    assert client_for(first).get(f"/api/v1/music/songs/{song.id}/statistics/").status_code == 403
+    assign_plan(first, SubscriptionPlan.Code.GOLD)
+    response = client_for(first).get(f"/api/v1/music/songs/{song.id}/statistics/")
+    assert response.status_code == 200
+    assert response.data["total_streams"] == 3
+    assert response.data["unique_listeners"] == 2
+    assert response.data["revenue"] == "0.01"
+
+
+def test_song_release_notifies_only_followers_who_opted_in(django_capture_on_commit_callbacks):
+    artist = user(User.Role.ARTIST, verified=True)
+    enabled, disabled = user(), user()
+    enabled.following.add(artist)
+    disabled.following.add(artist)
+    disabled.preferences.notify_new_releases = False
+    disabled.preferences.save(update_fields=("notify_new_releases",))
+
+    with django_capture_on_commit_callbacks(execute=True):
+        response = client_for(artist).post(
+            "/api/v1/music/songs/",
+            {"title": "Fresh", "duration_sec": 120, "cover_color": "#123456"},
+            format="json",
+        )
+
+    assert response.status_code == 201
+    assert Notification.objects.filter(user=enabled, type=Notification.Type.NEW_RELEASE).count() == 1
+    assert not Notification.objects.filter(user=disabled, type=Notification.Type.NEW_RELEASE).exists()

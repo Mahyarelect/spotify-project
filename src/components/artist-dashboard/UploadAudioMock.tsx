@@ -2,23 +2,31 @@ import { useState } from "react";
 import { Upload, Music, X } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-interface UploadAudioMockProps {
+interface UploadAudioUploaderProps {
   onDurationParsed: (durationSec: number) => void;
+  onFileSelected: (file?: File) => void;
 }
 
-export function UploadAudioMock({ onDurationParsed }: UploadAudioMockProps) {
+export function UploadAudioUploader({ onDurationParsed, onFileSelected }: UploadAudioUploaderProps) {
   const [fileName, setFileName] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  function handleMockUpload() {
-    const name = `track_${Date.now()}.mp3`;
-    setFileName(name);
-    const mockDuration = Math.floor(Math.random() * 180) + 120;
-    onDurationParsed(mockDuration);
+  function handleUpload(file?: File) {
+    if (!file) return;
+    setFileName(file.name);
+    onFileSelected(file);
+    const audio = document.createElement("audio");
+    audio.preload = "metadata";
+    audio.onloadedmetadata = () => {
+      onDurationParsed(Math.max(1, Math.round(audio.duration)));
+      URL.revokeObjectURL(audio.src);
+    };
+    audio.src = URL.createObjectURL(file);
   }
 
   function handleClear() {
     setFileName(null);
+    onFileSelected(undefined);
     onDurationParsed(0);
   }
 
@@ -42,14 +50,18 @@ export function UploadAudioMock({ onDurationParsed }: UploadAudioMockProps) {
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={handleMockUpload}
+        <label
           className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900/50 px-4 py-6 text-sm text-zinc-400 transition hover:border-green-500 hover:text-green-400"
         >
           <Upload size={20} />
           {t.workForm.audioFileCta}
-        </button>
+          <input
+            type="file"
+            accept=".mp3,.wav,.flac,audio/mpeg,audio/wav,audio/flac"
+            className="sr-only"
+            onChange={(event) => handleUpload(event.target.files?.[0])}
+          />
+        </label>
       )}
     </div>
   );

@@ -7,6 +7,7 @@ interface PayoutDto {
   artist_name: string;
   month: string;
   total_streams: number;
+  unique_listeners: number;
   amount: string;
   status: AuditPayment["status"];
   provider_reference: string | null;
@@ -28,6 +29,7 @@ function mapPayout(dto: PayoutDto): AuditPayment {
     artistName: dto.artist_name,
     month: dto.month.slice(0, 7),
     totalStreams: dto.total_streams,
+    uniqueListeners: dto.unique_listeners,
     amount: Number(dto.amount),
     status: dto.status,
     paidAt: dto.paid_at ?? undefined,

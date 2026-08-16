@@ -147,6 +147,7 @@ FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 CORS_ALLOWED_ORIGINS = [FRONTEND_ORIGIN]
 
 ZARINPAL_MERCHANT_ID = os.getenv("ZARINPAL_MERCHANT_ID", "c8d2f8b6-07c1-496c-9f4c-f8e8afae1955")
+ARTIST_RATE_PER_STREAM = os.getenv("ARTIST_RATE_PER_STREAM", "0.003")
 ZARINPAL_API_BASE_URL = os.getenv("ZARINPAL_API_BASE_URL", "https://sandbox.zarinpal.com/pg/v4/payment")
 ZARINPAL_START_PAY_BASE_URL = os.getenv("ZARINPAL_START_PAY_BASE_URL", "https://sandbox.zarinpal.com/pg/StartPay")
 ZARINPAL_CALLBACK_URL = os.getenv(

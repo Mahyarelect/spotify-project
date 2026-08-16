@@ -14,8 +14,7 @@ import {
 } from "@/components/artist-dashboard/WorkForm";
 import {
   getWorksByArtist,
-  getArtistListenerCount,
-  getArtistRevenue,
+  getArtistStatistics,
   createSong,
   updateSong,
   deleteSong,
@@ -44,15 +43,22 @@ export default function ArtistDashboardPage() {
     let cancelled = false;
 
     async function load() {
-      const works = await getWorksByArtist(user!.displayName);
-      const listeners = await getArtistListenerCount(user!.displayName);
-      const rev = await getArtistRevenue(user!.displayName);
+      const [works, statistics] = await Promise.all([
+        getWorksByArtist(user!.displayName),
+        getArtistStatistics(),
+      ]);
       if (cancelled) return;
-      setSongs(works.songs);
+      const bySong = new Map(statistics.songs.map((row) => [row.songId, row]));
+      setSongs(works.songs.map((song) => ({
+        ...song,
+        playCount: bySong.get(song.id)?.totalStreams ?? 0,
+        uniqueListeners: bySong.get(song.id)?.uniqueListeners ?? 0,
+        revenue: bySong.get(song.id)?.revenue ?? 0,
+      })));
       setAlbums(works.albums);
-      setTotalStreams(works.songs.reduce((sum, s) => sum + s.playCount, 0));
-      setListenerCount(listeners);
-      setRevenue(rev);
+      setTotalStreams(statistics.totalStreams);
+      setListenerCount(statistics.uniqueListeners);
+      setRevenue(statistics.revenue);
     }
 
     load();
@@ -114,6 +120,8 @@ export default function ArtistDashboardPage() {
           genre: data.genre || undefined,
           lyrics: data.lyrics || undefined,
           collaborators: data.collaborators.split(",").map((name) => name.trim()).filter(Boolean),
+          coverImage: data.coverImage,
+          audioFile: data.audioFile,
         });
       } else {
         const album = await createAlbum({
@@ -122,6 +130,7 @@ export default function ArtistDashboardPage() {
           releaseDate: new Date().toISOString().split("T")[0],
           isEarlyAccess: false,
           genre: data.genre || undefined,
+          coverImage: data.coverImage,
         });
 
         await createSong({
@@ -133,6 +142,8 @@ export default function ArtistDashboardPage() {
           collaborators: data.collaborators.split(",").map((name) => name.trim()).filter(Boolean),
           genre: data.genre || undefined,
           releaseYear: data.releaseYear ? parseInt(data.releaseYear) : undefined,
+          coverImage: data.coverImage,
+          audioFile: data.audioFile,
         });
       }
     } else {
@@ -140,6 +151,7 @@ export default function ArtistDashboardPage() {
         await updateAlbum(editingAlbum.id, {
           title: data.title,
           genre: data.genre || undefined,
+          coverImage: data.coverImage,
           isEarlyAccess: data.isEarlyAccess,
         });
       } else {
@@ -149,6 +161,7 @@ export default function ArtistDashboardPage() {
           releaseDate: data.releaseDate,
           isEarlyAccess: data.isEarlyAccess,
           genre: data.genre || undefined,
+          coverImage: data.coverImage,
         });
       }
     }

@@ -20,13 +20,20 @@ def generate_monthly_payouts(*, month, rate_per_stream, currency, generated_by):
         Stream.objects.filter(streamed_at__gte=start_at, streamed_at__lt=end_at)
         .values("song__artist_id").annotate(total=Count("id")).values_list("song__artist_id", "total")
     )
+    listeners = dict(
+        Stream.objects.filter(streamed_at__gte=start_at, streamed_at__lt=end_at)
+        .values("song__artist_id")
+        .annotate(total=Count("user_id", distinct=True))
+        .values_list("song__artist_id", "total")
+    )
     payouts = []
     for artist in User.objects.filter(role=User.Role.ARTIST, artist_verified=True, is_active=True):
         streams = counts.get(artist.id, 0)
+        unique_listeners = listeners.get(artist.id, 0)
         amount = (Decimal(streams) * rate_per_stream).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         payout, _ = ArtistPayout.objects.get_or_create(
             artist=artist, month=month,
-            defaults={"total_streams": streams, "rate_per_stream": rate_per_stream, "amount": amount, "currency": currency.upper(), "generated_by": generated_by},
+            defaults={"total_streams": streams, "unique_listeners": unique_listeners, "rate_per_stream": rate_per_stream, "amount": amount, "currency": currency.upper(), "generated_by": generated_by},
         )
         from apps.notifications.models import Notification
         from apps.notifications.services import create_notification

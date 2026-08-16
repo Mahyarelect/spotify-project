@@ -115,7 +115,9 @@ class ListeningGroupConsumer(AsyncJsonWebsocketConsumer):
     def _join(self, user_id, invite_code):
         with transaction.atomic():
             try:
-                group = ListeningGroup.objects.select_for_update().select_related("current_song__artist").get(invite_code=invite_code)
+                # Lock only the group row. PostgreSQL cannot apply FOR UPDATE to
+                # the nullable side of the current_song outer join.
+                group = ListeningGroup.objects.select_for_update().get(invite_code=invite_code)
             except ListeningGroup.DoesNotExist:
                 return None
             member, _ = ListeningMember.objects.select_for_update().get_or_create(group=group, user_id=user_id)
@@ -129,7 +131,7 @@ class ListeningGroupConsumer(AsyncJsonWebsocketConsumer):
     def _leave(self, user_id, group_id):
         with transaction.atomic():
             try:
-                group = ListeningGroup.objects.select_for_update().select_related("current_song__artist").get(pk=group_id)
+                group = ListeningGroup.objects.select_for_update().get(pk=group_id)
                 member = ListeningMember.objects.select_for_update().get(group=group, user_id=user_id)
             except (ListeningGroup.DoesNotExist, ListeningMember.DoesNotExist):
                 return None
@@ -150,7 +152,7 @@ class ListeningGroupConsumer(AsyncJsonWebsocketConsumer):
             return None
         with transaction.atomic():
             try:
-                group = ListeningGroup.objects.select_for_update().select_related("current_song__artist").get(pk=group_id)
+                group = ListeningGroup.objects.select_for_update().get(pk=group_id)
             except ListeningGroup.DoesNotExist:
                 return None
             now = timezone.now()
@@ -158,21 +160,25 @@ class ListeningGroupConsumer(AsyncJsonWebsocketConsumer):
                 requested_position = float(raw_position or 0)
             except (TypeError, ValueError):
                 return None
-            if action == "play" and song_id:
-                try:
-                    song = Song.objects.select_related("artist", "album").exclude(audio_file="").get(pk=song_id)
-                except (Song.DoesNotExist, ValueError):
-                    return None
-                if (
-                    song.album_id
-                    and song.album.is_early_access
-                    and song.artist_id != user_id
-                    and not get_effective_entitlements(group.members.get(user_id=user_id).user).get("early_access_allowed")
-                ):
-                    return None
-                group.current_song = song
-                group.position_seconds = max(0, min(requested_position, song.duration_sec))
-                group.is_playing = True
+            if action == "play":
+                if song_id:
+                    try:
+                        song = Song.objects.select_related("artist", "album").exclude(audio_file="").get(pk=song_id)
+                    except (Song.DoesNotExist, ValueError):
+                        return None
+                    if (
+                        song.album_id
+                        and song.album.is_early_access
+                        and song.artist_id != user_id
+                        and not get_effective_entitlements(group.members.get(user_id=user_id).user).early_access_allowed
+                    ):
+                        return None
+                    group.current_song = song
+                    group.position_seconds = max(0, min(requested_position, song.duration_sec))
+                    group.is_playing = True
+                elif group.current_song_id:
+                    group.position_seconds = _position(group, now)
+                    group.is_playing = True
             elif group.current_song_id:
                 current = _position(group, now)
                 if action == "pause":

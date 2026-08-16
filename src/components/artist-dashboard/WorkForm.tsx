@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import type { Song, Album } from "@/types/music";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { UploadAudioMock } from "./UploadAudioMock";
+import { UploadAudioUploader } from "./UploadAudioMock";
 import { CoverUploader } from "./CoverUploader";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -19,6 +19,8 @@ export interface WorkFormData {
   coverColor: string;
   releaseDate: string;
   isEarlyAccess: boolean;
+  audioFile?: File;
+  coverImage?: File;
 }
 
 interface WorkFormProps {
@@ -121,8 +123,9 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
                 onChange={(e) => update("collaborators", e.target.value)}
                 placeholder={t.workForm.collaboratorsPlaceholder}
               />
-              <UploadAudioMock
+              <UploadAudioUploader
                 onDurationParsed={(dur) => update("durationSec", dur)}
+                onFileSelected={(file) => update("audioFile", file)}
               />
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-zinc-300">
@@ -162,6 +165,8 @@ export function WorkForm({ type, initialData, onSubmit, onCancel }: WorkFormProp
           <CoverUploader
             value={form.coverColor}
             onChange={(color) => update("coverColor", color)}
+            file={form.coverImage}
+            onFileChange={(file) => update("coverImage", file)}
           />
 
           <div className="flex justify-end gap-3 pt-2">

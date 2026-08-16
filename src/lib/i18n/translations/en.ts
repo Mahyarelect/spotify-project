@@ -465,6 +465,7 @@ export const en = {
     copyInvite: "Copy invite link",
     members: "{count} connected",
     chooseSong: "Choose a song for everyone",
+    enableAudio: "Enable audio",
     seek: "Seek group playback",
     statuses: {
       idle: "Not connected",
@@ -596,7 +597,7 @@ export const en = {
     publishSingle: "Publish Single",
     publishAlbum: "Publish Album",
     audioFileLabel: "Audio File (Mock)",
-    audioFileCta: "Click to upload audio file (mock)",
+    audioFileCta: "Click to upload an MP3, WAV, or FLAC file",
     coverArtLabel: "Cover Art",
     changeColor: "Change Color",
     pickColor: "Pick a Color",

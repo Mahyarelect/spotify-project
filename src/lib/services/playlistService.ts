@@ -5,6 +5,7 @@ interface PlaylistResponse {
   id: string;
   title: string;
   cover_color: string;
+  cover_image: string | null;
   created_by: string;
   created_by_name: string;
   description: string;
@@ -23,6 +24,7 @@ function mapPlaylist(raw: PlaylistResponse): Playlist {
     id: raw.id,
     title: raw.title,
     coverColor: raw.cover_color,
+    coverImage: raw.cover_image ?? undefined,
     songIds: raw.songs.map((s) => s.song),
     createdBy: raw.created_by,
     description: raw.description || undefined,
@@ -47,15 +49,17 @@ export async function canCreatePlaylist(maxPlaylists: number | null): Promise<bo
 
 export async function createPlaylist(
   title: string,
-  description?: string
+  description?: string,
+  coverImage?: File,
 ): Promise<Playlist> {
+  const formData = new FormData();
+  formData.append("title", title.trim());
+  formData.append("cover_color", "#1b1b2f");
+  formData.append("description", description?.trim() ?? "");
+  if (coverImage) formData.append("cover_image", coverImage);
   const data = await apiRequest<PlaylistResponse>("music/playlists/", {
     method: "POST",
-    body: JSON.stringify({
-      title: title.trim(),
-      cover_color: "#1b1b2f",
-      description: description?.trim() ?? "",
-    }),
+    body: formData,
   });
   return mapPlaylist(data);
 }
@@ -90,7 +94,7 @@ export async function removeSongFromPlaylist(
 
 export async function getPlaylistById(playlistId: string): Promise<Playlist | undefined> {
   try {
-    const data = await apiRequest<PlaylistResponse>(`music/playlists/${playlistId}/`, { skipAuth: true });
+    const data = await apiRequest<PlaylistResponse>(`music/playlists/${playlistId}/`);
     return mapPlaylist(data);
   } catch {
     return undefined;

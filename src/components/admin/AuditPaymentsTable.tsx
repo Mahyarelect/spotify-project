@@ -56,6 +56,7 @@ export function AuditPaymentsTable({
               <tr className="border-b border-zinc-800 text-start text-xs text-zinc-500">
                 <th className="px-4 py-3">{t.admin.artist}</th>
                 <th className="hidden px-4 py-3 sm:table-cell">{t.admin.streams}</th>
+                <th className="hidden px-4 py-3 lg:table-cell">Listeners</th>
                 <th className="px-4 py-3">{t.admin.amount}</th>
                 <th className="px-4 py-3">{t.admin.auditStatus}</th>
                 <th className="px-4 py-3 text-end">{t.admin.actions}</th>
@@ -75,6 +76,9 @@ export function AuditPaymentsTable({
                     </td>
                     <td className="hidden px-4 py-3 text-zinc-400 sm:table-cell">
                       {payment.totalStreams.toLocaleString()}
+                    </td>
+                    <td className="hidden px-4 py-3 text-zinc-400 lg:table-cell">
+                      {payment.uniqueListeners.toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-zinc-200">
                       ${payment.amount.toFixed(2)}

@@ -1,5 +1,8 @@
+from decimal import Decimal, ROUND_HALF_UP
+
+from django.conf import settings
 from django.db import transaction
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, F, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -20,6 +23,7 @@ from .models import Album, Playlist, PlaylistSong, RecentlyPlayed, Song, Stream
 from .serializers.serializers import (
     AlbumCreateUpdateSerializer,
     AlbumSerializer,
+    ArtistStatisticsSerializer,
     PlaylistAddSongSerializer,
     PlaylistCreateUpdateSerializer,
     PlaylistRemoveSongSerializer,
@@ -29,6 +33,7 @@ from .serializers.serializers import (
     SearchResultSerializer,
     SongCreateUpdateSerializer,
     SongSerializer,
+    SongStatisticsSerializer,
     StreamCreateSerializer,
     StreamSerializer,
     StreamStatusSerializer,
@@ -62,6 +67,34 @@ def _visible_songs(request):
     if request.user.is_authenticated and request.user.role == User.Role.ARTIST:
         visible |= Q(artist=request.user)
     return queryset.filter(visible)
+
+
+def _song_statistics(song):
+    streams = Stream.objects.filter(song=song)
+    total = streams.count()
+    rate = Decimal(str(getattr(settings, "ARTIST_RATE_PER_STREAM", "0.003")))
+    return {
+        "song_id": song.id,
+        "total_streams": total,
+        "unique_listeners": streams.values("user_id").distinct().count(),
+        "revenue": (Decimal(total) * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+    }
+
+
+def _notify_new_release(song):
+    from apps.notifications.models import Notification
+    from apps.notifications.services import create_notification
+
+    for follower in song.artist.followers.filter(is_active=True, preferences__notify_new_releases=True):
+        if song.album and song.album.is_early_access and not get_effective_entitlements(follower).early_access_allowed:
+            continue
+        create_notification(
+            user=follower,
+            type=Notification.Type.NEW_RELEASE,
+            title="New release",
+            message=f"{song.artist.display_name} released {song.title}.",
+            link=f"/player/{song.id}",
+        )
 
 
 class AlbumListCreateView(ListCreateAPIView):
@@ -146,6 +179,7 @@ class SongListCreateView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save(artist=request.user)
+        transaction.on_commit(lambda: _notify_new_release(instance))
         return Response(SongSerializer(instance).data, status=status.HTTP_201_CREATED)
 
 
@@ -214,7 +248,7 @@ class PlaylistListCreateView(ListCreateAPIView):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             instance = serializer.save(created_by=request.user)
-        return Response(PlaylistSerializer(instance).data, status=status.HTTP_201_CREATED)
+        return Response(PlaylistSerializer(instance, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 
 class UserPlaylistListView(ListAPIView):
@@ -412,9 +446,9 @@ class SearchView(GenericAPIView):
 
         return Response(
             {
-                "songs": SongSerializer(songs, many=True).data,
-                "albums": AlbumSerializer(albums, many=True).data,
-                "playlists": PlaylistSerializer(playlists, many=True).data,
+                "songs": SongSerializer(songs, many=True, context={"request": request}).data,
+                "albums": AlbumSerializer(albums, many=True, context={"request": request}).data,
+                "playlists": PlaylistSerializer(playlists, many=True, context={"request": request}).data,
             }
         )
 
@@ -480,6 +514,39 @@ class StreamStatusView(GenericAPIView):
         )
 
 
+class SongStatisticsView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SongStatisticsSerializer
+
+    def get(self, request, pk):
+        song = get_object_or_404(Song.objects.select_related("artist", "album"), pk=pk)
+        if not (
+            request.user == song.artist
+            or request.user.role == User.Role.ADMIN
+            or get_effective_entitlements(request.user).statistics_allowed
+        ):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Gold subscription is required to view song statistics.")
+        return Response(self.get_serializer(_song_statistics(song)).data)
+
+
+class ArtistStatisticsView(GenericAPIView):
+    permission_classes = (IsVerifiedArtist,)
+    serializer_class = ArtistStatisticsSerializer
+
+    def get(self, request):
+        songs = list(Song.objects.filter(artist=request.user))
+        rows = [_song_statistics(song) for song in songs]
+        data = {
+            "total_streams": sum(row["total_streams"] for row in rows),
+            "unique_listeners": Stream.objects.filter(song__artist=request.user).values("user_id").distinct().count(),
+            "revenue": sum((row["revenue"] for row in rows), Decimal("0")),
+            "song_count": len(songs),
+            "songs": rows,
+        }
+        return Response(self.get_serializer(data).data)
+
+
 class ArtistProfileView(GenericAPIView):
     permission_classes = (AllowAny,)
 
@@ -510,7 +577,7 @@ class ArtistProfileView(GenericAPIView):
                 or get_effective_entitlements(request.user).statistics_allowed
             )
         )
-        total_streams = songs.aggregate(total=Sum("play_count"))["total"] or 0
+        total_streams = Stream.objects.filter(song__artist=artist).count()
 
         return Response(
             {

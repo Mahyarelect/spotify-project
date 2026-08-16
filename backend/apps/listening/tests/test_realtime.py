@@ -106,6 +106,23 @@ async def test_song_and_playback_changes_broadcast_to_every_member():
     assert first_state["isPlaying"] is second_state["isPlaying"] is True
     assert 12 <= second_state["position"] < 14
 
+    await sockets[1].send_json_to({"type": "command", "action": "pause"})
+    paused_first = await sockets[0].receive_json_from()
+    paused_second = await sockets[1].receive_json_from()
+    assert paused_first["isPlaying"] is paused_second["isPlaying"] is False
+
+    await sockets[0].send_json_to({"type": "command", "action": "seek", "position": 47})
+    sought_first = await sockets[0].receive_json_from()
+    sought_second = await sockets[1].receive_json_from()
+    assert sought_first["position"] == sought_second["position"] == 47
+    assert sought_second["isPlaying"] is False
+
+    await sockets[1].send_json_to({"type": "command", "action": "play"})
+    resumed_first = await sockets[0].receive_json_from()
+    resumed_second = await sockets[1].receive_json_from()
+    assert resumed_first["isPlaying"] is resumed_second["isPlaying"] is True
+    assert 47 <= resumed_second["position"] < 49
+
     await sockets[0].disconnect()
     await sockets[1].receive_json_from()
     await sockets[1].disconnect()

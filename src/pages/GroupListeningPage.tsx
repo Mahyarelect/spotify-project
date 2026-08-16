@@ -26,12 +26,13 @@ export default function GroupListeningPage() {
   const { inviteCode } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { syncFromGroup, progress } = usePlayer();
+  const { syncFromGroup, progress, playbackBlocked, resumePlayback } = usePlayer();
   const socketRef = useRef<WebSocket | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [groupState, setGroupState] = useState<GroupState | null>(null);
   const [status, setStatus] = useState<"idle" | "connecting" | "connected" | "closed" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [seekPreview, setSeekPreview] = useState<number | null>(null);
 
   useEffect(() => {
     void getAllSongs().then(setSongs).catch(() => setError(t.groupListening.loadError));
@@ -53,6 +54,7 @@ export default function GroupListeningPage() {
         const next = JSON.parse(event.data) as GroupState;
         if (next.type !== "state") return;
         setGroupState(next);
+        setSeekPreview(null);
         syncFromGroup(next.song, next.isPlaying, next.position);
       };
       socket.onerror = () => active && setStatus("error");
@@ -86,6 +88,11 @@ export default function GroupListeningPage() {
     socketRef.current.send(JSON.stringify({ type: "command", action, songId, position }));
   }
 
+  function commitSeek(position: number) {
+    setSeekPreview(position);
+    send("seek", undefined, position);
+  }
+
   const inviteUrl = inviteCode ? `${window.location.origin}${ROUTES.GROUP_LISTENING_ROOM.replace(":inviteCode", inviteCode)}` : "";
 
   return (
@@ -112,7 +119,7 @@ export default function GroupListeningPage() {
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 rounded-lg" style={{ backgroundColor: groupState.song.coverColor }} />
                 <div className="min-w-0 flex-1"><h2 className="truncate font-semibold">{groupState.song.title}</h2><p className="text-sm text-zinc-400">{groupState.song.artistName}</p></div>
-                <Button onClick={() => send(groupState.isPlaying ? "pause" : "play", groupState.song?.id, groupState.position)}>
+                <Button onClick={() => send(groupState.isPlaying ? "pause" : "play")}>
                   {groupState.isPlaying ? <Pause size={18} /> : <Play size={18} />}
                   {groupState.isPlaying ? t.player.pause : t.player.play}
                 </Button>
@@ -122,10 +129,17 @@ export default function GroupListeningPage() {
                 type="range"
                 min={0}
                 max={groupState.song.durationSec}
-                value={Math.min(progress, groupState.song.durationSec)}
+                value={Math.min(seekPreview ?? progress, groupState.song.durationSec)}
                 aria-label={t.groupListening.seek}
-                onChange={(event) => send("seek", undefined, Number(event.target.value))}
+                onChange={(event) => setSeekPreview(Number(event.target.value))}
+                onPointerUp={(event) => commitSeek(Number(event.currentTarget.value))}
+                onKeyUp={(event) => commitSeek(Number(event.currentTarget.value))}
               />
+              {playbackBlocked && groupState.isPlaying && (
+                <Button className="mt-3" variant="secondary" onClick={() => void resumePlayback()}>
+                  <Play size={18} />{t.groupListening.enableAudio}
+                </Button>
+              )}
             </PageShell>
           )}
 

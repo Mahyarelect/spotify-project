@@ -26,9 +26,12 @@ describe("playlistService backend contract", () => {
   it("creates a trimmed playlist through the API", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(playlist, 201));
     await expect(createPlaylist("  Focus  ", "  Work music  ")).resolves.toMatchObject({ id: "playlist-1" });
-    expect(fetchMock.mock.calls[0][1]).toMatchObject({
-      method: "POST",
-      body: JSON.stringify({ title: "Focus", cover_color: "#1b1b2f", description: "Work music" }),
+    const request = fetchMock.mock.calls[0][1];
+    expect(request).toMatchObject({ method: "POST" });
+    expect(request?.body).toBeInstanceOf(FormData);
+    const body = request?.body as FormData;
+    expect(Object.fromEntries(body.entries())).toEqual({
+      title: "Focus", cover_color: "#1b1b2f", description: "Work music",
     });
   });
 

@@ -12,19 +12,21 @@ export function CreatePlaylistModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onCreate: (title: string, description?: string) => void;
+  onCreate: (title: string, description?: string, coverImage?: File) => void;
   limitReached: boolean;
   limit: number | null;
 }) {
   const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState<File | undefined>();
 
   const handleSubmit = () => {
     if (!title.trim()) return;
-    onCreate(title.trim(), description.trim() || undefined);
+    onCreate(title.trim(), description.trim() || undefined, coverImage);
     setTitle("");
     setDescription("");
+    setCoverImage(undefined);
   };
 
   return (
@@ -61,6 +63,10 @@ export function CreatePlaylistModal({
                   if (e.key === "Enter") handleSubmit();
                 }}
               />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-zinc-300">Playlist cover</label>
+              <input type="file" accept="image/*" onChange={(event) => setCoverImage(event.target.files?.[0])} className="block w-full text-sm text-zinc-400 file:me-3 file:rounded file:border-0 file:bg-zinc-700 file:px-3 file:py-2 file:text-zinc-100" />
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium text-zinc-300">

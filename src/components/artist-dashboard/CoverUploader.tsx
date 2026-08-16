@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImageIcon, X } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface CoverUploaderProps {
   value: string;
   onChange: (coverColor: string) => void;
+  file?: File;
+  onFileChange: (file?: File) => void;
 }
 
 const COVER_COLORS = [
@@ -13,9 +15,20 @@ const COVER_COLORS = [
   "#0d1b2a", "#1b263b", "#415a77", "#778da9",
 ];
 
-export function CoverUploader({ value, onChange }: CoverUploaderProps) {
+export function CoverUploader({ value, onChange, file, onFileChange }: CoverUploaderProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(undefined);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   return (
     <div className="space-y-2">
@@ -27,7 +40,9 @@ export function CoverUploader({ value, onChange }: CoverUploaderProps) {
           className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg"
           style={{ backgroundColor: value || "#27272a" }}
         >
-          {value ? (
+          {previewUrl ? (
+            <img src={previewUrl} alt="Selected cover" className="h-full w-full rounded-lg object-cover" />
+          ) : value ? (
             <ImageIcon size={32} className="text-white/40" />
           ) : (
             <ImageIcon size={32} className="text-zinc-600" />
@@ -41,10 +56,14 @@ export function CoverUploader({ value, onChange }: CoverUploaderProps) {
           >
             {value ? t.workForm.changeColor : t.workForm.pickColor}
           </button>
+          <label className="ms-2 cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700">
+            Upload image
+            <input type="file" accept="image/*" className="sr-only" onChange={(event) => onFileChange(event.target.files?.[0])} />
+          </label>
           {value && (
             <button
               type="button"
-              onClick={() => onChange("")}
+              onClick={() => { onChange(""); onFileChange(undefined); }}
               className="ml-2 text-sm text-zinc-500 hover:text-red-400"
             >
               <X size={14} className="inline" /> {t.workForm.remove}

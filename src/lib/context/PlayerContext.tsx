@@ -27,6 +27,7 @@ interface PlayerState {
   repeatMode: RepeatMode;
   isExpanded: boolean;
   streamError: string | null;
+  playbackBlocked: boolean;
   sourcePlaylistId: string | null;
 }
 
@@ -46,6 +47,7 @@ interface PlayerContextType extends PlayerState {
   stop: () => void;
   clearStreamError: () => void;
   syncFromGroup: (song: Song | null, isPlaying: boolean, position: number) => void;
+  resumePlayback: () => Promise<void>;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -81,6 +83,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     repeatMode: prefs.repeatMode,
     isExpanded: false,
     streamError: null,
+    playbackBlocked: false,
     sourcePlaylistId: null,
   });
 
@@ -88,6 +91,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   stateRef.current = state;
   const songIdRef = useRef<string | null>(null);
   const pendingGroupPositionRef = useRef<number | null>(null);
+
+  const resumePlayback = useCallback(async () => {
+    try {
+      await getAudioElement().play();
+      setState((prev) => ({ ...prev, playbackBlocked: false }));
+    } catch {
+      setState((prev) => ({ ...prev, playbackBlocked: true }));
+    }
+  }, []);
 
   // Persist volume, shuffle, repeatMode
   useEffect(() => {
@@ -153,11 +165,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.addEventListener("loadedmetadata", applyPosition, { once: true });
       applyPosition();
       if (state.isPlaying) {
-        audio.play().catch(() => {});
+        void resumePlayback();
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentSong?.id]);
+  }, [state.currentSong?.id, resumePlayback]);
 
   // Handle play/pause toggling
   useEffect(() => {
@@ -167,12 +179,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const audio = getAudioElement();
 
     if (state.isPlaying) {
-      audio.play().catch(() => {});
+      void resumePlayback();
     } else {
       audio.pause();
+      setState((prev) => prev.playbackBlocked ? { ...prev, playbackBlocked: false } : prev);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.isPlaying]);
+  }, [state.isPlaying, resumePlayback]);
 
   function advanceToNext() {
     setState((prev) => {
@@ -444,6 +457,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       progress: safePosition,
       streamError: null,
       sourcePlaylistId: null,
+      playbackBlocked: false,
     }));
   }, []);
 
@@ -497,6 +511,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         stop,
         clearStreamError,
         syncFromGroup,
+        resumePlayback,
       }}
     >
       {children}

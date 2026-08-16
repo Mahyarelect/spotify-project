@@ -78,6 +78,28 @@ describe("API-backed authentication forms", () => {
     expect(await screen.findByText("Admin destination")).toBeInTheDocument();
   });
 
+  it("returns to a protected listening-room invite after login", async () => {
+    auth.login.mockResolvedValue({ role: "listener" });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={[{
+        pathname: "/login",
+        state: { from: { pathname: "/listen/invite-123", search: "?shared=1", hash: "" } },
+      }]}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/listen/:inviteCode" element={<div>Listening room destination</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText("Email"), "listener@example.com");
+    await user.type(screen.getByLabelText("Password"), "Password123!");
+    await user.click(screen.getByRole("button", { name: "Sign In" }));
+
+    expect(await screen.findByText("Listening room destination")).toBeInTheDocument();
+  });
+
   it("maps backend registration field errors into the form", async () => {
     auth.registerListener.mockRejectedValue(new ApiError(400, {
       error: {

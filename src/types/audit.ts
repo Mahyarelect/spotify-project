@@ -4,6 +4,7 @@ export interface AuditPayment {
   artistName: string;
   month: string;
   totalStreams: number;
+  uniqueListeners: number;
   amount: number;
   status: "pending" | "approved" | "paid" | "disputed";
   paidAt?: string;

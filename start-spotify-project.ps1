@@ -1,325 +1,287 @@
-﻿$ErrorActionPreference = "Stop"
+﻿"""Theory V1: explicit belief features only; no reward shaping."""
 
-# One-click launcher for spotify-project on Windows.
-# Put this file in the ROOT of the cloned repository, next to package.json.
+import numpy as np
 
-$Root = $PSScriptRoot
-$Backend = Join-Path $Root "backend"
-$Venv = Join-Path $Root ".venv"
-$VenvPython = Join-Path $Venv "Scripts\python.exe"
-$StateDir = Join-Path $Root ".launcher-state"
+from see.training.theory_api import TheorySpec
 
-$DbContainer = "spotify-postgres"
-$DbPort = 5433
-$BackendPort = 9000
-$FrontendPort = 5173
 
-function Write-Step($Message) {
-    Write-Host ""
-    Write-Host "==> $Message" -ForegroundColor Cyan
-}
+# Observation indices
+T_FRAC = 0
 
-function Require-Command($Name, $HelpText) {
-    if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
-        Write-Host ""
-        Write-Host "ERROR: '$Name' was not found." -ForegroundColor Red
-        Write-Host $HelpText -ForegroundColor Yellow
-        exit 1
-    }
-}
 
-function Test-TcpPort($Port) {
-    try {
-        $client = New-Object System.Net.Sockets.TcpClient
-        $result = $client.BeginConnect("127.0.0.1", $Port, $null, $null)
-        $ok = $result.AsyncWaitHandle.WaitOne(250)
-        if ($ok -and $client.Connected) {
-            $client.EndConnect($result)
-            $client.Close()
-            return $true
-        }
-        $client.Close()
-        return $false
-    }
-    catch {
-        return $false
-    }
-}
+class MyTheory(TheorySpec):
+    """
+    First theory experiment.
 
-function Ensure-Docker {
-    Require-Command "docker" "Install/start Docker Desktop first."
+    We make beliefs about the opponent explicit while keeping reward
+    shaping equal to zero. This lets us compare belief features directly
+    against the null baseline.
+    """
 
-    try {
-        docker info *> $null
-        return
-    }
-    catch {
-        $dockerDesktop = Join-Path $env:ProgramFiles "Docker\Docker\Docker Desktop.exe"
-        if (Test-Path $dockerDesktop) {
-            Write-Step "Starting Docker Desktop"
-            Start-Process $dockerDesktop | Out-Null
+    name = "beliefs-v1"
 
-            for ($i = 0; $i -lt 60; $i++) {
-                Start-Sleep -Seconds 2
-                try {
-                    docker info *> $null
-                    Write-Host "Docker Desktop is ready." -ForegroundColor Green
-                    return
-                }
-                catch {}
-            }
-        }
+    # Four theory-derived belief features are appended to the normal
+    # 16-dimensional observation.
+    extra_feature_dim = 4
 
-        Write-Host ""
-        Write-Host "ERROR: Docker Desktop is installed but the Docker engine is not available." -ForegroundColor Red
-        Write-Host "Start Docker Desktop, then run this launcher again." -ForegroundColor Yellow
-        exit 1
-    }
-}
+    def on_episode_start(self, player_id):
+        # V1 reconstructs its beliefs directly from public history,
+        # so no additional hidden state is required.
+        pass
 
-function Ensure-Postgres {
-    Write-Step "Checking PostgreSQL Docker container"
+    @staticmethod
+    def _other(player_id):
+        if player_id == "I":
+            return "U"
+        return "I"
 
-    $exists = docker container inspect $DbContainer 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Creating $DbContainer on localhost:$DbPort ..."
-        docker run --name $DbContainer `
-            -e POSTGRES_DB=spotify `
-            -e POSTGRES_USER=spotify `
-            -e POSTGRES_PASSWORD=spotify `
-            -p "${DbPort}:5432" `
-            -v spotify_pgdata:/var/lib/postgresql/data `
-            -d postgres:16
+    def extra_features(self, player_id, obs, public_state):
+        opp = self._other(player_id)
 
-        if ($LASTEXITCODE -ne 0) {
-            throw "Could not create the PostgreSQL container."
-        }
-    }
-    else {
-        $running = docker inspect -f "{{.State.Running}}" $DbContainer
-        if ($running -ne "true") {
-            Write-Host "Starting existing $DbContainer ..."
-            docker start $DbContainer | Out-Null
-        }
-        else {
-            Write-Host "$DbContainer is already running." -ForegroundColor Green
-        }
-    }
+        # --------------------------------------------------------------
+        # FEATURE 1:
+        # Bayesian belief that the opponent is a high-endurance type.
+        #
+        # H = high-endurance / high-resolve opponent
+        # L = low-endurance / low-resolve opponent
+        #
+        # Start with an uninformative prior:
+        # P(H) = P(L) = 0.5
+        # --------------------------------------------------------------
+        log_odds = 0.0
 
-    Write-Host "Checking PostgreSQL readiness..."
-    for ($i = 0; $i -lt 30; $i++) {
-        docker exec $DbContainer pg_isready -U spotify -d spotify *> $null
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "PostgreSQL is ready on localhost:$DbPort." -ForegroundColor Green
-            return
-        }
-        Start-Sleep -Seconds 1
-    }
+        signal_levels = np.asarray(
+            [0.0, 0.25, 0.50, 0.75, 1.0],
+            dtype=np.float32
+        )
 
-    throw "PostgreSQL did not become ready."
-}
+        # Stronger signals are assumed to be relatively more likely
+        # under H because the model's single-crossing condition makes
+        # strong signals relatively cheaper for stronger types.
+        likelihood_H = np.asarray(
+            [0.10, 0.15, 0.20, 0.25, 0.30],
+            dtype=np.float32
+        )
 
-function Ensure-BackendEnv {
-    $example = Join-Path $Backend ".env.example"
-    $envFile = Join-Path $Backend ".env"
+        likelihood_L = np.asarray(
+            [0.30, 0.25, 0.20, 0.15, 0.10],
+            dtype=np.float32
+        )
 
-    if (-not (Test-Path $envFile)) {
-        Write-Step "Creating backend .env"
-        Copy-Item $example $envFile
-    }
-
-    # This machine already uses 5432 for the Odoo PostgreSQL container.
-    # Ensure the Spotify project connects to its own container on 5433.
-    $content = Get-Content $envFile -Raw
-    $updated = $content.Replace(
-        "postgresql://spotify:spotify@localhost:5432/spotify",
-        "postgresql://spotify:spotify@localhost:5433/spotify"
-    )
-    if ($updated -ne $content) {
-        Set-Content -Path $envFile -Value $updated -Encoding UTF8
-        Write-Host "Updated backend DATABASE_URL to localhost:5433." -ForegroundColor Green
-    }
-}
-
-function Ensure-FrontendConfig {
-    $example = Join-Path $Root ".env.example"
-    $localEnv = Join-Path $Root ".env.local"
-
-    if ((Test-Path $example) -and (-not (Test-Path $localEnv))) {
-        Write-Step "Creating frontend .env.local"
-        Copy-Item $example $localEnv
-    }
-
-    # Ports 7969-8068 are excluded on this Windows machine, so Django uses 9000.
-    $viteConfig = Join-Path $Root "vite.config.ts"
-    if (Test-Path $viteConfig) {
-        $content = Get-Content $viteConfig -Raw
-        $updated = $content.Replace("http://127.0.0.1:8000", "http://127.0.0.1:9000")
-        if ($updated -ne $content) {
-            Set-Content -Path $viteConfig -Value $updated -Encoding UTF8
-            Write-Host "Updated Vite API proxy to Django port 9000." -ForegroundColor Green
-        }
-    }
-}
-
-function Ensure-PythonDependencies {
-    Require-Command "python" "Install Python 3.12 and make sure 'python' is on PATH."
-
-    if (-not (Test-Path $VenvPython)) {
-        Write-Step "Creating Python virtual environment"
-        & python -m venv $Venv
-        if ($LASTEXITCODE -ne 0) {
-            throw "Could not create the Python virtual environment."
+        # Public commitment stocks are reconstructed from history.
+        K = {
+            "I": 0.0,
+            "U": 0.0
         }
 
-        & $VenvPython -m pip install --upgrade pip
-        if ($LASTEXITCODE -ne 0) {
-            throw "Could not upgrade pip."
-        }
-    }
+        delta_K = 0.75
 
-    New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
+        pressure_sum = 0.0
+        pressure_count = 0
 
-    $requirements = Join-Path $Backend "requirements.txt"
-    $hashFile = Join-Path $StateDir "requirements.sha256"
-    $currentHash = (Get-FileHash $requirements -Algorithm SHA256).Hash
-    $savedHash = if (Test-Path $hashFile) { (Get-Content $hashFile -Raw).Trim() } else { "" }
+        history = public_state.get("history", [])
 
-    if (($currentHash -ne $savedHash) -or -not (Test-Path (Join-Path $Venv "Lib\site-packages\django"))) {
-        Write-Step "Installing/updating Python dependencies"
-        & $VenvPython -m pip install -r $requirements
-        if ($LASTEXITCODE -ne 0) {
-            throw "Python dependency installation failed."
-        }
-        Set-Content $hashFile $currentHash
-    }
-    else {
-        Write-Host "Python dependencies are already installed." -ForegroundColor Green
-    }
-}
+        for h in history:
+            sigma = h.get("sigma", {})
 
-function Ensure-NodeDependencies {
-    Require-Command "node" "Install Node.js 22+ and make sure 'node' is on PATH."
-    Require-Command "npm" "Install npm and make sure 'npm' is on PATH."
+            my_sigma = float(
+                sigma.get(player_id, 0.0)
+            )
 
-    New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
+            opp_sigma = float(
+                sigma.get(opp, 0.0)
+            )
 
-    $lockFile = Join-Path $Root "package-lock.json"
-    $hashFile = Join-Path $StateDir "package-lock.sha256"
-    $nodeModules = Join-Path $Root "node_modules"
-    $currentHash = (Get-FileHash $lockFile -Algorithm SHA256).Hash
-    $savedHash = if (Test-Path $hashFile) { (Get-Content $hashFile -Raw).Trim() } else { "" }
+            active = h.get("active", [])
 
-    if ((-not (Test-Path $nodeModules)) -or ($currentHash -ne $savedHash)) {
-        Write-Step "Installing/updating frontend dependencies"
-        Push-Location $Root
-        try {
-            & npm ci
-            if ($LASTEXITCODE -ne 0) {
-                throw "npm ci failed."
-            }
-        }
-        finally {
-            Pop-Location
-        }
-        Set-Content $hashFile $currentHash
-    }
-    else {
-        Write-Host "Frontend dependencies are already installed." -ForegroundColor Green
-    }
-}
+            opp_exited = bool(
+                h.get("exit", {}).get(opp, False)
+            )
 
-function Prepare-Django {
-    Write-Step "Running Django migrations"
-    Push-Location $Backend
-    try {
-        & $VenvPython manage.py migrate
-        if ($LASTEXITCODE -ne 0) {
-            throw "Django migrations failed."
-        }
+            # ----------------------------------------------------------
+            # FEATURE EVIDENCE:
+            # Approximate public pressure faced by the opponent.
+            #
+            # It combines:
+            #   - pressure from our signal,
+            #   - opponent accumulated commitment,
+            #   - joint escalation.
+            #
+            # This does NOT use the opponent's hidden endurance or type.
+            # ----------------------------------------------------------
+            opp_commitment = np.clip(
+                K[opp] / 4.0,
+                0.0,
+                1.0
+            )
 
-        Write-Step "Ensuring demo users exist"
-        & $VenvPython manage.py seed_demo_data
-        if ($LASTEXITCODE -ne 0) {
-            throw "seed_demo_data failed."
-        }
+            pressure = (
+                0.45 * my_sigma
+                + 0.30 * opp_commitment
+                + 0.25 * my_sigma * opp_sigma
+            )
 
-        $musicSamples = Join-Path $Backend "music_samples"
-        $musicMarker = Join-Path $StateDir "music-seeded.txt"
-        if ((Test-Path $musicSamples) -and (-not (Test-Path $musicMarker))) {
-            $mp3Count = @(Get-ChildItem $musicSamples -Filter "*.mp3" -File -ErrorAction SilentlyContinue).Count
-            if ($mp3Count -gt 0) {
-                Write-Step "Seeding sample music"
-                & $VenvPython manage.py seed_music
-                if ($LASTEXITCODE -eq 0) {
-                    Set-Content $musicMarker "seeded"
-                }
-                else {
-                    Write-Host "Music seeding failed; continuing without it." -ForegroundColor Yellow
-                }
-            }
-        }
-    }
-    finally {
-        Pop-Location
-    }
-}
+            pressure = float(
+                np.clip(pressure, 0.0, 1.0)
+            )
 
-function Start-Services {
-    Write-Step "Starting development servers"
+            pressure_sum += pressure
+            pressure_count += 1
 
-    if (Test-TcpPort $BackendPort) {
-        Write-Host "Django already appears to be running on port $BackendPort." -ForegroundColor Green
-    }
-    else {
-        $backendCommand = "Set-Location '$Backend'; & '$VenvPython' manage.py runserver 127.0.0.1:$BackendPort"
-        Start-Process powershell.exe -ArgumentList "-NoExit", "-Command", $backendCommand
-        Write-Host "Started Django at http://127.0.0.1:$BackendPort/" -ForegroundColor Green
-    }
+            # Only use the signal as new evidence when the opponent
+            # actually had an opportunity to choose an action.
+            #
+            # HOLD is not treated as a newly chosen costly signal.
+            if opp in active and not opp_exited:
 
-    if (Test-TcpPort $FrontendPort) {
-        Write-Host "Vite already appears to be running on port $FrontendPort." -ForegroundColor Green
-    }
-    else {
-        $frontendCommand = "Set-Location '$Root'; npm run dev"
-        Start-Process powershell.exe -ArgumentList "-NoExit", "-Command", $frontendCommand
-        Write-Host "Started Vite at http://localhost:$FrontendPort/" -ForegroundColor Green
-    }
+                index = int(
+                    np.argmin(
+                        np.abs(signal_levels - opp_sigma)
+                    )
+                )
 
-    Start-Sleep -Seconds 3
-    Start-Process "http://localhost:$FrontendPort/"
-}
+                # Bayesian likelihood-ratio update from signal strength.
+                log_odds += float(
+                    np.log(
+                        likelihood_H[index]
+                        / likelihood_L[index]
+                    )
+                )
 
-try {
-    if (-not (Test-Path (Join-Path $Root "package.json")) -or -not (Test-Path (Join-Path $Backend "manage.py"))) {
-        throw "Put this launcher in the ROOT of spotify-project (next to package.json)."
-    }
+                # Continuing under stronger public pressure is treated
+                # as additional evidence of endurance.
+                #
+                # At low pressure, H and L behave similarly.
+                # At high pressure, continuation is assumed to be more
+                # likely for H than for L.
+                p_continue_H = (
+                    0.72 + 0.18 * pressure
+                )
 
-    Write-Host "Spotify Project - One Click Launcher" -ForegroundColor Green
-    Write-Host "Project: $Root"
+                p_continue_L = (
+                    0.72 - 0.22 * pressure
+                )
 
-    Ensure-Docker
-    Ensure-Postgres
-    Ensure-BackendEnv
-    Ensure-FrontendConfig
-    Ensure-PythonDependencies
-    Ensure-NodeDependencies
-    Prepare-Django
-    Start-Services
+                log_odds += float(
+                    np.log(
+                        p_continue_H
+                        / p_continue_L
+                    )
+                )
 
-    Write-Host ""
-    Write-Host "Project startup complete." -ForegroundColor Green
-    Write-Host "Frontend : http://localhost:$FrontendPort/"
-    Write-Host "Backend  : http://127.0.0.1:$BackendPort/"
-    Write-Host "Postgres : localhost:$DbPort"
-    Write-Host ""
-    Write-Host "You can close this launcher window. The backend/frontend run in their own PowerShell windows."
-}
-catch {
-    Write-Host ""
-    Write-Host "STARTUP FAILED" -ForegroundColor Red
-    Write-Host $_.Exception.Message -ForegroundColor Red
-    Write-Host ""
-    Read-Host "Press Enter to close"
-    exit 1
-}
+            # Reconstruct the public commitment transition:
+            #
+            # K_i(t+1) = 0.75 K_i(t) + sigma_i(t)
+            K[player_id] = (
+                delta_K * K[player_id]
+                + my_sigma
+            )
+
+            K[opp] = (
+                delta_K * K[opp]
+                + opp_sigma
+            )
+
+        # Keep numerical values stable.
+        log_odds = float(
+            np.clip(log_odds, -8.0, 8.0)
+        )
+
+        # Convert log odds into posterior probability.
+        p_high = (
+            1.0
+            / (1.0 + np.exp(-log_odds))
+        )
+
+        # --------------------------------------------------------------
+        # FEATURE 2:
+        # Average public pressure that the opponent has survived.
+        # --------------------------------------------------------------
+        avg_pressure = (
+            pressure_sum
+            / max(pressure_count, 1)
+        )
+
+        # --------------------------------------------------------------
+        # FEATURE 3:
+        # Estimated current opponent endurance.
+        #
+        # We do not observe true opponent endurance.
+        # Instead, construct a belief proxy from:
+        #   posterior type probability,
+        #   elapsed time,
+        #   public pressure.
+        # --------------------------------------------------------------
+        t_frac = float(
+            np.clip(obs[T_FRAC], 0.0, 1.0)
+        )
+
+        high_type_path = (
+            1.0 - 0.30 * t_frac
+        )
+
+        low_type_path = (
+            1.0 - 0.65 * t_frac
+        )
+
+        endurance_proxy = (
+            p_high * high_type_path
+            + (1.0 - p_high) * low_type_path
+            - 0.20 * avg_pressure * t_frac
+        )
+
+        endurance_proxy = float(
+            np.clip(
+                endurance_proxy,
+                0.0,
+                1.0
+            )
+        )
+
+        # --------------------------------------------------------------
+        # FEATURE 4:
+        # Confidence in the high/low belief.
+        #
+        # confidence = 0 when posterior = 0.5
+        # confidence approaches 1 when posterior approaches 0 or 1.
+        # --------------------------------------------------------------
+        confidence = (
+            1.0
+            - 4.0
+            * p_high
+            * (1.0 - p_high)
+        )
+
+        confidence = float(
+            np.clip(
+                confidence,
+                0.0,
+                1.0
+            )
+        )
+
+        return np.asarray(
+            [
+                p_high,
+                avg_pressure,
+                endurance_proxy,
+                confidence,
+            ],
+            dtype=np.float32
+        )
+
+    def shaping(
+        self,
+        player_id,
+        obs,
+        action,
+        env_reward,
+        next_obs,
+        next_public,
+        terminated
+    ):
+        # No shaping in Experiment V1.
+        #
+        # This allows us to isolate whether explicit belief features
+        # improve learning relative to the null baseline.
+        return 0.0

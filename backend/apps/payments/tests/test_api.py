@@ -1,10 +1,13 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 import pytest
+from django.utils import timezone
 from rest_framework.test import APIClient
 from apps.accounts.models import User
 from apps.accounts.tests.factories import UserFactory
 from apps.payments.models import ArtistPayout
+from apps.music.models import Stream
+from apps.music.tests.factories import SongFactory
 from apps.subscriptions.models import SubscriptionOrder, SubscriptionPlan, UserSubscription
 
 pytestmark = pytest.mark.django_db
@@ -31,6 +34,31 @@ def test_only_admin_can_generate_and_transition_payouts():
     paid = client_for(admin).patch(f"/api/v1/admin/payouts/{payout.id}/status/", {"status": "paid", "provider_reference": "bank-123"}, format="json")
     assert paid.status_code == 200
     assert paid.data["status"] == "paid"
+
+
+def test_monthly_payout_reports_distinct_listeners():
+    admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+    artist = UserFactory(role=User.Role.ARTIST, artist_verified=True)
+    first, second = UserFactory(), UserFactory()
+    song = SongFactory(artist=artist, album=None)
+    rows = [
+        Stream.objects.create(user=first, song=song),
+        Stream.objects.create(user=first, song=song),
+        Stream.objects.create(user=second, song=song),
+    ]
+    for day, stream in enumerate(rows, start=10):
+        Stream.objects.filter(pk=stream.pk).update(
+            streamed_at=timezone.make_aware(datetime(2026, 7, day, 10, 0))
+        )
+
+    response = client_for(admin).post(
+        "/api/v1/admin/payouts/generate/",
+        {"month": "2026-07-01", "rate_per_stream": "0.003000", "currency": "USD"},
+        format="json",
+    )
+    row = next(item for item in response.data if str(item["artist"]) == str(artist.id))
+    assert row["total_streams"] == 3
+    assert row["unique_listeners"] == 2
 
 
 def test_artist_sees_only_own_reports():

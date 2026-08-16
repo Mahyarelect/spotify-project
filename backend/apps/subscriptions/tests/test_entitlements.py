@@ -7,9 +7,10 @@ from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
 
 from apps.accounts.models import User
+from apps.notifications.models import Notification
 from apps.subscriptions.models import SubscriptionPlan, UserSubscription
 from apps.subscriptions.selectors import get_effective_entitlements
-from apps.subscriptions.services import get_daily_stream_limit, get_playlist_limit, require_feature
+from apps.subscriptions.services import expire_due_subscriptions, get_daily_stream_limit, get_playlist_limit, require_feature
 
 
 pytestmark = pytest.mark.django_db
@@ -80,6 +81,18 @@ def test_expired_paid_subscription_resolves_to_free_immediately():
 
     assert entitlement.plan_code == "free"
     assert entitlement.daily_stream_limit == 60
+
+
+def test_expiring_subscription_creates_preference_driven_notification():
+    user = create_user("expiry@example.com")
+    user.subscription.plan = SubscriptionPlan.objects.get(code="gold")
+    user.subscription.expires_at = timezone.now() - timedelta(seconds=1)
+    user.subscription.save()
+
+    assert expire_due_subscriptions() == 1
+    assert Notification.objects.filter(
+        user=user, type=Notification.Type.SUBSCRIPTION_EXPIRY
+    ).count() == 1
 
 
 def test_limit_and_feature_helpers_use_effective_plan():

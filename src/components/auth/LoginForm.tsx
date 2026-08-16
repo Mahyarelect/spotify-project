@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createAuthSchemas } from "@/lib/validation/authSchemas";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
@@ -10,11 +10,13 @@ import { useMemo, useState } from "react";
 import { ROLE_HOME_ROUTE } from "@/lib/constants/routes";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { ApiError } from "@/lib/api/apiError";
+import { getLoginReturnPath } from "@/lib/routing/loginRedirect";
 
 export function LoginForm() {
   const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [serverError, setServerError] = useState("");
   const [invalidSubmit, setInvalidSubmit] = useState(false);
   const schema = useMemo(() => createAuthSchemas(t.validation).login, [t]);
@@ -31,7 +33,8 @@ export function LoginForm() {
     setInvalidSubmit(false);
     try {
       const { role } = await login(data.email, data.password);
-      navigate(ROLE_HOME_ROUTE[role as keyof typeof ROLE_HOME_ROUTE] ?? "/", { replace: true });
+      const returnPath = getLoginReturnPath(location.state);
+      navigate(returnPath ?? ROLE_HOME_ROUTE[role as keyof typeof ROLE_HOME_ROUTE] ?? "/", { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.code !== "invalid_credentials") {
         setServerError(error.message);

@@ -15,6 +15,7 @@ class ArtistPayout(models.Model):
     artist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="artist_payouts")
     month = models.DateField(help_text="First day of the reporting month.")
     total_streams = models.PositiveIntegerField(default=0)
+    unique_listeners = models.PositiveIntegerField(default=0)
     rate_per_stream = models.DecimalField(max_digits=10, decimal_places=6, validators=[MinValueValidator(0)])
     amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     currency = models.CharField(max_length=3, default="USD")
@@ -30,4 +31,3 @@ class ArtistPayout(models.Model):
         ordering = ("-month", "artist__display_name")
         constraints = [models.UniqueConstraint(fields=("artist", "month"), name="payments_artist_month_unique")]
         indexes = [models.Index(fields=("month", "status"), name="payments_month_status_idx")]
-

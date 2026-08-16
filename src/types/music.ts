@@ -11,6 +11,8 @@ export interface Song {
   audioFile?: string;
   hasAudio?: boolean;
   playCount: number;
+  uniqueListeners?: number;
+  revenue?: number;
   lyrics?: string;
   genre?: string;
   releaseYear?: number;
@@ -34,6 +36,7 @@ export interface Playlist {
   id: string;
   title: string;
   coverColor: string;
+  coverImage?: string;
   songIds: string[];
   createdBy: string;
   description?: string;

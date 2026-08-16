@@ -16,7 +16,7 @@ import { VolumeControl } from "./controls/VolumeControl";
 import { RepeatButton } from "./controls/RepeatButton";
 import { ShuffleButton } from "./controls/ShuffleButton";
 import { QueuePanel } from "./QueuePanel";
-import { getTodayStreamCount } from "@/lib/services/streamService";
+import { getSongStatistics } from "@/lib/services/artistWorkService";
 
 export function PlayerOverlay() {
   const { t } = useTranslation();
@@ -42,17 +42,20 @@ export function PlayerOverlay() {
 
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"lyrics" | "queue">("lyrics");
-  const [streamCount, setStreamCount] = useState(0);
+  const [statistics, setStatistics] = useState<{ totalStreams: number; uniqueListeners: number }>();
+
+  const canViewStats = user?.subscription.limits.statisticsAllowed ?? false;
+  const currentSongId = currentSong?.id;
 
   useEffect(() => {
-    if (user) {
-      getTodayStreamCount().then(setStreamCount);
+    setStatistics(undefined);
+    if (currentSongId && canViewStats) {
+      getSongStatistics(currentSongId).then(setStatistics).catch(() => setStatistics(undefined));
     }
-  }, [user]);
+  }, [currentSongId, canViewStats]);
 
   if (!isExpanded || !currentSong) return null;
 
-  const canViewStats = user?.subscription.limits.statisticsAllowed ?? false;
   const nextSong =
     queue.length > 0 && currentIndex + 1 < queue.length
       ? queue[currentIndex + 1]
@@ -123,9 +126,9 @@ export function PlayerOverlay() {
                 </>
               )}
             </div>
-            {canViewStats && (
+            {canViewStats && statistics && (
               <p className="mt-1 text-xs text-zinc-500">
-                {t.player.streamsToday.replace("{count}", String(streamCount))}
+                {statistics.totalStreams.toLocaleString()} streams · {statistics.uniqueListeners.toLocaleString()} listeners
               </p>
             )}
           </div>

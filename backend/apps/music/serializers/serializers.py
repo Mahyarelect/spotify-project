@@ -1,6 +1,9 @@
 from rest_framework import serializers
+from django.db.models import Q
 
 from apps.accounts.serializers.profile import RejectUnknownFieldsMixin
+from apps.accounts.models import User
+from apps.subscriptions.selectors import get_effective_entitlements
 
 from ..models import Album, Playlist, PlaylistSong, RecentlyPlayed, Song, Stream
 
@@ -114,8 +117,30 @@ class PlaylistSongSerializer(serializers.ModelSerializer):
 class PlaylistSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source="created_by.display_name", read_only=True)
     created_by_username = serializers.CharField(source="created_by.username", read_only=True)
-    song_count = serializers.IntegerField(read_only=True)
-    songs = PlaylistSongSerializer(source="playlist_songs", many=True, read_only=True)
+    song_count = serializers.SerializerMethodField()
+    songs = serializers.SerializerMethodField()
+
+    def _visible_playlist_songs(self, obj):
+        request = self.context.get("request")
+        rows = obj.playlist_songs.select_related("song__artist", "song__album").all()
+        if request is None:
+            return rows
+        user = request.user
+        entitled = user.is_authenticated and (
+            user.role == User.Role.ADMIN or get_effective_entitlements(user).early_access_allowed
+        )
+        if entitled:
+            return rows
+        visible = Q(song__album__isnull=True) | Q(song__album__is_early_access=False)
+        if user.is_authenticated and user.role == User.Role.ARTIST:
+            visible |= Q(song__artist=user)
+        return rows.filter(visible)
+
+    def get_songs(self, obj):
+        return PlaylistSongSerializer(self._visible_playlist_songs(obj), many=True).data
+
+    def get_song_count(self, obj):
+        return self._visible_playlist_songs(obj).count()
 
     class Meta:
         model = Playlist
@@ -123,6 +148,7 @@ class PlaylistSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "cover_color",
+            "cover_image",
             "created_by",
             "created_by_name",
             "created_by_username",
@@ -138,7 +164,7 @@ class PlaylistSerializer(serializers.ModelSerializer):
 class PlaylistCreateUpdateSerializer(RejectUnknownFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Playlist
-        fields = ("title", "cover_color", "description")
+        fields = ("title", "cover_color", "cover_image", "description")
 
 
 class PlaylistAddSongSerializer(RejectUnknownFieldsMixin, serializers.Serializer):
@@ -203,3 +229,18 @@ class StreamStatusSerializer(serializers.Serializer):
 
 class TopSongSerializer(SongSerializer):
     rank = serializers.IntegerField(read_only=True)
+
+
+class SongStatisticsSerializer(serializers.Serializer):
+    song_id = serializers.UUIDField()
+    total_streams = serializers.IntegerField()
+    unique_listeners = serializers.IntegerField()
+    revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+
+class ArtistStatisticsSerializer(serializers.Serializer):
+    total_streams = serializers.IntegerField()
+    unique_listeners = serializers.IntegerField()
+    revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
+    song_count = serializers.IntegerField()
+    songs = SongStatisticsSerializer(many=True)

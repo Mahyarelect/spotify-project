@@ -39,6 +39,7 @@ interface PlaylistResponse {
   id: string;
   title: string;
   cover_color: string;
+  cover_image: string | null;
   created_by: string;
   created_by_name: string;
   created_by_username: string;
@@ -100,23 +101,23 @@ function mapPlaylist(raw: PlaylistResponse): Playlist {
 }
 
 export async function getAllSongs(): Promise<Song[]> {
-  const data = await apiRequest<SongResponse[]>("music/songs/", { skipAuth: true });
+  const data = await apiRequest<SongResponse[]>("music/songs/");
   return data.map(mapSong);
 }
 
 export async function getAllAlbums(): Promise<Album[]> {
-  const data = await apiRequest<AlbumResponse[]>("music/albums/", { skipAuth: true });
+  const data = await apiRequest<AlbumResponse[]>("music/albums/");
   return data.map(mapAlbum);
 }
 
 export async function getAllPlaylists(): Promise<Playlist[]> {
-  const data = await apiRequest<PlaylistResponse[]>("music/playlists/", { skipAuth: true });
+  const data = await apiRequest<PlaylistResponse[]>("music/playlists/");
   return data.map(mapPlaylist);
 }
 
 export async function getSongById(songId: string): Promise<Song | undefined> {
   try {
-    const data = await apiRequest<SongResponse>(`music/songs/${songId}/`, { skipAuth: true });
+    const data = await apiRequest<SongResponse>(`music/songs/${songId}/`);
     return mapSong(data);
   } catch {
     return undefined;
@@ -125,7 +126,7 @@ export async function getSongById(songId: string): Promise<Song | undefined> {
 
 export async function getAlbumById(albumId: string): Promise<Album | undefined> {
   try {
-    const data = await apiRequest<AlbumResponse>(`music/albums/${albumId}/`, { skipAuth: true });
+    const data = await apiRequest<AlbumResponse>(`music/albums/${albumId}/`);
     return mapAlbum(data);
   } catch {
     return undefined;
@@ -136,7 +137,7 @@ export async function getAlbumSongs(albumId: string): Promise<Song[]> {
   try {
     const album = await apiRequest<AlbumResponse & { songs: SongResponse[] }>(
       `music/albums/${albumId}/`,
-      { skipAuth: true }
+      {}
     );
     return (album.songs ?? []).map(mapSong);
   } catch {
@@ -146,7 +147,7 @@ export async function getAlbumSongs(albumId: string): Promise<Song[]> {
 
 export async function getPlaylistById(playlistId: string): Promise<Playlist | undefined> {
   try {
-    const data = await apiRequest<PlaylistResponse>(`music/playlists/${playlistId}/`, { skipAuth: true });
+    const data = await apiRequest<PlaylistResponse>(`music/playlists/${playlistId}/`);
     return mapPlaylist(data);
   } catch {
     return undefined;
@@ -162,7 +163,7 @@ export async function searchMusic(query: string): Promise<{
     songs: SongResponse[];
     albums: AlbumResponse[];
     playlists: PlaylistResponse[];
-  }>(`music/search/?q=${encodeURIComponent(query)}`, { skipAuth: true });
+  }>(`music/search/?q=${encodeURIComponent(query)}`);
 
   return {
     songs: data.songs.map(mapSong),

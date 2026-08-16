@@ -87,20 +87,29 @@ export async function getWorksByArtist(artistName: string): Promise<{
   return { songs, albums };
 }
 
-export async function getArtistListenerCount(artistName: string): Promise<number> {
-  const songs = await getAllSongs();
-  const artistSongs = songs.filter(
-    (s) => s.artistName.toLowerCase() === artistName.toLowerCase()
-  );
-  return artistSongs.reduce((sum, s) => sum + s.playCount, 0);
+export async function getArtistStatistics(): Promise<{
+  totalStreams: number;
+  uniqueListeners: number;
+  revenue: number;
+  songCount: number;
+  songs: Array<{ songId: string; totalStreams: number; uniqueListeners: number; revenue: number }>;
+}> {
+  const raw = await apiRequest<{
+    total_streams: number; unique_listeners: number; revenue: string; song_count: number;
+    songs: Array<{ song_id: string; total_streams: number; unique_listeners: number; revenue: string }>;
+  }>("music/artists/me/statistics/");
+  return {
+    totalStreams: raw.total_streams,
+    uniqueListeners: raw.unique_listeners,
+    revenue: Number(raw.revenue),
+    songCount: raw.song_count,
+    songs: raw.songs.map((row) => ({ songId: row.song_id, totalStreams: row.total_streams, uniqueListeners: row.unique_listeners, revenue: Number(row.revenue) })),
+  };
 }
 
-export async function getArtistRevenue(artistName: string): Promise<number> {
-  const songs = await getAllSongs();
-  const totalStreams = songs
-    .filter((s) => s.artistName.toLowerCase() === artistName.toLowerCase())
-    .reduce((sum, s) => sum + s.playCount, 0);
-  return Math.round(totalStreams * 0.003 * 100) / 100;
+export async function getSongStatistics(songId: string): Promise<{ totalStreams: number; uniqueListeners: number; revenue: number }> {
+  const raw = await apiRequest<{ total_streams: number; unique_listeners: number; revenue: string }>(`music/songs/${songId}/statistics/`);
+  return { totalStreams: raw.total_streams, uniqueListeners: raw.unique_listeners, revenue: Number(raw.revenue) };
 }
 
 export interface CreateSongData {
@@ -113,6 +122,7 @@ export interface CreateSongData {
   collaborators?: string[];
   genre?: string;
   releaseYear?: number;
+  audioFile?: File;
 }
 
 export async function createSong(data: CreateSongData): Promise<Song> {
@@ -127,21 +137,38 @@ export async function createSong(data: CreateSongData): Promise<Song> {
   if (data.releaseYear) formData.append("release_year", String(data.releaseYear));
   if (data.coverImage) formData.append("cover_image", data.coverImage);
 
-  const raw = await apiRequest<SongResponse>("music/songs/", {
+  let raw = await apiRequest<SongResponse>("music/songs/", {
     method: "POST",
     body: formData,
   });
+  if (data.audioFile) raw = await uploadSongAudio(raw.id, data.audioFile);
   return mapSong(raw);
+}
+
+async function uploadSongAudio(songId: string, file: File): Promise<SongResponse> {
+  const formData = new FormData();
+  formData.append("audio_file", file);
+  return apiRequest<SongResponse>(`music/songs/${songId}/upload-audio/`, { method: "PUT", body: formData });
 }
 
 export async function updateSong(
   songId: string,
-  patch: { title?: string; genre?: string; lyrics?: string; collaborators?: string[] }
+  patch: { title?: string; genre?: string; lyrics?: string; collaborators?: string[]; coverImage?: File; audioFile?: File }
 ): Promise<Song> {
-  const raw = await apiRequest<SongResponse>(`music/songs/${songId}/`, {
+  const { coverImage, audioFile, ...metadata } = patch;
+  const body = coverImage ? new FormData() : JSON.stringify(metadata);
+  if (body instanceof FormData) {
+    if (patch.title) body.append("title", patch.title);
+    if (patch.genre) body.append("genre", patch.genre);
+    if (patch.lyrics) body.append("lyrics", patch.lyrics);
+    body.append("collaborators", JSON.stringify(patch.collaborators ?? []));
+    body.append("cover_image", coverImage!);
+  }
+  let raw = await apiRequest<SongResponse>(`music/songs/${songId}/`, {
     method: "PATCH",
-    body: JSON.stringify(patch),
+    body,
   });
+  if (audioFile) raw = await uploadSongAudio(songId, audioFile);
   return mapSong(raw);
 }
 
@@ -176,11 +203,18 @@ export async function createAlbum(data: CreateAlbumData): Promise<Album> {
 
 export async function updateAlbum(
   albumId: string,
-  patch: { title?: string; genre?: string; isEarlyAccess?: boolean }
+  patch: { title?: string; genre?: string; isEarlyAccess?: boolean; coverImage?: File }
 ): Promise<Album> {
+  const payload = patch.coverImage ? new FormData() : null;
+  if (payload) {
+    if (patch.title) payload.append("title", patch.title);
+    if (patch.genre) payload.append("genre", patch.genre);
+    if (patch.isEarlyAccess !== undefined) payload.append("is_early_access", String(patch.isEarlyAccess));
+    payload.append("cover_image", patch.coverImage!);
+  }
   const raw = await apiRequest<AlbumResponse>(`music/albums/${albumId}/`, {
     method: "PATCH",
-    body: JSON.stringify({
+    body: payload ?? JSON.stringify({
       ...(patch.title && { title: patch.title }),
       ...(patch.genre && { genre: patch.genre }),
       ...(patch.isEarlyAccess !== undefined && { is_early_access: patch.isEarlyAccess }),

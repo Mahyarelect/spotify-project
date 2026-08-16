@@ -8,7 +8,7 @@ class ArtistPayoutSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ArtistPayout
-        fields = ("id", "artist", "artist_name", "month", "total_streams", "rate_per_stream", "amount", "currency", "status", "provider_reference", "generated_at", "reviewed_at", "paid_at")
+        fields = ("id", "artist", "artist_name", "month", "total_streams", "unique_listeners", "rate_per_stream", "amount", "currency", "status", "provider_reference", "generated_at", "reviewed_at", "paid_at")
         read_only_fields = fields
 
 

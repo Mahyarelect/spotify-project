@@ -57,8 +57,10 @@ export default function HomePage() {
   };
 
   const recentPlaylists = recentEntries
-    .map((e) => playlists.find((p) => p.id === e.songId))
-    .filter(Boolean);
+    .map((entry) => playlists.find((playlist) => playlist.songIds.includes(entry.songId)))
+    .filter((playlist, index, rows): playlist is Playlist =>
+      Boolean(playlist) && rows.findIndex((candidate) => candidate?.id === playlist?.id) === index
+    );
 
   const newAlbums = [...albums]
     .filter((a) => !a.isEarlyAccess)
