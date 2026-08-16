@@ -168,14 +168,85 @@ This idempotently creates sample artists, albums, songs with audio, and playlist
 
 ## Run locally without Docker
 
-### Requirements
+This mode runs React and Django directly on the host while Docker supplies only PostgreSQL and Redis. It is the recommended local-development setup because it behaves consistently on a new machine and still supports real media and WebSockets.
+
+### One-command Windows setup
+
+Requirements: Docker Desktop, Git, Node.js 22+, and Python 3.12 (`py -3.12`). From PowerShell at the repository root:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\setup-local.ps1
+```
+
+The setup script:
+
+1. Starts an isolated `spotify-local` PostgreSQL volume on `localhost:5433` and Redis on `localhost:6379` using `compose.local.yaml`. It does not reuse the production-like Docker database/media references.
+2. Creates `.venv` and installs Python and npm dependencies.
+3. Creates `backend/.env` when missing.
+4. Restores the sample MP3 files from commit `1b1628b` when they are absent from a fresh checkout.
+5. Runs migrations, seeds demo accounts, seeds songs/albums/playlists with real audio, and runs Django checks.
+
+Then use two PowerShell terminals:
+
+```powershell
+# Terminal 1: Django ASGI, including WebSockets
+.\scripts\run-local-backend.ps1
+
+# Terminal 2: Vite
+.\scripts\run-local-frontend.ps1
+```
+
+Open <http://localhost:5173>. Vite proxies `/api`, `/admin`, `/media`, `/static`, and `/ws` to Daphne on port `9000`.
+
+To repeat setup without reinstalling dependencies, use:
+
+```powershell
+.\scripts\setup-local.ps1 -SkipInstall
+```
+
+Use `-SkipMusic` only when you intentionally do not want the sample catalog/audio.
+
+Stop only the local infrastructure while preserving its database:
+
+```powershell
+docker compose -p spotify-local -f compose.yaml -f compose.local.yaml down
+```
+
+To intentionally reset only the isolated local database and Redis state:
+
+```powershell
+docker compose -p spotify-local -f compose.yaml -f compose.local.yaml down --volumes
+.\scripts\setup-local.ps1 -SkipInstall
+```
+
+The normal full Docker stack uses the default `spotify-project` Compose project and remains separate from `spotify-local`.
+
+### Manual/cross-platform requirements
 
 - Node.js 22+
 - Python 3.12
 - PostgreSQL 15+
 - Redis 7+ recommended for group listening
 
-### Create PostgreSQL database
+### Manual option A: PostgreSQL and Redis from Docker
+
+This exposes only the infrastructure services required by native Django:
+
+```bash
+docker compose -p spotify-local -f compose.yaml -f compose.local.yaml up -d database redis
+```
+
+Use these values in `backend/.env`:
+
+```dotenv
+DATABASE_URL=postgresql://spotify:spotify@localhost:5433/spotify
+REDIS_URL=redis://127.0.0.1:6379/0
+FRONTEND_ORIGIN=http://localhost:5173
+DJANGO_DEBUG=true
+```
+
+### Manual option B: installed PostgreSQL
 
 In `psql` as an administrator:
 
@@ -193,6 +264,7 @@ psql -U postgres -c "CREATE DATABASE spotify OWNER spotify;"
 ```
 
 If they already exist, update credentials/ownership instead of recreating them.
+When using an installed PostgreSQL server, change `DATABASE_URL` to port `5432`.
 
 ### Backend on Windows PowerShell
 
@@ -203,6 +275,7 @@ py -3.12 -m venv .venv
 Copy-Item backend\.env.example backend\.env
 .\.venv\Scripts\python.exe backend\manage.py migrate
 .\.venv\Scripts\python.exe backend\manage.py seed_demo_data
+.\.venv\Scripts\python.exe backend\manage.py seed_music
 .\.venv\Scripts\python.exe backend\manage.py runserver 9000
 ```
 
@@ -215,7 +288,14 @@ python3.12 -m venv .venv
 cp backend/.env.example backend/.env
 .venv/bin/python backend/manage.py migrate
 .venv/bin/python backend/manage.py seed_demo_data
+.venv/bin/python backend/manage.py seed_music
 .venv/bin/python backend/manage.py runserver 9000
+```
+
+Before `seed_music`, ensure `backend/music_samples/` contains the ten expected MP3 files. In a full Git clone of this repository, restore the repository samples with:
+
+```bash
+git archive --format=tar 1b1628b backend/music_samples | tar -x
 ```
 
 Port `9000` matches the proxy in `vite.config.ts`. Configure Redis in `backend/.env`:
@@ -248,7 +328,7 @@ npm ci
 npm run dev
 ```
 
-Open <http://localhost:5173>. Vite proxies `/api` to Django on port `9000`.
+Open <http://localhost:5173>. Vite proxies API, media, admin/static files, and listening-room WebSockets to Django/Daphne on port `9000`.
 
 Create a manual superuser with:
 

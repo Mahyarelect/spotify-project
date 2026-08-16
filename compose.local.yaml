@@ -1,0 +1,8 @@
+services:
+  database:
+    ports:
+      - "${LOCAL_POSTGRES_PORT:-5433}:5432"
+
+  redis:
+    ports:
+      - "${LOCAL_REDIS_PORT:-6379}:6379"

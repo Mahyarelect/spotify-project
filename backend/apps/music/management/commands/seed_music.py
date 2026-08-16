@@ -281,7 +281,8 @@ class Command(BaseCommand):
                 },
             )
 
-            if created or not song.audio_file:
+            audio_is_missing = not song.audio_file or not song.audio_file.storage.exists(song.audio_file.name)
+            if created or audio_is_missing:
                 # Copy audio file to media directory
                 ext = audio_path.suffix
                 audio_content = ContentFile(audio_path.read_bytes())
